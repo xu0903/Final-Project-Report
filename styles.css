@@ -1,0 +1,73 @@
+:root{
+  --bg:#0b0b10;
+  --card:#141420;
+  --muted:#9aa0a6;
+  --primary:#7c9cff;
+  --ok:#4caf50;
+  --warn:#ff9800;
+  --danger:#f44336;
+  --border:#2a2a3a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans TC",sans-serif;color:#e7e9ea;background:#0f0f14}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+
+.container{max-width:1040px;margin:0 auto;padding:0 16px}
+.section-title{margin:24px 0 12px}
+.small{font-size:12px}
+.muted{color:var(--muted)}
+.badge{display:inline-block;background:#1c1c2a;border:1px solid var(--border);padding:6px 10px;border-radius:999px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--border);background:#1c1c2a;padding:4px 8px;border-radius:999px}
+
+.site-header{position:sticky;top:0;background:#0d0d13;border-bottom:1px solid var(--border);z-index:10}
+.nav{display:flex;justify-content:space-between;align-items:center;height:56px}
+.brand{font-weight:700;letter-spacing:0.5px}
+nav a{padding:10px;border-radius:8px}
+nav a.active,nav a:hover{background:#1a1a27}
+
+.site-footer{border-top:1px solid var(--border);padding:24px 0;margin-top:40px;color:var(--muted)}
+
+.hero{padding:36px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin:12px 0}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.row label{display:flex;flex-direction:column;gap:6px}
+input,select,button{background:#141421;color:#e7e9ea;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+button{cursor:pointer}
+button:hover{background:#1b1b2b}
+
+.product-card{display:block}
+.product-cover{height:140px;border-radius:12px;border:1px solid var(--border)}
+.product-cover.big{height:320px;border-radius:16px;margin-bottom:12px}
+.product-info{padding:10px}
+
+.product-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:24px}
+@media (max-width:860px){.product-layout{grid-template-columns:1fr}}
+
+.sizes{display:flex;gap:8px;flex-wrap:wrap}
+.size-btn{min-width:48px;text-align:center}
+
+.heatmap-row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.heat-cell{width:44px;height:22px;border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px}
+.heat-legend{display:flex;gap:8px;margin-top:8px;color:var(--muted);font-size:12px}
+
+.suggestion{margin-top:8px}
+
+.fit-stats{margin-top:10px}
+
+.masonry{columns:4 240px;column-gap:16px}
+.masonry .gcard{break-inside:avoid;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#131320;margin:0 0 16px}
+.gcard img{width:100%;display:block}
+.gmeta{padding:10px;font-size:13px;color:var(--muted)}
+
+.outfit-layout{display:grid;grid-template-columns:280px 1fr;gap:16px}
+.catalog{display:grid;grid-template-columns:1fr;gap:10px}
+.piece{display:flex;gap:10px;align-items:center;background:#161626;border:1px solid var(--border);border-radius:12px;padding:8px}
+.piece .swatch{width:28px;height:28px;border-radius:6px;background:var(--c,#888);border:1px solid #00000055}
+.piece .label{font-size:14px;color:#cfd2d6}
+.dropzone{min-height:220px;border:2px dashed #3a3a50;border-radius:16px;padding:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.dropzone:empty::after{content:attr(data-empty);color:var(--muted)}
+.hidden{display:none}

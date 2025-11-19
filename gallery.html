@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>實穿牆｜FitMatch</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="index.html">FitMatch</a>
+    <nav>
+      <a href="index.html">首頁</a>
+      <a href="gallery.html" class="active">實穿牆</a>
+      <a href="outfit.html">Outfit Builder</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>實穿牆（Real-Body Gallery）</h1>
+
+  <div class="card">
+    <h3>上傳你的實穿照</h3>
+    <form id="upload-form" class="row">
+      <label>商品 SKU
+        <input id="sku" value="sku-tee-001" required />
+      </label>
+      <label>尺寸
+        <select id="size">
+          <option>S</option><option>M</option><option>L</option><option>XL</option>
+        </select>
+      </label>
+      <label>身高(cm)
+        <input type="number" id="height" min="130" max="210" step="1" />
+      </label>
+      <label>體重(kg)
+        <input type="number" id="weight" min="35" max="140" step="0.1" />
+      </label>
+      <input type="file" id="file" accept="image/*" required />
+      <button type="submit">上傳</button>
+    </form>
+    <div class="muted small">為了示範，圖片會以 base64 存在瀏覽器的 localStorage（非雲端）。</div>
+  </div>
+
+  <div class="card">
+    <h3>篩選</h3>
+    <form id="filter-form" class="row">
+      <label>SKU
+        <input id="f-sku" placeholder="sku-tee-001" />
+      </label>
+      <label>尺寸
+        <select id="f-size">
+          <option value="">全部</option>
+          <option>S</option><option>M</option><option>L</option><option>XL</option>
+        </select>
+      </label>
+      <label>身高 ≥
+        <input type="number" id="f-minh" min="0" />
+      </label>
+      <label>身高 ≤
+        <input type="number" id="f-maxh" min="0" />
+      </label>
+      <button type="submit">套用</button>
+    </form>
+  </div>
+
+  <section id="grid" class="masonry"></section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">© 2025 FitMatch Demo</div>
+</footer>
+
+<script type="module">
+  import { addPhoto, listPhotos } from './js/gallery.js';
+  import { renderGalleryCard } from './js/gallery.js';
+
+  const grid = document.getElementById('grid');
+
+  const render = (filters = {}) => {
+    grid.innerHTML = '';
+    const items = listPhotos(filters);
+    if (!items.length) {
+      grid.innerHTML = '<p class="muted">尚無符合的實穿照片。</p>';
+      return;
+    }
+    items.forEach(it => grid.appendChild(renderGalleryCard(it)));
+  };
+
+  document.getElementById('upload-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const file = document.getElementById('file').files[0];
+    if (!file) return;
+    await addPhoto({
+      sku_id: document.getElementById('sku').value.trim(),
+      size: document.getElementById('size').value,
+      height_cm: parseFloat(document.getElementById('height').value) || null,
+      weight_kg: parseFloat(document.getElementById('weight').value) || null,
+    }, file);
+    e.target.reset();
+    render();
+    alert('已上傳（僅儲存在本機瀏覽器）');
+  });
+
+  document.getElementById('filter-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    render({
+      sku: document.getElementById('f-sku').value.trim() || null,
+      size: document.getElementById('f-size').value || null,
+      minh: parseFloat(document.getElementById('f-minh').value) || null,
+      maxh: parseFloat(document.getElementById('f-maxh').value) || null,
+    });
+  });
+
+  render();
+</script>
+</body>
+</html>

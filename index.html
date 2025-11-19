@@ -1,12 +1,58 @@
-<!-- init 2 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FitMatch 服飾商店</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">FitMatch</a>
+      <nav>
+        <a href="index.html" class="active">首頁</a>
+        <a href="gallery.html">實穿牆</a>
+        <a href="outfit.html">Outfit Builder</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>找到適合你的尺寸與穿搭</h1>
+      <p>群眾回饋的 Size 建議、即時庫存熱力、實穿照片、拖拉拼搭。</p>
+    </section>
+
+    <section>
+      <h2 class="section-title">精選商品</h2>
+      <div id="product-list" class="grid"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">© 2025 FitMatch Demo</div>
+  </footer>
+
+  <script type="module">
+    import { seedIfNeeded, listProducts } from './js/api.js';
+    import { el } from './js/dom.js';
+
+    seedIfNeeded();
+
+    const list = document.getElementById('product-list');
+    const products = listProducts();
+
+    products.forEach(p => {
+      const card = el('a', { class: 'card product-card', href: `product.html?sku=${encodeURIComponent(p.defaultSku)}` }, [
+        el('div', { class: 'product-cover', style: `background:${p.cover}` }),
+        el('div', { class: 'product-info' }, [
+          el('h3', {}, p.name),
+          el('p', { class: 'muted' }, `${p.brand} • ${p.category}`),
+        ])
+      ]);
+      list.appendChild(card);
+    });
+  </script>
 </body>
 </html>
