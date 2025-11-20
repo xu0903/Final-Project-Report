@@ -1,3 +1,5 @@
+p{color: darkgray;}
+
 :root{
   --bg:#0b0b10;
   --card:#141420;
@@ -71,3 +73,11 @@ button:hover{background:#1b1b2b}
 .dropzone{min-height:220px;border:2px dashed #3a3a50;border-radius:16px;padding:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
 .dropzone:empty::after{content:attr(data-empty);color:var(--muted)}
 .hidden{display:none}
+
+
+/* --- 主頁 --- */
+.btn {padding: 8px 14px;border-radius: 8px;font-size: 16px;font-weight: 600;display: inline-block;cursor: pointer;transition: 0.2s;text-decoration: none;}
+.btn-primary {background: #ffffff;color: #000000;}
+.btn-primary:hover {background: #dddddd;}
+.btn-outline {border: 1px solid #666;color: #cccccc;}
+.btn-outline:hover {border-color: #999999;background: rgba(255, 255, 255, 0.06);}
