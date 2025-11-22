@@ -1,16 +1,31 @@
 <!-- 註冊 Really-->
- <!doctype html>
+
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>註冊</title>
-  <link rel="stylesheet" href="./css/common.css"/>
-  <link rel="stylesheet" href="./css/register.css"/>
+  <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
-  <header class="header"></header>
-  <main class="container grid register-wrap">
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">FitMatch</a>
+      <nav>
+        <a href="index.html">主頁</a>
+        <a href="login.html">登入/註冊</a>
+        <a href="outfit.html">風格篩選</a>
+        <a href="idea.html">找靈感</a>
+        <a href="gallery.html">結果展示</a>
+        <a href="ID.html">會員</a>
+        <a href="messageboard.html">留言板</a>
+      </nav>
+    </div>
+  </header>
+
+   <main class="container grid register-wrap">
     <section class="card">
       <h2>建立帳號</h2>
       <form class="grid" id="reg-form" novalidate>
@@ -36,3 +51,4 @@
   <script>document.getElementById('y').textContent = new Date().getFullYear()</script>
 </body>
 </html>
+>>>>>>> a1829975fa6460e56ef9f13f544f0497c1191eac

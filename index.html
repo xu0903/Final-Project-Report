@@ -5,56 +5,51 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>FitMatch 服飾商店</title>
+  <title>主頁</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
+
   <header class="site-header">
     <div class="container nav">
       <a class="brand" href="index.html">FitMatch</a>
       <nav>
-        <a href="index.html" class="active">首頁</a>
-        <a href="gallery.html">實穿牆</a>
-        <a href="outfit.html">Outfit Builder</a>
+        <a href="index.html">主頁</a>
+        <a href="login.html">登入/註冊</a>
+        <a href="outfit.html">風格篩選</a>
+        <a href="idea.html">找靈感</a>
+        <a href="gallery.html">結果展示</a>
+        <a href="ID.html">會員</a>
+        <a href="messageboard.html">留言板</a>
       </nav>
     </div>
   </header>
 
   <main class="container">
     <section class="hero">
-      <h1>找到適合你的尺寸與穿搭</h1>
-      <p>群眾回饋的 Size 建議、即時庫存熱力、實穿照片、拖拉拼搭。</p>
-    </section>
+      <div class="hero-grid">
 
-    <section>
-      <h2 class="section-title">精選商品</h2>
-      <div id="product-list" class="grid"></div>
+        <div class="hero-text">
+          <h1>FitMatch-穿搭風格篩選</h1>
+          <p>
+            使用顏色取樣與風格規則，提供多套男裝/女裝/中性風格穿搭建議。
+          </p>
+
+          <a href="outfit.html" class="btn btn-primary">開始篩選</a>
+          <a href="idea.html" class="btn btn-outline">找靈感</a>
+        </div>
+
+        <div class="hero-img">
+          <!-- 你可以換自己的圖片 -->
+          <img src="https://images.unsplash.com/photo-1520975922071-a14cc0055f8a" alt="">
+        </div>
+
+      </div>
     </section>
   </main>
-
-  <footer class="site-footer">
-    <div class="container">© 2025 FitMatch Demo</div>
-  </footer>
-
-  <script type="module">
-    import { seedIfNeeded, listProducts } from './js/api.js';
-    import { el } from './js/dom.js';
-
-    seedIfNeeded();
-
-    const list = document.getElementById('product-list');
-    const products = listProducts();
-
-    products.forEach(p => {
-      const card = el('a', { class: 'card product-card', href: `product.html?sku=${encodeURIComponent(p.defaultSku)}` }, [
-        el('div', { class: 'product-cover', style: `background:${p.cover}` }),
-        el('div', { class: 'product-info' }, [
-          el('h3', {}, p.name),
-          el('p', { class: 'muted' }, `${p.brand} • ${p.category}`),
-        ])
-      ]);
-      list.appendChild(card);
-    });
-  </script>
+  <script src="index.js"></script>
 </body>
 </html>
+
+
