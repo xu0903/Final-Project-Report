@@ -1,12 +1,72 @@
 <!-- 登入 Really-->
- <!DOCTYPE html>
- <html lang="en">
- <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登入</title>
- </head>
- <body>
-    
- </body>
- </html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>登入｜FitMatch</title>
+  <!-- 你的全站樣式（若沒有可忽略） -->
+  <link rel="stylesheet" href="styles.css" />
+  <!-- 登入頁面的專用樣式 -->
+  
+</head>
+<body>
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="index.html">FitMatch</a>
+    <nav>
+      <a href="index.html">首頁</a>
+      <a href="gallery.html">實穿牆</a>
+      <a href="outfit.html">Outfit Builder</a>
+      <a class="active" href="login.html">登入</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container auth-wrap">
+  <section class="auth-card">
+    <h1>歡迎回來</h1>
+    <p class="muted">請使用 Email 與密碼登入。</p>
+
+    <form id="login-form" novalidate>
+      <label class="field">
+        <span>Email:</span>
+        <input id="email" type="email" autocomplete="username" required placeholder="you@example.com" />
+        <small class="err" data-for="email"></small>
+      </label>
+      <br>
+      <label class="field">
+        
+        <div class="pass-row">密碼          :
+          <input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="至少 6 碼" />
+          <button class="ghost" id="toggle-pass" type="button" aria-label="顯示或隱藏密碼">顯示</button>
+        </div>
+        <small class="err" data-for="password"></small>
+      </label>
+
+      <div class="row between">
+        <label class="check">
+          <input id="remember" type="checkbox" />
+        </label>記住我
+        <a class="small" href="#" id="forgot">忘記密碼？</a>
+      </div>
+
+      <button id="submit" type="submit" disabled>登入</button>
+      <p id="msg" class="msg" role="status"></p>
+    </form>
+
+    <div class="tips">
+      <p class="small muted">
+        Demo 帳號：<code>demo@fitmatch.dev</code>　密碼：<code>fitmatch</code>
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">© 2025 FitMatch Demo</div>
+</footer>
+
+<script type="module" src="login.js"></script>
+</body>
+</html>

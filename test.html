@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <title>Bootstrap Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+</head>
+<body>
+
+  <!-- 上方導覽列 Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#">FitMatch</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link active" href="#">首頁</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">穿搭推薦</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">留言板</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 版心內容 -->
+  <div class="container mt-5">
+    <div class="row">
+      <!-- 左邊欄位 -->
+      <div class="col-md-8">
+        <h1 class="mb-3">今天穿什麼？</h1>
+        <p class="lead">根據天氣與你的衣櫃，幫你找到適合的穿搭。</p>
+        <button class="btn btn-primary me-2">開始生成穿搭</button>
+        <button class="btn btn-outline-secondary">查看收藏</button>
+      </div>
+
+      <!-- 右邊欄位 -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header">今日天氣</div>
+          <div class="card-body">
+            <h5 class="card-title">體感 22°C · 微風</h5>
+            <p class="card-text">建議：薄長袖 + 長褲，外加一件薄外套。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+  ></script>
+</body>
+</html>
