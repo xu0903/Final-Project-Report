@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>找靈感</title>
+  <title>找靈感 | FitMatch</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -23,5 +23,90 @@
       </nav>
     </div>
   </header>
+
+  <main class="container idea-layout">
+    <!-- 左側：篩選條件 -->
+    <section class="idea-filter-panel">
+      <h1>找靈感</h1>
+      <p class="muted small">
+        先選擇一種顏色與一種風格，我們會隨機產生幾個穿搭靈感格子。<br>
+        之後可以再接上實際服飾資料與 AI 搭配演算法。
+      </p>
+
+      <!-- 顏色標籤（圓框點 二擇一） -->
+      <div class="card">
+        <h2>顏色標籤</h2>
+        <div class="tag-pills" id="color-tags">
+          <button type="button"
+                  class="tag-pill"
+                  data-group="color"
+                  data-key="earth"
+                  data-label="大地色">
+            <span class="dot"></span> 大地色
+          </button>
+          <button type="button"
+                  class="tag-pill"
+                  data-group="color"
+                  data-key="mono"
+                  data-label="黑白灰">
+            <span class="dot"></span> 黑白灰
+          </button>
+        </div>
+      </div>
+
+      <!-- 風格標籤（圓框點 二擇一） -->
+      <div class="card">
+        <h2>風格標籤</h2>
+        <div class="tag-pills" id="style-tags">
+          <button type="button"
+                  class="tag-pill"
+                  data-group="style"
+                  data-key="eu"
+                  data-label="歐美風">
+            <span class="dot"></span> 歐美風
+          </button>
+          <button type="button"
+                  class="tag-pill"
+                  data-group="style"
+                  data-key="jp"
+                  data-label="日系">
+            <span class="dot"></span> 日系
+          </button>
+          <button type="button"
+                  class="tag-pill"
+                  data-group="style"
+                  data-key="kr"
+                  data-label="韓系">
+            <span class="dot"></span> 韓系
+          </button>
+        </div>
+      </div>
+
+      <button type="button" id="generate-ideas" class="btn primary">
+        產生靈感
+      </button>
+
+      <p id="idea-tip" class="muted small"></p>
+    </section>
+
+    <!-- 右側：靈感格子 -->
+    <section class="idea-result-panel">
+      <h2>靈感格子</h2>
+      <p class="muted small">
+        每格代表一組穿搭靈感。你可以先試玩收藏功能，資料會被存進本機的
+        <code>localStorage</code>，在「會員」頁面即可看到收藏紀錄。
+      </p>
+
+      <div id="idea-grid" class="idea-grid">
+        <!-- 這裡由 JS 動態產生靈感卡片 -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">© 2025 FitMatch Demo</div>
+  </footer>
+
+  <script src="idea.js" defer></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>留言板</title>
+  <title>留言板 | FitMatch</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -19,9 +19,67 @@
         <a href="idea.html">找靈感</a>
         <a href="gallery.html">結果展示</a>
         <a href="ID.html">會員</a>
-        <a href="messageboard.html">留言板</a>
+        <a href="messageboard.html" class="active">留言板</a>
       </nav>
     </div>
   </header>
+
+  <main class="container">
+    <section class="message-board">
+      <h1>留言板</h1>
+      <p class="message-board-intro">
+        分享你的穿搭靈感、使用心得，或是給 FitMatch 的建議 📝
+      </p>
+
+     
+
+      <!-- 留言列表 -->
+      <section>
+        <h2 class="message-list-title">全部留言</h2>
+        <ul id="message-list" class="message-list">
+          <!-- JavaScript 會把留言插在這裡 -->
+        </ul>
+      </section>
+    </section>
+  </main>
+
+  
+
+   <!-- 新增留言表單 -->
+      <form id="new-message-form" class="card message-form">
+        <div class="form-row">
+          <label for="nickname">暱稱（可留空）</label>
+          <input
+            type="text"
+            id="nickname"
+            name="nickname"
+            placeholder="例：FitMatch 小夥伴"
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="content">留言內容</label>
+          <textarea
+            id="content"
+            name="content"
+            rows="4"
+            placeholder="今天的穿搭靈感是..."
+            required
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn primary">送出留言</button>
+      </form>
+
+      <hr class="divider" />
+
+  <script src="messageboard.js" defer></script>
+
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2025 FitMatch Outfit Recommendation</p>
+    </div>
+  </footer>
 </body>
 </html>

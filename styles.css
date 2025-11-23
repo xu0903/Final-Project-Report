@@ -27,7 +27,7 @@ a { text-decoration: none; color: inherit; }
 img { max-width: 100%; display: block; }
 
 .container {
-  max-width: 1080px;
+  max-width: 2160px;
   margin: 0 auto;
   padding: 0 20px;
 }
@@ -71,6 +71,9 @@ nav a:hover {
 
 .hero {
   padding: 80px 0;
+}
+* {
+  box-sizing: border-box;
 }
 
 .hero-grid {
@@ -301,3 +304,226 @@ input, select, button {
 }
 
 .hidden { display: none; }
+
+
+/* 留言板 */
+.btn-like.liked {
+  font-weight: 600;
+  opacity: 1;
+  transform: scale(1.03);
+}
+
+
+
+/* 會員頁版面 */
+.member-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.5fr);
+  gap: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+}
+
+.member-column h1,
+.member-column h2 {
+  margin-bottom: 0.75rem;
+}
+
+.form-vertical .form-row,
+.form-horizontal .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.form-vertical input,
+.form-horizontal input,
+.form-vertical select,
+.form-horizontal select {
+  padding: 0.45rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font: inherit;
+}
+
+.bmi-result {
+  margin-top: 0.75rem;
+  line-height: 1.5;
+}
+
+.btn.small {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.9rem;
+}
+
+/* 收藏穿搭格子 */
+.favorites-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.outfit-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.outfit-thumb {
+  width: 100%;
+  padding-top: 100%; /* 方形 */
+  border-radius: 8px;
+  background-color: #e5e7eb;
+  background-size: cover;
+  background-position: center;
+}
+
+.outfit-body {
+  min-height: 40px;
+}
+
+.outfit-title {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.outfit-note {
+  margin: 0.15rem 0 0;
+}
+
+.favorites-empty {
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f3f4f6;
+}
+
+/* 手機版一欄 */
+@media (max-width: 768px) {
+  .member-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/*找靈感*/
+/* 找靈感 頁面 */
+.idea-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr);
+  gap: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+}
+
+.idea-filter-panel h1 {
+  margin-bottom: 0.5rem;
+}
+
+.idea-filter-panel .card + .card {
+  margin-top: 1rem;
+}
+
+/* 圓框點 標籤樣式 */
+.tag-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.tag-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.tag-pill .dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  border: 2px solid #9ca3af;
+  box-sizing: border-box;
+}
+
+.tag-pill.active {
+  border-color: #111827;
+  background: #f3f4f6;
+  box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
+}
+
+.tag-pill.active .dot {
+  border-color: #111827;
+  background: #111827;
+}
+
+/* 靈感格子 */
+.idea-result-panel h2 {
+  margin-bottom: 0.5rem;
+}
+
+.idea-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.idea-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.6rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.idea-thumb {
+  width: 100%;
+  padding-top: 100%; /* 正方形 */
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+}
+
+.idea-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.idea-title {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.idea-tags {
+  margin: 0;
+}
+
+.btn.secondary {
+  border: 1px solid #d1d5db;
+  background: #fff;
+}
+
+/* RWD: 手機一欄 */
+@media (max-width: 768px) {
+  .idea-layout {
+    grid-template-columns: 1fr;
+  }
+}
+

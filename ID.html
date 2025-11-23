@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>會員資料頁</title>
+  <title>會員資料頁 | FitMatch</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -24,164 +24,103 @@
     </div>
   </header>
 
-<main class="container">
-  <div id="product" class="product-layout">
-    <div class="product-media">
-      <div id="cover" class="product-cover big"></div>
-      <div class="muted" id="batch-info"></div>
-    </div>
+  <main class="container member-layout">
+    <!-- 左邊：會員基本資料 + BMI -->
+    <section class="member-column">
+      <h1>會員資料</h1>
 
-    <div class="product-panel">
-      <h1 id="name">商品名</h1>
-      <p id="meta" class="muted"></p>
-
+      <!-- 帳號 / 密碼 -->
       <div class="card">
-        <h3>選擇尺寸</h3>
-        <div id="size-buttons" class="sizes"></div>
-        <div class="heatmap-row" id="heatmap"></div>
-        <div class="muted small" id="restock-note"></div>
-      </div>
+        <h2>帳號資訊</h2>
+        <form id="account-form" class="form-vertical">
+          <div class="form-row">
+            <label for="account">帳號（Email 或使用者名稱）</label>
+            <input
+              type="text"
+              id="account"
+              name="account"
+              placeholder="example@fitmatch.com"
+              autocomplete="username"
+            />
+          </div>
 
-      <div class="card">
-        <h3>Size 智慧建議</h3>
-        <form id="measure-form" class="row">
-          <label>身高(cm)
-            <input type="number" id="h" min="130" max="210" step="1" required>
-          </label>
-          <label>體重(kg)
-            <input type="number" id="w" min="35" max="140" step="0.1" required>
-          </label>
-          <button type="submit">取得建議</button>
+          <div class="form-row">
+            <label for="password">密碼</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            />
+          </div>
+
+          <button type="submit" class="btn primary small">
+            儲存帳號資訊
+          </button>
+          <p class="muted small" id="account-msg"></p>
         </form>
-        <div id="suggestion" class="suggestion"></div>
       </div>
 
+      <!-- 身高 / 體重 / BMI -->
       <div class="card">
-        <h3>Fit Notes（群眾回饋）</h3>
-        <form id="fit-form" class="row">
-          <label>購買尺寸
-            <select id="size_bought"></select>
-          </label>
-          <label>感受
-            <select id="fit">
-              <option value="tight">偏緊</option>
-              <option value="ok">剛好</option>
-              <option value="loose">偏鬆</option>
-            </select>
-          </label>
-          <input id="body_notes" placeholder="肩寬略緊 / 袖長偏長…" />
-          <button type="submit">送出</button>
+        <h2>身高 / 體重 / BMI</h2>
+        <form id="bmi-form" class="form-horizontal">
+          <div class="form-row">
+            <label for="height">身高 (cm)</label>
+            <input
+              type="number"
+              id="height"
+              name="height"
+              min="130"
+              max="220"
+              step="1"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <label for="weight">體重 (kg)</label>
+            <input
+              type="number"
+              id="weight"
+              name="weight"
+              min="30"
+              max="200"
+              step="0.1"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn primary small">
+            計算 BMI
+          </button>
         </form>
-        <div id="fit-stats" class="fit-stats"></div>
-      </div>
-    </div>
-  </div>
-</main>
 
-<footer class="site-footer">
-  <div class="container">© 2025 FitMatch Demo</div>
-</footer>
-
-<script type="module">
-  import { getQuery, el } from './js/dom.js';
-  import { seedIfNeeded, getSku, getInventory, getFitStats, addFitNote, getBatchInfo } from './js/api.js';
-  import { renderHeatmap } from './js/heatmap.js';
-  import { suggestSize } from './js/sizeAdvisor.js';
-
-  seedIfNeeded();
-
-  const skuId = getQuery('sku') || 'sku-tee-001';
-  const sku = getSku(skuId);
-  if (!sku) {
-    alert('找不到商品，返回首頁');
-    location.href = 'index.html';
-  }
-
-  // 基本資訊
-  document.getElementById('name').textContent = sku.product.name;
-  document.getElementById('meta').textContent = `${sku.product.brand} • ${sku.product.category} • 布料：${sku.product.fabric}`;
-  document.getElementById('cover').style.background = sku.product.cover;
-
-  // 批次透明
-  const batch = getBatchInfo(skuId);
-  document.getElementById('batch-info').textContent = `批次 ${batch.code} • 檢驗通過率 ${Math.round(batch.passed_rate*100)}% • ${batch.notes}`;
-
-  // 尺寸按鈕
-  const sizeButtons = document.getElementById('size-buttons');
-  sku.availableSizes.forEach(s => {
-    sizeButtons.appendChild(el('button', { class: 'size-btn', 'data-size': s, type: 'button' }, s));
-  });
-
-  // 庫存熱力圖
-  const inv = getInventory(skuId);
-  const heatWrap = document.getElementById('heatmap');
-  renderHeatmap(heatWrap, inv);
-  const low = Object.entries(inv).find(([sz, q]) => q <= 2);
-  document.getElementById('restock-note').textContent = low ? `提醒：${low[0]} 尺寸庫存偏低` : '庫存充足';
-
-  // Size 建議
-  const form = document.getElementById('measure-form');
-  const profile = JSON.parse(localStorage.getItem('measure_profile') || 'null');
-  if (profile) {
-    document.getElementById('h').value = profile.h;
-    document.getElementById('w').value = profile.w;
-  }
-  const $suggest = document.getElementById('suggestion');
-  const updateSuggestion = () => {
-    const h = parseFloat(document.getElementById('h').value);
-    const w = parseFloat(document.getElementById('w').value);
-    const stats = getFitStats(skuId);
-    const res = suggestSize(h, w, stats);
-    $suggest.innerHTML = res
-      ? `<div class="badge">建議尺寸：<strong>${res.size}</strong>（信心 ${Math.round(res.confidence*100)}%）</div>
-         <div class="muted small">依據樣本 ${res.samples} 筆；若介於兩碼之間，優先考量肩寬。</div>`
-      : `<div class="muted">請輸入身高體重取得建議。</div>`;
-  };
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    localStorage.setItem('measure_profile', JSON.stringify({
-      h: parseFloat(document.getElementById('h').value),
-      w: parseFloat(document.getElementById('w').value),
-    }));
-    updateSuggestion();
-  });
-  updateSuggestion();
-
-  // Fit Notes 表單與統計
-  const sizeSelect = document.getElementById('size_bought');
-  sku.availableSizes.forEach(s => sizeSelect.appendChild(el('option', { value: s }, s)));
-
-  const renderFitStats = () => {
-    const stats = getFitStats(skuId);
-    const total = stats.total || 0;
-    document.getElementById('fit-stats').innerHTML = total
-      ? `
-        <div class="chips">
-          ${Object.entries(stats.bySize).map(([sz, obj]) => `
-            <span class="chip">${sz}：剛好 ${obj.ok||0}、偏緊 ${obj.tight||0}、偏鬆 ${obj.loose||0}</span>
-          `).join('')}
+        <div id="bmi-result" class="bmi-result muted">
+          尚未輸入資料。
         </div>
-        `
-      : `<div class="muted">還沒有回饋，成為第一個分享尺寸感受的人吧！</div>`;
-  };
-  renderFitStats();
+      </div>
+    </section>
 
-  document.getElementById('fit-form').addEventListener('submit', e => {
-    e.preventDefault();
-    const payload = {
-      sku_id: skuId,
-      size_bought: sizeSelect.value,
-      fit: document.getElementById('fit').value,
-      body_notes: document.getElementById('body_notes').value.trim() || null,
-      height_cm: JSON.parse(localStorage.getItem('measure_profile')||'{}').h || null,
-      weight_kg: JSON.parse(localStorage.getItem('measure_profile')||'{}').w || null,
-    };
-    addFitNote(payload);
-    e.target.reset();
-    renderFitStats();
-    updateSuggestion();
-    alert('已送出回饋，感謝！');
-  });
-</script>
+    <!-- 右邊：收藏穿搭 -->
+    <section class="member-column">
+      <h2>收藏的穿搭</h2>
+      <p class="muted small">
+        下方顯示你在 FitMatch 中按下「收藏」的穿搭組合，未來可改成從會員資料庫讀取。
+      </p>
+
+      <div id="favorites-grid" class="favorites-grid">
+        <!-- JS 會把收藏穿搭卡片長出來 -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">© 2025 FitMatch Demo</div>
+  </footer>
+
+  <!-- 簡單會員頁 JS，不再用 module -->
+  <script src="member.js" defer></script>
 </body>
 </html>
