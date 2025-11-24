@@ -1,4 +1,3 @@
-// idea.js
 
 const FAVORITES_KEY = "fitmatch_favorites";
 
