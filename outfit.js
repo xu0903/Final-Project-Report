@@ -2,6 +2,22 @@
 
 const FAVORITES_KEY = "fitmatch_favorites";
 
+// 顏色背景（讓靈感卡片有色系感）
+const colorBG = {
+  earth: "#d4b89f",
+  mono: "#c4c4c4",
+  pastel: "#f9dfe5",
+  pink: "#ffb3c6",
+  red: "#e26d5a",
+  orange: "#ffb84c",
+  yellow: "#ffe26a",
+  lightgreen: "#b7e4c7",
+  darkgreen: "#588157",
+  lightblue: "#a0c4ff",
+  blue: "#4361ee",
+  purple: "#c77dff",
+};
+
 // 讀收藏
 function loadFavorites() {
   try {
@@ -43,10 +59,7 @@ function escapeHTML(str) {
 function createIdeaCardHTML(data) {
   const { id, title, colorLabel, styleLabel, colorKey } = data;
 
-  // 簡單用背景色暗示色系（實際可換衣服圖片）
-  let bg = "#e5e7eb";
-  if (colorKey === "earth") bg = "#d4b89f";
-  if (colorKey === "mono") bg = "#c4c4c4";
+  const bg = colorBG[colorKey] || "#e5e7eb";
 
   return `
     <article class="idea-card" 
@@ -76,11 +89,11 @@ function setupTagPills() {
       const btn = e.target.closest(".tag-pill");
       if (!btn) return;
       const groupName = btn.dataset.group;
-      // 先清掉同 group 的 active
+
       document
         .querySelectorAll(`.tag-pill[data-group="${groupName}"]`)
         .forEach((el) => el.classList.remove("active"));
-      // 再幫自己加 active
+
       btn.classList.add("active");
     });
   });
@@ -120,9 +133,9 @@ function renderIdeas() {
     return;
   }
 
-  // 目前先隨機產生 3 個「文字版」靈感卡片，不做真正的搭配
   const ideas = [];
   const count = 3;
+
   for (let i = 1; i <= count; i++) {
     ideas.push({
       id: `${colorKey}-${styleKey}-${Date.now()}-${i}`,
@@ -145,7 +158,7 @@ function setupGenerateButton() {
   btn.addEventListener("click", renderIdeas);
 }
 
-// 收藏按鈕事件（寫入 localStorage → 會員頁會讀到）
+// 收藏按鈕事件
 function setupFavoriteButtons() {
   const grid = document.getElementById("idea-grid");
   if (!grid) return;
@@ -169,7 +182,7 @@ function setupFavoriteButtons() {
       style,
       color,
       note,
-      image: null, // 之後可換成實際圖片 URL
+      image: null,
     };
 
     addFavorite(favItem);
@@ -183,7 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupGenerateButton();
   setupFavoriteButtons();
 
-  // 初始提示
   const grid = document.getElementById("idea-grid");
   if (grid) {
     grid.innerHTML = `
