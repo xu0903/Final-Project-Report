@@ -106,4 +106,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // 這裡單純 redirect，實際帶參數可以之後再補
     window.location.href = "outfit.html";
   });
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> 178840d1cb1d890c445405ee045f99205d46bf54

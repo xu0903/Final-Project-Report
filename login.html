@@ -53,11 +53,30 @@
         </label>記住我
         <a class="small" href="#" id="forgot">忘記密碼？</a>
       </div>
+      <label class="field">
+        <span>驗證碼:</span>
+
+        <div class="captcha-row">
+          <img id="captcha-img" src="" alt="驗證碼圖片" />
+          <button type="button" class="ghost" id="refresh-captcha">換一張</button>
+        </div>
+
+        <input
+          id="captcha"
+          type="text"
+          maxlength="4"
+          placeholder="請輸入圖片中的 4 個字元"
+          autocomplete="off"
+          required
+        />
+        <small class="err" data-for="captcha"></small>
+      </label>
 
       <button id="submit" type="submit" disabled>登入</button>
       <button id="register-btn" type="button" onclick="location.href='register.html'">註冊</button>
       <p id="msg" class="msg" role="status"></p>
     </form>
+    
 
     <div class="tips">
       <p class="small muted">
