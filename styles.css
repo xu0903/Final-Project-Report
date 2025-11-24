@@ -527,3 +527,150 @@ input, select, button {
   }
 }
 
+
+/* 找靈感新樣式：一列 6 個卡片，橫向捲動 */
+.inspiration-page {
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+}
+
+.inspiration-header h1 {
+  margin-bottom: 0.4rem;
+}
+
+.inspiration-strip-wrap {
+  margin-top: 1.5rem;
+  overflow-x: auto;
+  overflow-y: visible;       /* 讓上下不要被裁切 */
+  padding: 0.75rem 0 0.75rem;/* 多一點頭頂空間 */
+}
+
+
+/* 隱藏橫向捲軸（有需要可以拿掉） */
+.inspiration-strip-wrap::-webkit-scrollbar {
+  height: 6px;
+}
+.inspiration-strip-wrap::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 999px;
+}
+
+.inspiration-strip {
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 0.25rem;
+  scroll-snap-type: x mandatory;
+}
+
+/* 卡片寬度約佔整體 30%：一次大約看到 3 個完整 + 1 個被切 */
+.insp-card {
+  flex: 0 0 30%;
+  min-width: 230px;
+  max-width: 320px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
+}
+
+/* 上半部當作圖片區（先用漸層色塊代替） */
+.insp-thumb {
+  height: 150px;
+  background-size: cover;
+  background-position: center;
+}
+
+/* 不同情境給不同色調，之後可換成真的圖 */
+.insp-thumb.campus {
+  background-image: linear-gradient(135deg, #93c5fd, #d1fae5);
+}
+.insp-thumb.commute {
+  background-image: linear-gradient(135deg, #e5e7eb, #9ca3af);
+}
+.insp-thumb.date {
+  background-image: linear-gradient(135deg, #fecaca, #fed7aa);
+}
+.insp-thumb.weekend {
+  background-image: linear-gradient(135deg, #fef3c7, #bbf7d0);
+}
+.insp-thumb.sport {
+  background-image: linear-gradient(135deg, #bfdbfe, #a7f3d0);
+}
+.insp-thumb.formal {
+  background-image: linear-gradient(135deg, #e5e7eb, #111827);
+}
+
+.insp-body {
+  padding: 0.75rem 0.9rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.insp-body h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.insp-tags,
+.insp-text {
+  margin: 0;
+}
+
+/* 手機版：改成一列一個較大卡片 */
+@media (max-width: 768px) {
+  .insp-card {
+    flex: 0 0 80%;
+    min-width: 260px;
+  }
+}
+/*找靈感*/
+
+.insp-card {
+  flex: 0 0 30%;
+  min-width: 230px;
+  max-width: 320px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
+  position: relative;   /* 給 pseudo 元件定位用 */
+  transition: box-shadow 0.15s ease;
+}
+
+/* hover：微微放大 + 陰影加深（未被點選的卡片） */
+.insp-card:hover:not(.active) {
+  transform: scale(1.02);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.10);
+}
+
+
+/* 這裡先清空，只保留你想要的東西（不要位移） */
+.insp-card.active {
+
+  transform: translateY(-2px);
+}
+
+/* 預設：沒有高光 */
+.insp-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;                  /* 完全跟卡片一樣大 */
+  border-radius: inherit;
+  border: 2px solid transparent;
+  pointer-events: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* 被選到時：在卡片「裡面」畫一圈藍色高光 */
+.insp-card.active::after {
+  border-color: #b8c7d7;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4);
+}

@@ -1,10 +1,10 @@
-<!-- 穿搭篩選頁 Pinky-->
+<!-- 找靈感 Really-->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>穿搭篩選頁</title>
+  <title>找靈感 | FitMatch</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -23,5 +23,107 @@
       </nav>
     </div>
   </header>
+
+  <main class="container inspiration-page">
+    <section class="inspiration-header">
+      <h1>今日穿搭靈感</h1>
+      <p class="muted small">
+        從不同情境的靈感卡片開始發想，之後可以連動到實際篩選功能或 AI 生成穿搭。
+      </p>
+    </section>
+
+    <section class="inspiration-strip-wrap">
+      <div class="inspiration-strip">
+        <!-- 1 -->
+        <article class="insp-card" data-scene="campus">
+          <div class="insp-thumb campus"></div>
+          <div class="insp-body">
+            <h2>校園日常</h2>
+            <p class="insp-tags muted small">#大地色 #休閒 #寬褲</p>
+            <p class="insp-text small">
+              球鞋＋寬褲＋薄外套，剛好應付教室冷氣與操場烈日。
+            </p>
+          </div>
+        </article>
+
+        <!-- 2 -->
+        <article class="insp-card" data-scene="commute">
+          <div class="insp-thumb commute"></div>
+          <div class="insp-body">
+            <h2>通勤辦公</h2>
+            <p class="insp-tags muted small">#黑白灰 #襯衫 #Smart casual</p>
+            <p class="insp-text small">
+              襯衫搭西裝褲，配上球鞋或樂福鞋，舒適又不失專業。
+            </p>
+          </div>
+        </article>
+
+        <!-- 3 -->
+        <article class="insp-card" data-scene="date">
+          <div class="insp-thumb date"></div>
+          <div class="insp-body">
+            <h2>約會午後</h2>
+            <p class="insp-tags muted small">#韓系 #溫柔 #針織</p>
+            <p class="insp-text small">
+              柔和色系上衣＋牛仔褲，簡單乾淨、照片也好看。
+            </p>
+          </div>
+        </article>
+
+        <!-- 4 -->
+        <article class="insp-card" data-scene="weekend">
+          <div class="insp-thumb weekend"></div>
+          <div class="insp-body">
+            <h2>週末出遊</h2>
+            <p class="insp-tags muted small">#日系 #大地色 #層次感</p>
+            <p class="insp-text small">
+              工裝外套＋卡其褲＋帆布鞋，適合走路、逛市集、拍照。
+            </p>
+          </div>
+        </article>
+
+        <!-- 5 -->
+        <article class="insp-card" data-scene="sport">
+          <div class="insp-thumb sport"></div>
+          <div class="insp-body">
+            <h2>運動休閒</h2>
+            <p class="insp-tags muted small">#Athleisure #機能 #寬鬆版型</p>
+            <p class="insp-text small">
+              連帽上衣＋運動短褲，打完球直接去吃宵夜也不突兀。
+            </p>
+          </div>
+        </article>
+
+        <!-- 6 -->
+        <article class="insp-card" data-scene="formal">
+          <div class="insp-thumb formal"></div>
+          <div class="insp-body">
+            <h2>正式場合</h2>
+            <p class="insp-tags muted small">#歐美風 #西裝外套 #黑白灰</p>
+            <p class="insp-text small">
+              西裝外套搭素 T、長褲，面試 / 報告 / 家族聚餐都能駕馭。
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 底下的說明 + 導去篩選的按鈕 -->
+    <section class="inspiration-detail">
+      <h2>已選擇的靈感</h2>
+      <p id="insp-selected" class="muted small">
+        點擊上方任一張卡片，看看今天可以從哪個情境開始搭配。
+      </p>
+      <button type="button" id="insp-to-outfit" class="btn primary small" disabled>
+        帶我去搭配
+      </button>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">© 2025 FitMatch Demo</div>
+  </footer>
+
+  <script src="idea.js" defer></script>
 </body>
 </html>
