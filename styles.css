@@ -886,3 +886,135 @@ input, select, button {
     position: static;
   }
 }
+/* ============================================
+   GALLERY 結果展示頁升級版面
+   ============================================ */
+
+/* 主要 layout：左右 50 / 50 */
+.gallery-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+}
+
+/* 左側大圖展示區 */
+.look-image {
+  width: 100%;
+  padding-top: 80%; /* 比例可調（原本 120% → 改為 80%） */
+  background-size: cover;
+  background-position: center;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background-color: var(--sand);
+  transition: 0.25s ease;
+}
+
+/* 右側資訊區 */
+.gallery-right h1 {
+  margin-bottom: 0.4rem;
+}
+
+.gallery-buttons {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.8rem 0 1rem;
+}
+
+#fav-btn.active-fav {
+  background: var(--taupe);
+  color: #fff;
+  border: none;
+}
+#fav-btn.active-fav:hover {
+  background: #8e877f;
+}
+
+/* 重新搭配按鈕 hover */
+#redo-btn:hover {
+  background: rgba(199,166,147,0.2);
+}
+
+
+/* ============================================
+   縮圖牆（Thumbnails）
+   ============================================ */
+
+.thumbnails-area {
+  margin-top: 1.5rem;
+}
+
+.thumbnails-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 0.75rem;
+}
+
+.thumb-item {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s;
+  background-color: #f9fafb;
+}
+
+.thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* hover 效果 */
+.thumb-item:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+  border-color: #b8c7d7;
+}
+
+/* active 效果 */
+.thumb-item.active-thumb {
+  border: 2px solid #b8c7d7;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.35);
+  transform: scale(1.03);
+}
+
+/* 標籤區調整 */
+.look-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.6rem 0 0.2rem;
+}
+
+
+/* ============================================
+   RWD for Gallery
+   ============================================ */
+
+@media (max-width: 768px) {
+  .gallery-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .look-image {
+    padding-top: 100%; /* 手機版可以讓圖方形一點 */
+  }
+
+  .thumbnails-grid {
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  }
+}
+
+#msg.warning {
+  color: #c00;
+  font-weight: bold;
+}
+
+#msg.success {
+  color: #0a0;
+  font-weight: bold;
+}

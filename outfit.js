@@ -57,21 +57,24 @@ function escapeHTML(str) {
 }
 
 /* --------------------------------------------
-   建立靈感卡片
+   建立靈感卡片（無性別色塊）
 --------------------------------------------- */
 function createIdeaCardHTML(data) {
-  const { id, title, colorLabel, styleLabel, colorKey, styleKey } = data;
+  const { id, title, colorLabel, styleLabel, genderLabel,
+          colorKey, styleKey, genderKey } = data;
 
   const bg = colorBG[colorKey] || "#e5e7eb";
 
   return `
     <article class="idea-card"
-             data-id="${escapeHTML(id)}"
-             data-title="${escapeHTML(title)}"
-             data-color="${escapeHTML(colorLabel)}"
-             data-style="${escapeHTML(styleLabel)}"
-             data-colorkey="${escapeHTML(colorKey)}"
-             data-stylekey="${escapeHTML(styleKey)}">
+       data-id="${escapeHTML(id)}"
+       data-title="${escapeHTML(title)}"
+       data-color="${escapeHTML(colorLabel)}"
+       data-style="${escapeHTML(styleLabel)}"
+       data-gender="${escapeHTML(genderLabel)}"
+       data-colorkey="${escapeHTML(colorKey)}"
+       data-stylekey="${escapeHTML(styleKey)}"
+       data-genderkey="${escapeHTML(genderKey)}">
 
       <div class="idea-thumb" style="background-color:${bg};"></div>
 
@@ -79,13 +82,16 @@ function createIdeaCardHTML(data) {
         <h3 class="idea-title">${escapeHTML(title)}</h3>
 
         <p class="idea-tags muted small">
-          #${escapeHTML(colorLabel)}　#${escapeHTML(styleLabel)}
+          #${escapeHTML(colorLabel)}
+          #${escapeHTML(styleLabel)}
+          #${escapeHTML(genderLabel)}
         </p>
 
         <button type="button" class="btn secondary btn-fav">
           ★ 收藏
         </button>
       </div>
+
     </article>
   `;
 }
@@ -103,46 +109,49 @@ function setupTagPills() {
 
       const groupName = btn.dataset.group;
 
-      // 同 group 清除 active
-      group
-        .querySelectorAll(`.tag-pill[data-group="${groupName}"]`)
+      group.querySelectorAll(`.tag-pill[data-group="${groupName}"]`)
         .forEach((el) => el.classList.remove("active"));
 
-      // 選取的那顆加 active
       btn.classList.add("active");
     });
   });
 }
 
 /* --------------------------------------------
-   取得目前的顏色 / 風格選擇
+   取得目前選擇：顏色 / 風格 / 性別
 --------------------------------------------- */
 function getCurrentSelection() {
   const colorBtn = document.querySelector('.tag-pill[data-group="color"].active');
   const styleBtn = document.querySelector('.tag-pill[data-group="style"].active');
+  const genderBtn = document.querySelector('.tag-pill[data-group="gender"].active');
 
   return {
     colorKey: colorBtn?.dataset.key || null,
     colorLabel: colorBtn?.dataset.label || null,
+
     styleKey: styleBtn?.dataset.key || null,
     styleLabel: styleBtn?.dataset.label || null,
+
+    genderKey: genderBtn?.dataset.key || null,
+    genderLabel: genderBtn?.dataset.label || null
   };
 }
 
 /* --------------------------------------------
-   按鈕：產生靈感卡片
+   按鈕：產生靈感卡片（含性別）
 --------------------------------------------- */
 function renderIdeas() {
   const grid = document.getElementById("idea-grid");
   const tip = document.getElementById("idea-tip");
   if (!grid) return;
 
-  const { colorKey, colorLabel, styleKey, styleLabel } = getCurrentSelection();
+  const { colorKey, colorLabel, styleKey, styleLabel, genderKey, genderLabel }
+    = getCurrentSelection();
 
-  if (!colorKey || !styleKey) {
+  if (!colorKey || !styleKey || !genderKey) {
     grid.innerHTML = `
       <div class="muted">
-        請先在左側選擇一種 <strong>顏色標籤</strong> 與一種 <strong>風格標籤</strong> 再點「產生靈感」。
+        請先在左側選擇 <strong>性別</strong>、<strong>顏色</strong>、<strong>風格</strong> 再點「產生靈感」。
       </div>
     `;
     tip.textContent = "";
@@ -154,32 +163,38 @@ function renderIdeas() {
 
   for (let i = 1; i <= count; i++) {
     ideas.push({
-      id: `${colorKey}-${styleKey}-${Date.now()}-${i}`,
-      title: `${colorLabel} × ${styleLabel} 靈感 Look ${i}`,
+      id: `${colorKey}-${styleKey}-${genderKey}-${Date.now()}-${i}`,
+      title: `${colorLabel} × ${styleLabel} × ${genderLabel} Look ${i}`,
       colorKey,
       colorLabel,
       styleKey,
       styleLabel,
+      genderKey,
+      genderLabel,
     });
   }
 
   grid.innerHTML = ideas.map((x) => createIdeaCardHTML(x)).join("");
 
-  tip.textContent = `已根據「${colorLabel}」與「${styleLabel}」產生 ${count} 個靈感格子！`;
+  setupFavoriteButtons();
+  setupCardClickJump();
 
-  // 存起這次產生的結果
+  tip.textContent =
+    `已根據「${colorLabel} × ${styleLabel} × ${genderLabel}」產生 ${count} 個靈感格子！`;
+
   localStorage.setItem("fitmatch_lastIdeas", JSON.stringify({
     colorKey,
     styleKey,
+    genderKey,
     colorLabel,
     styleLabel,
+    genderLabel,
     ideas
   }));
-
 }
 
 /* --------------------------------------------
-   收藏按鈕功能（事件委派）
+   收藏按鈕功能
 --------------------------------------------- */
 function setupFavoriteButtons() {
   const grid = document.getElementById("idea-grid");
@@ -216,27 +231,23 @@ function setupFavoriteButtons() {
 }
 
 /* --------------------------------------------
-   ⭐ 卡片點擊 → 加 active 動畫 + 跳轉 gallery.html
+   ⭐ 卡片點擊 → 跳轉 gallery.html
 --------------------------------------------- */
 function setupCardClickJump() {
   const grid = document.getElementById("idea-grid");
   if (!grid) return;
 
   grid.addEventListener("click", (e) => {
-    // 如果點到收藏按鈕，則不要觸發卡片跳轉
     if (e.target.closest(".btn-fav")) return;
 
     const card = e.target.closest(".idea-card");
     if (!card) return;
 
-    // 先移除其他 active，保持只亮一張
     document.querySelectorAll(".idea-card.active")
       .forEach((c) => c.classList.remove("active"));
 
-    // 加 active 動畫（微上移 + 高光框）
     card.classList.add("active");
 
-    // 取卡片資料
     const id = card.dataset.id;
     const title = card.dataset.title;
     const color = card.dataset.color;
@@ -244,7 +255,6 @@ function setupCardClickJump() {
     const colorKey = card.dataset.colorkey;
     const styleKey = card.dataset.stylekey;
 
-    // 儲存到結果頁
     const result = {
       id,
       title,
@@ -257,14 +267,15 @@ function setupCardClickJump() {
 
     localStorage.setItem("fitmatch_result", JSON.stringify(result));
 
-    // 0.15 秒後跳轉（讓動畫看起來更順）
     setTimeout(() => {
       window.location.href = "gallery.html";
     }, 150);
   });
 }
 
-
+/* --------------------------------------------
+   DOMContentLoaded
+--------------------------------------------- */
 document.addEventListener("DOMContentLoaded", () => {
   setupTagPills();
   setupGenerateButton();
@@ -273,17 +284,15 @@ document.addEventListener("DOMContentLoaded", () => {
   setupRegenerateButton();
 
   const nav = performance.getEntriesByType("navigation")[0];
-  const isBack = nav && nav.type === "back_forward";   // ←瀏覽器返回
-  const isReload = nav && nav.type === "reload";        // ←重新整理
+  const isBack = nav && nav.type === "back_forward";
+  const isReload = nav && nav.type === "reload";
 
   const grid = document.getElementById("idea-grid");
 
-  // 如果是重新整理 → 清空 lastIdeas
   if (isReload) {
     localStorage.removeItem("fitmatch_lastIdeas");
   }
 
-  // 如果是瀏覽器「返回」→ 恢復卡片
   const last = localStorage.getItem("fitmatch_lastIdeas");
 
   if (isBack && last) {
@@ -296,15 +305,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const colorBtn = document.querySelector(`.tag-pill[data-key="${data.colorKey}"]`);
     const styleBtn = document.querySelector(`.tag-pill[data-key="${data.styleKey}"]`);
+    const genderBtn = document.querySelector(`.tag-pill[data-key="${data.genderKey}"]`);
 
     if (colorBtn) colorBtn.classList.add("active");
     if (styleBtn) styleBtn.classList.add("active");
+    if (genderBtn) genderBtn.classList.add("active");
 
     const tip = document.getElementById("idea-tip");
-    tip.textContent = `已恢復先前產生的靈感：${data.colorLabel} × ${data.styleLabel}`;
+    tip.textContent =
+      `已恢復先前產生的靈感：${data.colorLabel} × ${data.styleLabel} × ${data.genderLabel}`;
 
   } else {
-    // 非返回（包含重新整理）→ 顯示預設空畫面
     grid.innerHTML = `
       <div class="muted">
         尚未產生任何靈感。請在左側選擇顏色與風格，然後點「產生靈感」。
@@ -313,10 +324,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-
-
 /* --------------------------------------------
-   產生靈感按鈕
+   setupGenerateButton
 --------------------------------------------- */
 function setupGenerateButton() {
   const btn = document.getElementById("generate-ideas");
@@ -324,15 +333,19 @@ function setupGenerateButton() {
   btn.addEventListener("click", renderIdeas);
 }
 
+/* --------------------------------------------
+   重新生成（加入性別）
+--------------------------------------------- */
 function setupRegenerateButton() {
   const btn = document.getElementById("regenerate");
   if (!btn) return;
 
   btn.addEventListener("click", () => {
-    const { colorKey, colorLabel, styleKey, styleLabel } = getCurrentSelection();
+    const { colorKey, colorLabel, styleKey, styleLabel, genderKey, genderLabel }
+      = getCurrentSelection();
 
-    if (!colorKey || !styleKey) {
-      alert("請先選擇顏色與風格！");
+    if (!colorKey || !styleKey || !genderKey) {
+      alert("請先選擇顏色、風格與性別！");
       return;
     }
 
@@ -342,35 +355,35 @@ function setupRegenerateButton() {
     const ideas = [];
     const count = 3;
 
-    // 重新生成（使用原本顏色風格）
     for (let i = 1; i <= count; i++) {
       ideas.push({
-        id: `${colorKey}-${styleKey}-${Date.now()}-${i}`,
-        title: `${colorLabel} × ${styleLabel} 靈感 Look ${i}`,
+        id: `${colorKey}-${styleKey}-${genderKey}-${Date.now()}-${i}`,
+        title: `${colorLabel} × ${styleLabel} × ${genderLabel} Look ${i}`,
         colorKey,
         colorLabel,
         styleKey,
         styleLabel,
+        genderKey,
+        genderLabel
       });
     }
 
     grid.innerHTML = ideas.map(x => createIdeaCardHTML(x)).join("");
 
-    // 更新提示文字
-    tip.textContent = `已重新為你產生新的靈感：${colorLabel} × ${styleLabel}`;
+    tip.textContent =
+      `已重新為你產生新的靈感：${colorLabel} × ${styleLabel} × ${genderLabel}`;
 
-    // 更新 localStorage（覆蓋舊資料）
     localStorage.setItem("fitmatch_lastIdeas", JSON.stringify({
       colorKey,
       styleKey,
+      genderKey,
       colorLabel,
       styleLabel,
+      genderLabel,
       ideas
     }));
 
-    // 重新綁定收藏與點擊事件
     setupFavoriteButtons();
     setupCardClickJump();
   });
 }
-
