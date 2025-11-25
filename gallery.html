@@ -1,4 +1,4 @@
-<!-- gallery.html — 結果展示頁 Pinky -->
+<!-- gallery.html — 結果展示頁 Pinky（升級版） -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -23,27 +23,55 @@
     </div>
   </header>
 
+  <!-- 🔥 新版展示 layout：左右 50 / 50 -->
   <main class="container gallery-layout">
 
-    <!-- 左：大圖（穿搭效果） -->
+    <!-- =====================
+         左側：主展示圖片（大圖）
+    ====================== -->
     <section class="gallery-left">
       <div id="look-image" class="look-image"></div>
     </section>
 
-    <!-- 右：文字描述 + 標籤 + 收藏 -->
+    <!-- =====================
+         右側：標題 + 標籤 + 收藏 + 小縮圖牆
+    ====================== -->
     <section class="gallery-right">
+
+      <!-- 主標題 -->
       <h1 id="look-title">穿搭結果</h1>
       <p id="look-note" class="muted small"></p>
 
+      <!-- 標籤 -->
       <div class="look-tags" id="look-tags"></div>
 
-      <button type="button" id="fav-btn" class="btn primary small">
-        ★ 收藏此穿搭
-      </button>
+      <!-- 收藏 + 重新搭配 -->
+      <div class="gallery-buttons">
+        <button type="button" id="fav-btn" class="btn primary small">
+          ★ 收藏
+        </button>
 
-      <button type="button" id="redo-btn" class="btn outline small">
-        重新搭配
-      </button>
+        <button type="button" id="redo-btn" class="btn outline small">
+          重新搭配
+        </button>
+      </div>
+
+      <!-- =====================
+           🔥 新增：縮圖牆 thumbnails（3–4 張）
+           點擊縮圖 → 左側大圖切換
+      ====================== -->
+      <div class="thumbnails-area">
+        <h3 class="muted small" style="margin-bottom: 8px;">其他顯示角度 / 配件</h3>
+
+        <div id="thumbnails-grid" class="thumbnails-grid">
+          <!-- JS 會插入例如： 
+              <div class="thumb-item" data-src="looks/...jpg">
+                 <img src="looks/...jpg" />
+              </div> 
+          -->
+        </div>
+      </div>
+
     </section>
 
   </main>
