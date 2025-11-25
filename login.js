@@ -193,6 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
   submitBtn.disabled = !(okEmail && hasPwd && hasCaptcha);
 }
+  
 
   emailInput.addEventListener("input", () => {
     validateEmail(emailInput);
@@ -237,55 +238,76 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // 登入送出
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    msgBox.textContent = "";
+  // 登入送出
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  msgBox.textContent = "";
+  msgBox.className = ""; // ★ 新增：先把 msgBox 的 class 清空
 
-    const okEmail = validateEmail(emailInput);
-    const okPwd = validatePassword(pwdInput);
-    const okCaptcha = validateCaptcha(captchaInput);
+  const okEmail = validateEmail(emailInput);
+  const okPwd = validatePassword(pwdInput);
+  const okCaptcha = validateCaptcha(captchaInput); // 還是用你原本的驗證函式
 
-    if (!okEmail || !okPwd || !okCaptcha) {
-      // 任一不過就再換一張，增加安全性
-      pickRandomCaptcha();
-      return;
-    }
+  // === 驗證碼錯誤：增加醒目的提醒 ===
+  if (!okCaptcha) {
+    // 小字錯誤已經在 validateCaptcha 裡 setFieldError 過了
+    msgBox.textContent = "驗證碼錯誤，已為您更換一張，請重新輸入新的驗證碼。";
+    msgBox.classList.add("warning"); // ★ 新增：讓 #msg 變紅色（CSS 自己定義）
 
-    const email = emailInput.value.trim();
-    const password = pwdInput.value;
+    alert("驗證碼錯誤，請重新輸入！"); // ★ 新增：彈窗提醒（不想要可以刪掉這行）
 
-    const users = loadUsers();
-    const user = users.find((u) => u.email === email);
+    captchaInput.value = "";   // ★ 新增：清空使用者剛打錯的內容
+    pickRandomCaptcha();       // ★ 新增：換一張新的圖
+    submitBtn.disabled = true; // ★ 新增：重新 disable 登入按鈕
+    captchaInput.focus();      // ★ 新增：把游標移回驗證碼欄位
+    return;                    // 中斷登入流程
+  }
 
-    if (!user || user.password !== password) {
-      msgBox.textContent = "帳號或密碼錯誤，請再試一次。";
-      // 登入失敗也換一張驗證碼
-      pickRandomCaptcha();
-      submitBtn.disabled = true;
-      return;
-    }
+  // 其他欄位沒過也不要登入（這裡已經確定驗證碼是對的了）
+  if (!okEmail || !okPwd) {
+    pickRandomCaptcha();       // 你原本就有的行為：登入沒成功也換一次圖
+    submitBtn.disabled = true;
+    return;
+  }
 
-    // 記住我：記錄 email
-    if (rememberChk.checked) {
-      localStorage.setItem(
-        REMEMBER_KEY,
-        JSON.stringify({ email, remember: true })
-      );
-    } else {
-      localStorage.removeItem(REMEMBER_KEY);
-    }
+  const email = emailInput.value.trim();
+  const password = pwdInput.value;
 
-    // 給會員頁用的帳號資訊
+  const users = loadUsers();
+  const user = users.find((u) => u.email === email);
+
+  if (!user || user.password !== password) {
+    msgBox.textContent = "帳號或密碼錯誤，請再試一次。";
+    msgBox.classList.add("warning"); // ★ 新增：錯誤也讓訊息變紅
+    pickRandomCaptcha();
+    submitBtn.disabled = true;
+    return;
+  }
+
+  // 記住我：記錄 email
+  if (rememberChk.checked) {
     localStorage.setItem(
-      ACCOUNT_KEY,
-      JSON.stringify({ account: email, password })
+      REMEMBER_KEY,
+      JSON.stringify({ email, remember: true })
     );
+  } else {
+    localStorage.removeItem(REMEMBER_KEY);
+  }
 
-    msgBox.textContent = "登入成功，即將前往會員頁…";
-    setTimeout(() => {
-      window.location.href = "ID.html";
-    }, 800);
-  });
+  // 給會員頁用的帳號資訊
+  localStorage.setItem(
+    ACCOUNT_KEY,
+    JSON.stringify({ account: email, password })
+  );
+
+  msgBox.textContent = "登入成功，即將前往會員頁…";
+  msgBox.classList.remove("warning");
+  msgBox.classList.add("success"); // ★ 新增：成功改成綠色訊息（CSS 自己定義）
+
+  setTimeout(() => {
+    window.location.href = "ID.html";
+  }, 800);
+});
 
   // 初始：先載入一張驗證碼 & 更新按鈕狀態
   pickRandomCaptcha();

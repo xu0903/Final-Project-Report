@@ -40,20 +40,20 @@
       <label class="field">
         <div class="pass-row">
           <span>密碼</span>
-          <button class="ghost small-text" id="toggle-pass" type="button">顯示</button>
+          <a class="small" href="#" id="forgot" >忘記密碼？</a>
         </div>
         <input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="至少 6 碼" />
+        <button class="ghost small-text" id="toggle-pass" type="button">顯示</button>
         <small class="err" data-for="password"></small>
       </label>
+      <label class="check">
+        <input id="remember" type="checkbox" /> <a style="font-size: 14px;">記住我</a>
+      </label>
 
-      <div class="row between" style="margin: 10px 0;">
-        <label class="check">
-          <input id="remember" type="checkbox" /> <span style="font-size: 14px;">記住我</span>
-        </label>
-        <a class="small" href="#" id="forgot">忘記密碼？</a>
-      </div>
+      <!-- <div class="row between" style="margin: 10px 0;">
+      </div> -->
 
-      <label class="field">
+      <label class="field"><br>
         <span>驗證碼</span>
         <div class="captcha-inline-row">
           <input
