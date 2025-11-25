@@ -1025,3 +1025,106 @@ input, select, button {
   color: #0a0;
   font-weight: bold;
 }
+/* ============================================================
+   找靈感頁面 - 「已選擇的靈感」整段完整樣式修正版
+   將整坨文字置中、放大，並讓第三行文字不再是小字
+   ============================================================ */
+
+.insp-detail-row {
+  display: flex;
+  align-items: center;          /* ⭐ 整段垂直置中 */
+  justify-content: space-between;
+  gap: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* 左側整坨文字 36% */
+.insp-detail-text {
+  width: 36%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;      /* ⭐ 內文也置中 */
+  line-height: 1.8;
+}
+
+/* 標題放大 */
+.insp-detail-text .insp-title {
+  font-size: 2.3rem; 
+  margin-bottom: 0.3rem;           
+  font-weight: 700;
+}
+
+/* ⭐⭐ 文本全部放大（覆蓋 .small, .muted）⭐⭐ */
+.insp-detail-text p,
+.insp-detail-text span,
+.insp-detail-text strong {
+  font-size: 1.2rem !important; /* ⭐ 讓第二行、第三行、第四行全部一樣大 */
+  color: var(--text-light) !important;
+}
+
+/* 右側縮圖卡片區 64% */
+.insp-mini-cards {
+  width: 64%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+/* 卡片樣式固定 */
+.insp-mini-cards .idea-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.6rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.insp-mini-cards .idea-card:hover:not(.active) {
+  transform: scale(1.03);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+/* active 效果 */
+.insp-mini-cards .idea-card.active {
+  transform: translateY(-3px);
+}
+
+.insp-mini-cards .idea-card.active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid #b8c7d7;
+  box-shadow: 0 0 0 2px rgba(96,165,250,0.4);
+  pointer-events: none;
+}
+
+/* 正方形縮圖 */
+.insp-mini-cards .idea-thumb {
+  width: 100%;
+  padding-top: 100%;
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+}
+
+/* ====== RWD ====== */
+@media (max-width: 768px) {
+  .insp-detail-row {
+    flex-direction: column;
+  }
+
+  .insp-detail-text,
+  .insp-mini-cards {
+    width: 100%;
+  }
+
+  .insp-mini-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
