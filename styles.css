@@ -760,3 +760,129 @@ input, select, button {
   padding: 0.4rem 0.9rem;
   border-radius: 8px;
 }
+
+/*Login頁*/
+/* --- Login 專用修正樣式 --- */
+
+/* 讓卡片絕對置中 */
+.auth-wrap {
+  min-height: 80vh; /* 扣掉 header 高度 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.centered-card {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border: 2px solid var(--line); /* 加框框 */
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+/* 驗證碼同一行設定 */
+.captcha-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.captcha-inline-row input {
+  flex: 1; /* 輸入框佔滿剩餘空間 */
+  min-width: 0;
+}
+
+.captcha-inline-row img {
+  height: 42px; /* 固定高度配合 input */
+  width: auto;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* 按鈕字體修正與樣式 */
+.btn-login, .btn-outline-login {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-family: "Noto Serif TC", serif; /* 確保字體一致 */
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-login {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+}
+
+.btn-outline-login {
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.small-text {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* --- Message Board Split Layout --- */
+.message-layout-split {
+  display: grid;
+  grid-template-columns: 300px 1fr; /* 左側固定 300px，右側自適應 */
+  gap: 24px;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+  align-items: start;
+}
+
+.sticky-card {
+  position: sticky;
+  top: 90px; /* 隨捲動固定 */
+}
+
+.full-width {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.input-file {
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* 留言中的圖片 */
+.message-img {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  margin-top: 10px;
+  display: block;
+  object-fit: cover;
+}
+
+/* 刪除按鈕 */
+.btn-delete {
+  color: #ef4444; /* 紅色 */
+  font-size: 13px;
+  margin-left: 10px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+.btn-delete:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .message-layout-split {
+    grid-template-columns: 1fr; /* 手機變單欄 */
+  }
+  .sticky-card {
+    position: static;
+  }
+}

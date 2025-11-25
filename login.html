@@ -25,69 +25,64 @@
   </header>
 
 
-  <main class="container auth-wrap">
-  <section class="auth-card">
+<main class="container auth-wrap">
+  <section class="auth-card centered-card">
     <h1>歡迎回來</h1>
     <p class="muted">請使用 Email 與密碼登入。</p>
 
     <form id="login-form" novalidate>
       <label class="field">
-        <span>Email:</span>
+        <span>Email</span>
         <input id="email" type="email" autocomplete="username" required placeholder="you@example.com" />
         <small class="err" data-for="email"></small>
       </label>
-      <br>
+
       <label class="field">
-        
-        <div class="pass-row">密碼          :
-          <input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="至少 6 碼" />
-          <button class="ghost" id="toggle-pass" type="button" aria-label="顯示或隱藏密碼">顯示</button>
+        <div class="pass-row">
+          <span>密碼</span>
+          <button class="ghost small-text" id="toggle-pass" type="button">顯示</button>
         </div>
+        <input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="至少 6 碼" />
         <small class="err" data-for="password"></small>
       </label>
 
-      <div class="row between">
+      <div class="row between" style="margin: 10px 0;">
         <label class="check">
-          <input id="remember" type="checkbox" />
-        </label>記住我
+          <input id="remember" type="checkbox" /> <span style="font-size: 14px;">記住我</span>
+        </label>
         <a class="small" href="#" id="forgot">忘記密碼？</a>
       </div>
+
       <label class="field">
-        <span>驗證碼:</span>
-
-        <div class="captcha-row">
-          <img id="captcha-img" src="" alt="驗證碼圖片" />
-          <button type="button" class="ghost" id="refresh-captcha">換一張</button>
+        <span>驗證碼</span>
+        <div class="captcha-inline-row">
+          <input
+            id="captcha"
+            type="text"
+            maxlength="4"
+            placeholder="輸入驗證碼"
+            autocomplete="off"
+            required
+          />
+          <img id="captcha-img" src="" alt="驗證碼" />
+          <button type="button" class="ghost small-text" id="refresh-captcha">換一張</button>
         </div>
-
-        <input
-          id="captcha"
-          type="text"
-          maxlength="4"
-          placeholder="請輸入圖片中的 4 個字元"
-          autocomplete="off"
-          required
-        />
         <small class="err" data-for="captcha"></small>
       </label>
 
-      <button id="submit" type="submit" disabled>登入</button>
-      <button id="register-btn" type="button" onclick="location.href='register.html'">註冊</button>
+      <button id="submit" type="submit" class="btn-login">登入</button>
+      <button id="register-btn" type="button" class="btn-outline-login" onclick="location.href='register.html'">註冊帳號</button>
+      
       <p id="msg" class="msg" role="status"></p>
     </form>
     
-
     <div class="tips">
       <p class="small muted">
-        Demo 帳號：<code>demo@fitmatch.dev</code>　密碼：<code>fitmatch</code>
+        Demo：<code>demo@fitmatch.dev</code> / <code>fitmatch</code>
       </p>
     </div>
   </section>
 </main>
-
-<footer class="site-footer">
-  <div class="container">© 2025 FitMatch Demo</div>
-</footer>
 
 <script type="module" src="login.js"></script>
 </body>

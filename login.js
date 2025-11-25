@@ -152,6 +152,8 @@ function validateCaptcha(input) {
   return true;
 }
 
+
+
 // ===== Main =====
 document.addEventListener("DOMContentLoaded", () => {
   seedDemoUser();
@@ -184,11 +186,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 控制登入按鈕是否可按
   function updateSubmitState() {
-    const okEmail = validateEmail(emailInput);
-    const okPwd = validatePassword(pwdInput);
-    const okCaptcha = validateCaptcha(captchaInput);
-    submitBtn.disabled = !(okEmail && okPwd && okCaptcha);
-  }
+  const okEmail = validateEmail(emailInput); // Email 還是可以即時檢查格式
+  // 密碼跟驗證碼只檢查「是否有填寫」，不檢查內容正確性
+  const hasPwd = pwdInput.value.length >= 6;
+  const hasCaptcha = captchaInput.value.trim().length > 0;
+  
+  submitBtn.disabled = !(okEmail && hasPwd && hasCaptcha);
+}
 
   emailInput.addEventListener("input", () => {
     validateEmail(emailInput);
@@ -201,11 +205,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   if (captchaInput) {
-    captchaInput.addEventListener("input", () => {
-      validateCaptcha(captchaInput);
-      updateSubmitState();
-    });
-  }
+  captchaInput.addEventListener("input", () => {
+    // 這裡只檢查是否有值，不檢查正不正確，以免還沒打完就報錯
+    setFieldError(captchaInput, ""); 
+    updateSubmitState(); // 仍然更新按鈕狀態
+  });
+}
+  
 
   // 顯示 / 隱藏 密碼
   togglePassBtn.addEventListener("click", () => {
