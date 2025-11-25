@@ -1,80 +1,106 @@
-// ID.js
+// messageboard.js 重點修改
 
-// ... (loadProfile, saveProfile 等前面的函數保留) ...
+// 1. 修改 HTML 生成，加入圖片與刪除按鈕
+function createMessageHTML(msg) {
+  // ... (前段變數處理) ...
+  const isLiked = likedMessageIds.has(msg.id);
 
-// 新增：尺寸判斷邏輯 (簡單版)
-function calcSize(height, weight) {
-  // 這只是一個簡單的範例邏輯，你可以根據需求調整
-  // 邏輯：簡單用 BMI 或體重來推算
-  const bmi = calcBMI(height, weight);
-  if (!bmi) return "未知";
-  
-  if (bmi < 18.5) return "S";
-  if (bmi < 22) return "M";
-  if (bmi < 25) return "L";
-  if (bmi < 30) return "XL";
-  return "2XL";
+  // 處理圖片 HTML
+  const imgHTML = msg.image 
+    ? `<img src="${msg.image}" class="message-img" alt="穿搭照">` 
+    : "";
+
+  return `
+    <li class="message-card" data-id="${msg.id}">
+      <div class="message-header">
+        <div>
+          <span class="message-nickname">${escapeHTML(nickname)}</span>
+          <span class="message-time">${formatTime(msg.createdAt)}</span>
+        </div>
+        <button type="button" class="btn-delete">刪除</button>
+      </div>
+
+      <p class="message-content">${contentHTML}</p>
+      ${imgHTML} 
+
+      <div class="message-actions">
+         <button type="button" class="btn-text btn-like ${isLiked ? "liked" : ""}">
+            ${isLiked ? "💖" : "🤍"} <span class="like-count">${msg.likes || 0}</span>
+         </button>
+         <button type="button" class="btn-text btn-reply-toggle">回覆</button>
+      </div>
+      
+      <div class="reply-area hidden">...</div>
+    </li>
+  `;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  // ... (帳號部分代碼保持不變) ...
+// 2. 修改發送留言處理 (加入圖片讀取)
+function handleNewMessageSubmit(event) {
+  event.preventDefault();
+  const nicknameInput = document.getElementById("nickname");
+  const contentTextarea = document.getElementById("content");
+  const fileInput = document.getElementById("msg-image"); // 抓圖片
 
-  // ===== BMI 與 Size 計算區 =====
-  const bmiForm = document.getElementById("bmi-form");
-  // 確保 HTML 中的 ID 是 height, weight
-  const heightInput = document.getElementById("height");
-  const weightInput = document.getElementById("weight");
-  const bmiResult = document.getElementById("bmi-result");
+  const nickname = nicknameInput.value.trim();
+  const content = contentTextarea.value.trim();
 
-  // 讀取舊資料並顯示
-  const storedProfile = loadProfile();
-  if (storedProfile) {
-    if (storedProfile.height) heightInput.value = storedProfile.height;
-    if (storedProfile.weight) weightInput.value = storedProfile.weight;
+  if (!content) return;
+
+  const processMessage = (imgBase64) => {
+    const newMessage = {
+      id: Date.now().toString(),
+      nickname,
+      content,
+      image: imgBase64 || null, // 存圖片 Base64
+      createdAt: new Date().toISOString(),
+      likes: 0,
+      replies: [],
+    };
+
+    messages.push(newMessage);
+    saveMessages();
+    renderMessages();
     
-    // 如果有舊資料，直接算一次顯示出來
-    if (storedProfile.height && storedProfile.weight) {
-        updateBMIResult(storedProfile.height, storedProfile.weight);
+    // 清空
+    contentTextarea.value = "";
+    fileInput.value = "";
+  };
+
+  // 檢查是否有圖
+  if (fileInput.files && fileInput.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      processMessage(e.target.result); // 讀完圖後存檔
+    };
+    reader.readAsDataURL(fileInput.files[0]);
+  } else {
+    processMessage(null); // 沒圖直接存
+  }
+}
+
+// 3. 事件監聽加入「刪除」功能
+function setupListEvents() {
+  const list = document.getElementById("message-list");
+  if (!list) return;
+
+  list.addEventListener("click", (event) => {
+    const card = event.target.closest(".message-card");
+    if (!card) return;
+    const id = card.dataset.id;
+
+    // --- 刪除功能 ---
+    if (event.target.classList.contains("btn-delete")) {
+      if (confirm("確定要刪除這則留言嗎？")) {
+        messages = messages.filter(m => m.id !== id); // 過濾掉該 id
+        saveMessages();
+        renderMessages();
+      }
+      return;
     }
-  }
 
-  // 顯示結果的共用函數
-  function updateBMIResult(h, w) {
-      const bmi = calcBMI(h, w);
-      if (!bmi) return;
-      const cat = bmiCategory(bmi);
-      const size = calcSize(h, w); // 計算尺寸
-
-      bmiResult.innerHTML = `
-        <div style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
-            身高 <strong>${h} cm</strong>、體重 <strong>${w} kg</strong><br>
-            BMI：<strong>${bmi.toFixed(1)}</strong> <span class="badge">${cat}</span><br>
-            <hr style="margin:8px 0; border:0; border-top:1px dashed #ddd;">
-            建議尺碼：<strong style="font-size:1.2em; color:var(--accent);">${size}</strong>
-        </div>
-      `;
-  }
-
-  // 表單送出監聽
-  if (bmiForm) {
-      bmiForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const h = parseFloat(heightInput.value);
-        const w = parseFloat(weightInput.value);
-
-        if (!h || !w) {
-            alert("請輸入有效的身高與體重！");
-            return;
-        }
-
-        const bmi = calcBMI(h, w);
-        // 存檔
-        saveProfile({ height: h, weight: w, bmi });
-        
-        // 更新畫面
-        updateBMIResult(h, w);
-      });
-  }
-
-  // ... (收藏穿搭 renderFavorites 保持不變) ...
-});
+    // ... (原本的按讚與回覆邏輯保持不變) ...
+  });
+  
+  // ... (原本的回覆 submit 邏輯保持不變) ...
+}

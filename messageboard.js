@@ -59,17 +59,30 @@ function saveLikes() {
 function createMessageHTML(msg) {
   const nickname = msg.nickname?.trim() || "匿名";
   const contentHTML = escapeHTML(msg.content).replace(/\n/g, "<br>");
-  const isLiked = likedMessageIds.has(msg.id); // 這則留言有沒有被這個使用者按過
-
+  const isLiked = likedMessageIds.has(msg.id);
+  const imgHTML = msg.image
+    ? `<div class="message-media">
+         <img src="${msg.image}" class="message-img" alt="穿搭照">
+       </div>`
+    : "";
+  const replyCount = (msg.replies || []).length;
   const repliesHTML = (msg.replies || [])
     .map((rep) => {
       const repName = rep.nickname?.trim() || "訪客";
       const repContent = escapeHTML(rep.content).replace(/\n/g, "<br>");
+
       return `
-        <li class="reply-item">
+        <li class="reply-item" data-reply-id="${rep.id}">
           <div class="reply-header">
             <span class="reply-nickname">${repName}</span>
-            <span class="reply-time">${formatTime(rep.createdAt)}</span>
+            <div class="reply-meta">
+              <span class="reply-time">${formatTime(rep.createdAt)}</span>
+              <button
+                type="button"
+                class="btn-icon btn-reply-delete"
+                aria-label="刪除回覆"
+              >🗑️</button>
+            </div>
           </div>
           <p class="reply-content">${repContent}</p>
         </li>
@@ -85,6 +98,7 @@ function createMessageHTML(msg) {
       </div>
 
       <p class="message-content">${contentHTML}</p>
+      ${imgHTML}
 
       <div class="message-actions">
         <button
@@ -94,9 +108,17 @@ function createMessageHTML(msg) {
           ${isLiked ? "💖" : "🤍"}
           <span class="like-count">${msg.likes || 0}</span>
         </button>
-        <button type="button" class="btn-text btn-reply-toggle">
-          回覆
+
+                <button type="button" class="btn-text btn-reply-toggle">
+           <a>  </a> 回覆(${replyCount})
         </button>
+
+
+        <button
+          type="button"
+          class="btn-icon btn-delete"
+          aria-label="刪除留言"
+        >🗑️</button>
       </div>
 
       <div class="reply-area hidden">
@@ -144,32 +166,47 @@ function renderMessages() {
   list.innerHTML = itemsHTML;
 }
 
+// 送出新留言（含圖片）
 function handleNewMessageSubmit(event) {
   event.preventDefault();
   const nicknameInput = document.getElementById("nickname");
   const contentTextarea = document.getElementById("content");
+  const fileInput = document.getElementById("msg-image");
 
   const nickname = nicknameInput.value.trim();
   const content = contentTextarea.value.trim();
 
   if (!content) return;
 
-  const newMessage = {
-    id: Date.now().toString(),
-    nickname,
-    content,
-    createdAt: new Date().toISOString(),
-    likes: 0,
-    replies: [],
+  const processMessage = (imgBase64) => {
+    const newMessage = {
+      id: Date.now().toString(),
+      nickname,
+      content,
+      image: imgBase64 || null,
+      createdAt: new Date().toISOString(),
+      likes: 0,
+      replies: [],
+    };
+
+    messages.push(newMessage);
+    saveMessages();
+    renderMessages();
+
+    // 清空欄位（暱稱可保留方便連續留言）
+    contentTextarea.value = "";
+    fileInput.value = "";
   };
 
-  messages.push(newMessage);
-  saveMessages();
-  renderMessages();
-
-  // 清空表單
-  contentTextarea.value = "";
-  // nickname 保留，方便連續留言
+  if (fileInput.files && fileInput.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      processMessage(e.target.result);
+    };
+    reader.readAsDataURL(fileInput.files[0]);
+  } else {
+    processMessage(null);
+  }
 }
 
 function setupForm() {
@@ -182,7 +219,7 @@ function setupListEvents() {
   const list = document.getElementById("message-list");
   if (!list) return;
 
-  // 事件委派：處理按讚 + 展開回覆 + 送出回覆
+  // 點擊事件：刪留言 + 刪回覆 + 愛心 + 展開回覆
   list.addEventListener("click", (event) => {
     const card = event.target.closest(".message-card");
     if (!card) return;
@@ -190,14 +227,49 @@ function setupListEvents() {
     const msg = messages.find((m) => m.id === id);
     if (!msg) return;
 
-    // 愛心：再次點擊可以收回
+    // 🗑 刪除整則留言
+    if (event.target.closest(".btn-delete")) {
+      const ok = confirm("確定要刪除這則留言嗎？");
+      if (ok) {
+        messages = messages.filter((m) => m.id !== id);
+        likedMessageIds.delete(id);
+        saveMessages();
+        saveLikes();
+        renderMessages();
+      }
+      return;
+    }
+
+    // 🗑 刪除回覆
+    if (event.target.closest(".btn-reply-delete")) {
+      const replyItem = event.target.closest(".reply-item");
+      if (!replyItem) return;
+      const replyId = replyItem.dataset.replyId;
+      if (!replyId) return;
+
+      const ok = confirm("確定要刪除這則回覆嗎？");
+      if (!ok) return;
+
+      msg.replies = (msg.replies || []).filter((r) => r.id !== replyId);
+      saveMessages();
+      renderMessages();
+
+      // 刪除後保持這則留言的回覆區展開
+      const updatedArea = document.querySelector(
+        `.message-card[data-id="${id}"] .reply-area`
+      );
+      if (updatedArea) {
+        updatedArea.classList.remove("hidden");
+      }
+      return;
+    }
+
+    // 💖 愛心
     if (event.target.closest(".btn-like")) {
       if (likedMessageIds.has(id)) {
-        // 已按過，變成收回愛心
         msg.likes = Math.max((msg.likes || 0) - 1, 0);
         likedMessageIds.delete(id);
       } else {
-        // 第一次按，增加愛心
         msg.likes = (msg.likes || 0) + 1;
         likedMessageIds.add(id);
       }
@@ -207,7 +279,7 @@ function setupListEvents() {
       return;
     }
 
-    // 展開/收合回覆區
+    // 展開 / 收合回覆區
     if (event.target.closest(".btn-reply-toggle")) {
       const replyArea = card.querySelector(".reply-area");
       if (replyArea) {
@@ -217,7 +289,7 @@ function setupListEvents() {
     }
   });
 
-  // 處理回覆的 submit
+  // 回覆 submit
   list.addEventListener("submit", (event) => {
     const form = event.target.closest(".reply-form");
     if (!form) return;
@@ -245,12 +317,12 @@ function setupListEvents() {
     saveMessages();
     renderMessages();
 
-    // 回覆送出後，保持這張卡片的回覆區是展開的
-    const updatedCard = document.querySelector(
+    // 回覆送出後，保持回覆區展開
+    const updatedArea = document.querySelector(
       `.message-card[data-id="${id}"] .reply-area`
     );
-    if (updatedCard) {
-      updatedCard.classList.remove("hidden");
+    if (updatedArea) {
+      updatedArea.classList.remove("hidden");
     }
   });
 }
