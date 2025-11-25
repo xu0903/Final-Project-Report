@@ -761,6 +761,13 @@ input, select, button {
   border-radius: 8px;
 }
 
+#regenerate:hover {
+  background: #e8dcd5;
+  transform: translateY(-2px);
+  transition: 0.2s;
+}
+
+
 /*Login頁*/
 /* --- Login 專用修正樣式 --- */
 
