@@ -1,7 +1,9 @@
-// idea.js － 找靈感頁
+// idea.js — 找靈感頁
 
 const INSP_KEY = "fitmatch_inspiration";
+const RESULT_KEY = "fitmatch_result";
 
+/* --------------------- 靈感資料 --------------------- */
 const inspirations = [
   {
     id: "campus",
@@ -13,19 +15,19 @@ const inspirations = [
     id: "commute",
     title: "通勤辦公",
     tags: ["黑白灰", "襯衫", "Smart casual"],
-    note: "要見同事或開會，又不想穿得太正式的工作日。",
+    note: "見客或開會、舒適與正式兼具的辦公風。",
   },
   {
     id: "date",
     title: "約會午後",
     tags: ["韓系", "溫柔", "針織"],
-    note: "逛街、咖啡廳、看電影，整體感覺乾淨、舒服就加分很多。",
+    note: "柔和色系上衣＋牛仔褲，乾淨好拍又不會太刻意。",
   },
   {
     id: "weekend",
     title: "週末出遊",
     tags: ["日系", "大地色", "層次感"],
-    note: "適合戶外走走或一日遊，照片也會很好看。",
+    note: "適合戶外走走或逛市集，照片也很好看。",
   },
   {
     id: "sport",
@@ -37,74 +39,139 @@ const inspirations = [
     id: "formal",
     title: "正式場合",
     tags: ["歐美風", "西裝外套", "黑白灰"],
-    note: "面試、簡報、正式聚會，可以偏正式但保留一點個人風格。",
+    note: "面試、簡報、朋友家族聚餐都能駕馭。",
   },
 ];
 
-// 將選到的靈感存進 localStorage，給 outfit.html 用
+/* --------------------- localStorage --------------------- */
 function saveInspiration(data) {
   localStorage.setItem(INSP_KEY, JSON.stringify(data));
 }
-
 function loadInspiration() {
   try {
     const raw = localStorage.getItem(INSP_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    console.error("載入靈感失敗", e);
+  } catch {
     return null;
   }
 }
 
+/* --------------------- 生成 4 張推薦卡片 --------------------- */
+function generateMiniCards(base) {
+  const area = document.getElementById("insp-recommend");
+  if (!area) return;
+
+  const html = [];
+
+  for (let i = 1; i <= 4; i++) {
+    const data = {
+      id: `${base.id}-${Date.now()}-${i}`,
+      title: `${base.title} Look ${i}`,
+      color: base.tags[0] || "色系",
+      style: base.tags[1] || "風格",
+      gender: base.tags[2] || "中性",
+    };
+
+    html.push(`
+      <article class="idea-card"
+        data-id="${data.id}"
+        data-title="${data.title}"
+        data-color="${data.color}"
+        data-style="${data.style}"
+        data-gender="${data.gender}"
+        data-colorkey="earth"
+        data-stylekey="eu"
+        data-genderkey="unisex">
+
+        <div class="idea-thumb" style="background-color:#e8e3da;"></div>
+
+        <div class="idea-body">
+          <h3 class="idea-title">${data.title}</h3>
+          <p class="idea-tags muted small">
+            #${data.color} #${data.style} #${data.gender}
+          </p>
+        </div>
+      </article>
+    `);
+  }
+
+  area.innerHTML = html.join("");
+
+  setupMiniCardClick();
+}
+
+/* --------------------- 小卡片點擊 → gallery --------------------- */
+function setupMiniCardClick() {
+  const area = document.getElementById("insp-recommend");
+  if (!area) return;
+
+  area.querySelectorAll(".idea-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const data = {
+        id: card.dataset.id,
+        title: card.dataset.title,
+        color: card.dataset.color,
+        style: card.dataset.style,
+        gender: card.dataset.gender,
+        colorKey: card.dataset.colorkey,
+        styleKey: card.dataset.stylekey,
+        genderKey: card.dataset.genderkey,
+        note: `${card.dataset.color} × ${card.dataset.style} × ${card.dataset.gender} Look`,
+      };
+
+      localStorage.setItem(RESULT_KEY, JSON.stringify(data));
+      window.location.href = "gallery.html";
+    });
+  });
+}
+
+/* --------------------- 主流程 --------------------- */
 document.addEventListener("DOMContentLoaded", () => {
   const cards = document.querySelectorAll(".insp-card");
   const detail = document.getElementById("insp-selected");
   const toOutfitBtn = document.getElementById("insp-to-outfit");
 
-  // 恢復之前選過的靈感（如果有）
+  // 恢復之前選過的
   const stored = loadInspiration();
   if (stored) {
     const card = document.querySelector(`.insp-card[data-scene="${stored.id}"]`);
-    if (card) {
-      card.classList.add("active");
-    }
+    if (card) card.classList.add("active");
+
     detail.innerHTML = `
       上次你選擇的是：<strong>${stored.title}</strong><br>
       建議關鍵字：${stored.tags.join("、")}<br>
-      <span class="muted small">${stored.note}</span>
+      ${stored.note}
     `;
+
+    generateMiniCards(stored);
     toOutfitBtn.disabled = false;
   }
 
+  // 點擊上方 insp-card
   cards.forEach((card) => {
     card.addEventListener("click", () => {
       const id = card.dataset.scene;
       const data = inspirations.find((x) => x.id === id);
       if (!data) return;
 
-      // 高亮目前卡片
       cards.forEach((c) => c.classList.remove("active"));
       card.classList.add("active");
 
-      // 更新說明
       detail.innerHTML = `
         你選擇的是：<strong>${data.title}</strong><br>
         建議關鍵字：${data.tags.join("、")}<br>
-        <span class="muted small">${data.note}</span>
+        ${data.note}
       `;
 
-      // 儲存到 localStorage
       saveInspiration(data);
+      generateMiniCards(data);
+
       toOutfitBtn.disabled = false;
     });
   });
 
-  // 帶去「風格篩選」頁
+  // 跳到 outfit.html
   toOutfitBtn.addEventListener("click", () => {
-    const current = loadInspiration();
-    if (!current) return;
-    // 這裡單純 redirect，實際帶參數可以之後再補
     window.location.href = "outfit.html";
   });
 });
-
