@@ -155,24 +155,26 @@
         產生靈感
       </button>
 
+      <button type="button" id="clear-filters" class="btn secondary" style="margin-left: 0.5rem;">
+        清除篩選
+      </button>
       <p id="idea-tip" class="muted small"></p>
     </section>
 
     <!-- 右側：靈感格子 -->
-    <section class="idea-result-panel">
-      <h2>靈感Card</h2>
-      <p class="muted small">
-        每格代表一組穿搭靈感。你可以先試玩收藏功能，在「會員」頁面即可看到收藏紀錄。
-      </p>
+   <section class="idea-result-panel">
+  <h2>靈感Card</h2>
+  <p class="muted small">
+    每格代表一組穿搭靈感。你可以先試玩收藏功能，在「會員」頁面即可看到收藏紀錄。
+  </p>
 
-      <div id="idea-grid" class="idea-grid">
-        <!-- 這裡由 JS 動態產生靈感卡片 -->
-      </div>
+  <div id="idea-grid" class="idea-grid">
+    </div>
 
-      <button id="regenerate" class="btn primary small" style="margin-top: 1rem;">
-        重新生成
-      </button>
-    </section>
+  <button id="regenerate" class="btn primary small" style="margin-top: 1rem; display: none;">
+    重新生成
+  </button>
+</section>
   </main>
 
   <script src="outfit.js" defer></script>
