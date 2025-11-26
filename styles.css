@@ -1153,6 +1153,29 @@ button,
   margin-bottom: 3rem;
   align-items: start;
 }
+/* !!!!!!!!!!!!!!!!!!!!!!!!!! */
+/* --- Message Board Split Layout --- */
+.message-layout-split {
+  display: grid;
+  /* 左側改為 25%，右側自動填滿剩餘空間 (1fr) */
+  grid-template-columns: 27% 1fr; 
+  gap: 24px;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+  align-items: start;
+}
+
+/* 為了讓左側在 40% 寬度下好看一點，建議加這行確保卡片不會太寬 */
+.msg-sidebar {
+  min-width: 0; /* 防止內容撐開 grid item */
+}
+
+/* 手機版維持單欄 */
+@media (max-width: 768px) {
+  .message-layout-split {
+    grid-template-columns: 1fr; 
+  }
+}
 
 .sticky-card {
   position: sticky;
@@ -1256,6 +1279,50 @@ button,
   outline: none;
   border: none;
   text-decoration: none;
+}
+
+
+/* --- 字數計數器樣式 --- */
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-wrapper textarea {
+  width: 100%;
+  resize: vertical; /* 允許垂直拉伸 */
+  display: block;
+}
+
+.char-count {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: 12px;
+  color: #9ca3af; /* 淺灰色 */
+  pointer-events: none; /* 讓滑鼠點擊穿透，不會擋住輸入 */
+  background-color: rgba(255, 255, 255, 0.8); /* 稍微加個背景防字重疊 */
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* 回覆的愛心按鈕 */
+.btn-reply-like {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+.btn-reply-like:hover {
+  color: #ef4444;
+}
+.btn-reply-like.liked {
+  color: #ef4444; /* 按讚後變紅 */
 }
 
 /* ============================================

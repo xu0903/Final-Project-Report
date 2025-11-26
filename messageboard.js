@@ -1,9 +1,9 @@
 // messageboard.js
 
 const STORAGE_KEY = "fitmatch_messageboard";
-const LIKE_STORAGE_KEY = "fitmatch_message_likes"; // 記錄已按讚的留言
+const LIKE_STORAGE_KEY = "fitmatch_message_likes"; // 記錄已按讚的留言/回覆 ID
 let messages = [];
-let likedMessageIds = new Set(); // 存放已按讚的留言 id
+let likedMessageIds = new Set(); // 存放已按讚的 ID (包含留言與回覆)
 
 // 安全轉義，避免 XSS
 function escapeHTML(str) {
@@ -39,7 +39,7 @@ function saveMessages() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
 }
 
-// 讀取已按愛心的留言 id
+// 讀取已按愛心的 ID
 function loadLikes() {
   try {
     const raw = localStorage.getItem(LIKE_STORAGE_KEY);
@@ -51,9 +51,16 @@ function loadLikes() {
   }
 }
 
-// 存回已按愛心的留言 id
+// 存回已按愛心的 ID
 function saveLikes() {
   localStorage.setItem(LIKE_STORAGE_KEY, JSON.stringify([...likedMessageIds]));
+}
+
+// ★ 更新字數計數器工具函數
+function updateCharCount(inputElement, displayElement) {
+  const currentLength = inputElement.value.length;
+  const maxLength = inputElement.getAttribute("maxlength") || 500;
+  displayElement.textContent = `${currentLength}/${maxLength}`;
 }
 
 function createMessageHTML(msg) {
@@ -65,18 +72,34 @@ function createMessageHTML(msg) {
          <img src="${msg.image}" class="message-img" alt="穿搭照">
        </div>`
     : "";
+  
   const replyCount = (msg.replies || []).length;
+
   const repliesHTML = (msg.replies || [])
     .map((rep) => {
       const repName = rep.nickname?.trim() || "訪客";
       const repContent = escapeHTML(rep.content).replace(/\n/g, "<br>");
+      // ★ 回覆是否已按讚
+      const isRepLiked = likedMessageIds.has(rep.id);
+      // 確保舊資料有 likes 欄位
+      const repLikes = rep.likes || 0;
 
       return `
         <li class="reply-item" data-reply-id="${rep.id}">
           <div class="reply-header">
             <span class="reply-nickname">${repName}</span>
             <div class="reply-meta">
+              
+              <button 
+                type="button" 
+                class="btn-reply-like ${isRepLiked ? "liked" : ""}"
+                title="給個讚"
+              >
+                ${isRepLiked ? "❤️" : "♡"} <span class="reply-like-count">${repLikes}</span>
+              </button>
+
               <span class="reply-time">${formatTime(rep.createdAt)}</span>
+              
               <button
                 type="button"
                 class="btn-icon btn-reply-delete"
@@ -109,10 +132,9 @@ function createMessageHTML(msg) {
           <span class="like-count">${msg.likes || 0}</span>
         </button>
 
-                <button type="button" class="btn-text btn-reply-toggle">
-           <a>  </a> 回覆(${replyCount})
+        <button type="button" class="btn-text btn-reply-toggle">
+          💬 回覆(${replyCount})
         </button>
-
 
         <button
           type="button"
@@ -129,12 +151,18 @@ function createMessageHTML(msg) {
             class="input-sm"
             placeholder="暱稱（可留空）"
           />
-          <textarea
-            name="replyContent"
-            rows="2"
-            placeholder="寫下你的回覆..."
-            required
-          ></textarea>
+          
+          <div class="input-wrapper">
+            <textarea
+              name="replyContent"
+              rows="2"
+              placeholder="寫下你的回覆..."
+              maxlength="500"
+              required
+            ></textarea>
+            <span class="char-count reply-char-count">0/500</span>
+          </div>
+
           <button type="submit" class="btn small">送出回覆</button>
         </form>
 
@@ -172,6 +200,9 @@ function handleNewMessageSubmit(event) {
   const nicknameInput = document.getElementById("nickname");
   const contentTextarea = document.getElementById("content");
   const fileInput = document.getElementById("msg-image");
+  
+  // 計數器歸零
+  const charCount = document.getElementById("main-char-count");
 
   const nickname = nicknameInput.value.trim();
   const content = contentTextarea.value.trim();
@@ -193,9 +224,10 @@ function handleNewMessageSubmit(event) {
     saveMessages();
     renderMessages();
 
-    // 清空欄位（暱稱可保留方便連續留言）
+    // 清空欄位
     contentTextarea.value = "";
     fileInput.value = "";
+    if(charCount) charCount.textContent = "0/500"; // 重置計數器
   };
 
   if (fileInput.files && fileInput.files[0]) {
@@ -213,13 +245,22 @@ function setupForm() {
   const form = document.getElementById("new-message-form");
   if (!form) return;
   form.addEventListener("submit", handleNewMessageSubmit);
+
+  // ★ 主留言框：監聽輸入事件更新計數器
+  const contentTextarea = document.getElementById("content");
+  const charCount = document.getElementById("main-char-count");
+  if (contentTextarea && charCount) {
+    contentTextarea.addEventListener("input", () => {
+      updateCharCount(contentTextarea, charCount);
+    });
+  }
 }
 
 function setupListEvents() {
   const list = document.getElementById("message-list");
   if (!list) return;
 
-  // 點擊事件：刪留言 + 刪回覆 + 愛心 + 展開回覆
+  // 使用事件委派監聽所有互動
   list.addEventListener("click", (event) => {
     const card = event.target.closest(".message-card");
     if (!card) return;
@@ -229,10 +270,15 @@ function setupListEvents() {
 
     // 🗑 刪除整則留言
     if (event.target.closest(".btn-delete")) {
-      const ok = confirm("確定要刪除這則留言嗎？");
-      if (ok) {
+      if (confirm("確定要刪除這則留言嗎？")) {
         messages = messages.filter((m) => m.id !== id);
         likedMessageIds.delete(id);
+        
+        // 也要刪除這則留言底下所有回覆的按讚紀錄
+        if(msg.replies) {
+            msg.replies.forEach(r => likedMessageIds.delete(r.id));
+        }
+
         saveMessages();
         saveLikes();
         renderMessages();
@@ -247,24 +293,24 @@ function setupListEvents() {
       const replyId = replyItem.dataset.replyId;
       if (!replyId) return;
 
-      const ok = confirm("確定要刪除這則回覆嗎？");
-      if (!ok) return;
+      if (!confirm("確定要刪除這則回覆嗎？")) return;
 
       msg.replies = (msg.replies || []).filter((r) => r.id !== replyId);
+      likedMessageIds.delete(replyId); // 刪除該回覆的按讚紀錄
+
       saveMessages();
+      saveLikes();
       renderMessages();
 
-      // 刪除後保持這則留言的回覆區展開
+      // 保持展開
       const updatedArea = document.querySelector(
         `.message-card[data-id="${id}"] .reply-area`
       );
-      if (updatedArea) {
-        updatedArea.classList.remove("hidden");
-      }
+      if (updatedArea) updatedArea.classList.remove("hidden");
       return;
     }
 
-    // 💖 愛心
+    // 💖 主留言愛心
     if (event.target.closest(".btn-like")) {
       if (likedMessageIds.has(id)) {
         msg.likes = Math.max((msg.likes || 0) - 1, 0);
@@ -279,6 +325,41 @@ function setupListEvents() {
       return;
     }
 
+    // ★ 回覆愛心
+    const replyLikeBtn = event.target.closest(".btn-reply-like");
+    if (replyLikeBtn) {
+      const replyItem = replyLikeBtn.closest(".reply-item");
+      if (!replyItem) return;
+      const replyId = replyItem.dataset.replyId;
+      
+      const reply = msg.replies.find(r => r.id === replyId);
+      if (!reply) return;
+
+      // 初始化 likes 屬性 (舊資料可能沒有)
+      if (typeof reply.likes !== 'number') reply.likes = 0;
+
+      if (likedMessageIds.has(replyId)) {
+        // 收回讚
+        reply.likes = Math.max(reply.likes - 1, 0);
+        likedMessageIds.delete(replyId);
+      } else {
+        // 按讚
+        reply.likes += 1;
+        likedMessageIds.add(replyId);
+      }
+
+      saveMessages();
+      saveLikes();
+      renderMessages();
+      
+      // 保持展開
+      const updatedArea = document.querySelector(
+        `.message-card[data-id="${id}"] .reply-area`
+      );
+      if (updatedArea) updatedArea.classList.remove("hidden");
+      return;
+    }
+
     // 展開 / 收合回覆區
     if (event.target.closest(".btn-reply-toggle")) {
       const replyArea = card.querySelector(".reply-area");
@@ -286,6 +367,19 @@ function setupListEvents() {
         replyArea.classList.toggle("hidden");
       }
       return;
+    }
+  });
+
+  // ★ 監聽回覆輸入框的字數變化 (事件委派 input)
+  list.addEventListener("input", (event) => {
+    if (event.target.tagName === "TEXTAREA" && event.target.name === "replyContent") {
+        const wrapper = event.target.closest(".input-wrapper");
+        if (wrapper) {
+            const countSpan = wrapper.querySelector(".reply-char-count");
+            if (countSpan) {
+                updateCharCount(event.target, countSpan);
+            }
+        }
     }
   });
 
@@ -302,14 +396,16 @@ function setupListEvents() {
     if (!msg) return;
 
     const nickname = form.replyNickname.value.trim();
-    const content = form.replyContent.value.trim();
+    const contentInput = form.replyContent;
+    const content = contentInput.value.trim();
     if (!content) return;
 
     const reply = {
-      id: Date.now().toString(),
+      id: Date.now().toString(), // 使用 timestamp 當 id
       nickname,
       content,
       createdAt: new Date().toISOString(),
+      likes: 0 // ★ 新增 likes 欄位
     };
 
     if (!msg.replies) msg.replies = [];
