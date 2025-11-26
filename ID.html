@@ -1,10 +1,9 @@
-<!-- 會員資料頁 Really-->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>會員資料頁</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>會員中心 - FitMatch</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -17,109 +16,51 @@
         <a href="login.html">登入/註冊</a>
         <a href="outfit.html">風格篩選</a>
         <a href="idea.html">找靈感</a>
-        <a href="ID.html">會員</a>
+        <a href="ID.html" class="active">會員</a>
         <a href="messageboard.html">留言板</a>
       </nav>
     </div>
   </header>
 
   <main class="container member-layout">
-    <!-- 左邊：會員基本資料 + BMI -->
+    <!-- 左側：會員卡片資料 -->
     <section class="member-column">
-      <h1>會員資料</h1>
-
-      <!-- 帳號 / 密碼 -->
       <div class="card">
-        <h2>帳號資訊</h2>
-        <form id="account-form" class="form-vertical">
-          <div class="form-row">
-            <label for="account">帳號（Email 或使用者名稱）</label>
-            <input
-              type="text"
-              id="account"
-              name="account"
-              placeholder="example@fitmatch.com"
-              autocomplete="username"
-            />
+        <h2 style="margin-top:0;">會員資料</h2>
+        
+        <!-- 顯示資料區 -->
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem;">
+          <!-- 預設頭像 -->
+          <div style="width: 80px; height: 80px; background: #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #fff;">
+            ☺
           </div>
-
-          <div class="form-row">
-            <label for="password">密碼</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="••••••••"
-              autocomplete="current-password"
-            />
+          
+          <div>
+            <!-- ▼▼▼ 這裡是用來顯示暱稱與帳號的 ID ▼▼▼ -->
+            <h3 id="display-nickname" style="margin: 0; font-size: 1.5rem;">訪客</h3>
+            <p id="display-account" class="muted small" style="margin: 5px 0 0;">尚無資料</p>
           </div>
-
-          <button type="submit" class="btn primary small">
-            儲存帳號資訊
-          </button>
-          <p class="muted small" id="account-msg"></p>
-        </form>
-      </div>
-
-      <!-- 身高 / 體重 / BMI -->
-      <div class="card">
-        <h2>身高 / 體重 / BMI</h2>
-        <form id="bmi-form" class="form-horizontal">
-          <div class="form-row">
-            <label for="height">身高 (cm)</label>
-            <input
-              type="number"
-              id="height"
-              name="height"
-              min="130"
-              max="220"
-              step="1"
-              required
-            />
-          </div>
-
-          <div class="form-row">
-            <label for="weight">體重 (kg)</label>
-            <input
-              type="number"
-              id="weight"
-              name="weight"
-              min="30"
-              max="200"
-              step="0.1"
-              required
-            />
-          </div>
-
-          <button type="submit" class="btn primary small">
-            計算 BMI
-          </button>
-        </form>
-
-        <div id="bmi-result" class="bmi-result muted">
-          尚未輸入資料。
         </div>
+
+        <button id="btn-logout" class="btn small" style="background: #ef4444; color: white; border: none; display: none;">
+          登出
+        </button>
+        <a href="login.html" id="link-login" class="btn primary small">前往登入/註冊</a>
       </div>
     </section>
 
-    <!-- 右邊：收藏穿搭 -->
+    <!-- 右側：收藏或其他內容 (暫時留白或放之前的 BMI 計算) -->
     <section class="member-column">
-      <h2>收藏的穿搭</h2>
-      <p class="muted small">
-        下方顯示你在 FitMatch 中按下「收藏」的穿搭組合，未來可改成從會員資料庫讀取。
-      </p>
-
-      <div id="favorites-grid" class="favorites-grid">
-        <!-- JS 會把收藏穿搭卡片長出來 -->
+      <div class="card">
+        <h2>我的收藏</h2>
+        <p class="muted">這裡之後可以顯示你在風格篩選頁收藏的靈感...</p>
+        <div class="favorites-grid" id="fav-grid">
+           <!-- JS 動態填入收藏 -->
+        </div>
       </div>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="container">© 2025 FitMatch Demo</div>
-  </footer>
-
-  <!-- 簡單會員頁 JS，不再用 module -->
-  <script src="member.js" defer></script>
+  <script src="ID.js"></script>
 </body>
 </html>

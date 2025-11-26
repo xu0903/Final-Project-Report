@@ -1,240 +1,44 @@
-// member.js
-
-const ACCOUNT_KEY = "fitmatch_account";
-const PROFILE_KEY = "fitmatch_profile";
-const FAVORITES_KEY = "fitmatch_favorites";
-
-// 讀帳號資料
-function loadAccount() {
-  try {
-    const raw = localStorage.getItem(ACCOUNT_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    console.error("載入帳號失敗", e);
-    return null;
-  }
-}
-
-// 存帳號資料
-function saveAccount(data) {
-  localStorage.setItem(ACCOUNT_KEY, JSON.stringify(data));
-}
-
-// 讀身高體重
-function loadProfile() {
-  try {
-    const raw = localStorage.getItem(PROFILE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    console.error("載入 profile 失敗", e);
-    return null;
-  }
-}
-
-// 存身高體重
-function saveProfile(data) {
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
-}
-
-// 計算 BMI
-function calcBMI(heightCm, weightKg) {
-  if (!heightCm || !weightKg) return null;
-  const hM = heightCm / 100;
-  const bmi = weightKg / (hM * hM);
-  return bmi;
-}
-
-function bmiCategory(bmi) {
-  if (bmi < 18.5) return "體重過輕";
-  if (bmi < 24) return "正常範圍";
-  if (bmi < 27) return "體重過重";
-  if (bmi < 30) return "輕度肥胖";
-  if (bmi < 35) return "中度肥胖";
-  return "重度肥胖";
-}
-
-function calcSize(height, weight) {
-  // 這只是一個簡單的範例邏輯，你可以根據需求調整
-  // 邏輯：簡單用 BMI 或體重來推算
-  const bmi = calcBMI(height, weight);
-  if (!bmi) return "未知";
-  
-  if (bmi < 18.5) return "S";
-  if (bmi < 22) return "M";
-  if (bmi < 25) return "L";
-  if (bmi < 30) return "XL";
-  return "2XL";
-}
-
-// 讀收藏穿搭
-function loadFavorites() {
-  try {
-    const raw = localStorage.getItem(FAVORITES_KEY);
-    const data = raw ? JSON.parse(raw) : [];
-    // 確保是陣列
-    return Array.isArray(data) ? data : [];
-  } catch (e) {
-    console.error("載入收藏穿搭失敗", e);
-    return [];
-  }
-}
-
-// 渲染收藏穿搭格子
-function renderFavorites() {
-  const grid = document.getElementById("favorites-grid");
-  if (!grid) return;
-
-  const favorites = loadFavorites();
-
-  if (!favorites.length) {
-    grid.innerHTML = `
-      <div class="favorites-empty muted">
-        目前還沒有收藏任何穿搭，去 <strong>結果展示</strong> 或 <strong>找靈感</strong> 頁面試試收藏功能吧！
-      </div>
-    `;
-    return;
-  }
-
-  grid.innerHTML = favorites
-    .map((item, index) => {
-      // 兼容不同格式：字串 / 物件
-      const title =
-        (typeof item === "string" && item) ||
-        item.title ||
-        item.name ||
-        `收藏穿搭 ${index + 1}`;
-
-      const note =
-        item.note ||
-        item.style ||
-        item.occasion ||
-        item.weather ||
-        "";
-
-      const img =
-        item.image ||
-        item.img ||
-        item.cover ||
-        ""; // 沒圖就用純色背景
-
-      return `
-        <article class="outfit-card">
-          <div class="outfit-thumb" ${
-            img ? `style="background-image:url('${img}')" ` : ""
-          }></div>
-          <div class="outfit-body">
-            <h3 class="outfit-title">${escapeHTML(title)}</h3>
-            ${
-              note
-                ? `<p class="outfit-note muted small">${escapeHTML(note)}</p>`
-                : ""
-            }
-          </div>
-        </article>
-      `;
-    })
-    .join("");
-}
-
-// 簡單 XSS 防護
-function escapeHTML(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-  // ===== 帳號區 =====
-  const accountForm = document.getElementById("account-form");
-  const accountInput = document.getElementById("account");
-  const passwordInput = document.getElementById("password");
-  const accountMsg = document.getElementById("account-msg");
-
+  // 1. 從 LocalStorage 讀取使用者資料
+  const userJson = localStorage.getItem("fitmatch_user");
   
+  // 取得頁面上的顯示元素
+  const nickNameEl = document.getElementById("display-nickname");
+  const accountEl = document.getElementById("display-account");
+  const logoutBtn = document.getElementById("btn-logout");
+  const loginLink = document.getElementById("link-login");
 
-  const storedAccount = loadAccount();
-  if (storedAccount) {
-    accountInput.value = storedAccount.account || "";
-    // 密碼仍然會被 <input type="password"> 遮蔽
-    passwordInput.value = storedAccount.password || "";
+  if (userJson) {
+    // --- 狀況 A：使用者已登入（有資料）---
+    const user = JSON.parse(userJson);
+
+    // 更新畫面文字
+    if (nickNameEl) nickNameEl.textContent = user.nickname;
+    if (accountEl) accountEl.textContent = user.account; // 或者 user.account
+
+    // 顯示登出按鈕，隱藏登入連結
+    if (logoutBtn) logoutBtn.style.display = "inline-block";
+    if (loginLink) loginLink.style.display = "none";
+
+  } else {
+    // --- 狀況 B：未登入（無資料）---
+    if (nickNameEl) nickNameEl.textContent = "訪客";
+    if (accountEl) accountEl.textContent = "請先登入或註冊";
+
+    // 隱藏登出按鈕，顯示登入連結
+    if (logoutBtn) logoutBtn.style.display = "none";
+    if (loginLink) loginLink.style.display = "inline-block";
   }
 
-  accountForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const acc = accountInput.value.trim();
-    const pwd = passwordInput.value;
-
-    saveAccount({ account: acc, password: pwd });
-    accountMsg.textContent = "已儲存帳號資訊（儲存在本機瀏覽器）。";
-    setTimeout(() => (accountMsg.textContent = ""), 3000);
-  });
-
-  // ===== BMI 與 Size 計算區 =====
-  const bmiForm = document.getElementById("bmi-form");
-  // 確保 HTML 中的 ID 是 height, weight
-  const heightInput = document.getElementById("height");
-  const weightInput = document.getElementById("weight");
-  const bmiResult = document.getElementById("bmi-result");
-
-  // 讀取舊資料並顯示
-  const storedProfile = loadProfile();
-  if (storedProfile) {
-    if (storedProfile.height) heightInput.value = storedProfile.height;
-    if (storedProfile.weight) weightInput.value = storedProfile.weight;
-    
-    // 如果有舊資料，直接算一次顯示出來
-    if (storedProfile.height && storedProfile.weight) {
-        updateBMIResult(storedProfile.height, storedProfile.weight);
-    }
-    if (storedProfile.bmi) {
-      const cat = bmiCategory(storedProfile.bmi);
-      bmiResult.innerHTML = `
-        目前紀錄：身高 ${storedProfile.height} cm、體重 ${
-        storedProfile.weight
-      } kg<br>
-        BMI 約為 <strong>${storedProfile.bmi.toFixed(
-          1
-        )}</strong>（${cat}）
-      `;
-    }
+  // 2. 實作登出功能
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      if (confirm("確定要登出嗎？")) {
+        // 清除使用者資料
+        localStorage.removeItem("fitmatch_user");
+        // 重新整理頁面以更新狀態
+        window.location.reload();
+      }
+    });
   }
-  function updateBMIResult(h, w) {
-      const bmi = calcBMI(h, w);
-      if (!bmi) return;
-      const cat = bmiCategory(bmi);
-      const size = calcSize(h, w); // 計算尺寸
-
-      bmiResult.innerHTML = `
-        <div style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
-            身高 <strong>${h} cm</strong>、體重 <strong>${w} kg</strong><br>
-            BMI：<strong>${bmi.toFixed(1)}</strong> <span class="badge">${cat}</span><br>
-            <hr style="margin:8px 0; border:0; border-top:1px dashed #ddd;">
-            建議尺碼：<strong style="font-size:1.2em; color:var(--accent);">${size}</strong>
-        </div>
-      `;
-  }
-
-  bmiForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const h = parseFloat(heightInput.value);
-    const w = parseFloat(weightInput.value);
-
-    if (!h || !w) return;
-    const bmi = calcBMI(h, w);
-    if (!bmi) return;
-
-    const cat = bmiCategory(bmi);
-    saveProfile({ height: h, weight: w, bmi });
-
-    bmiResult.innerHTML = `
-      身高 <strong>${h} cm</strong>、體重 <strong>${w} kg</strong><br>
-      BMI 約為 <strong>${bmi.toFixed(1)}</strong>（${cat}）
-    `;
-  });
-
-  // ===== 收藏穿搭 =====
-  renderFavorites();
 });
