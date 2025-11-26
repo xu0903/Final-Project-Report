@@ -1,6 +1,5 @@
 // idea.js — 找靈感頁
 
-const INSP_KEY = "fitmatch_inspiration";
 const RESULT_KEY = "fitmatch_result";
 
 /* --------------------- 靈感資料 --------------------- */
@@ -14,7 +13,7 @@ const inspirations = [
   {
     id: "commute",
     title: "通勤辦公",
-    tags: ["黑白灰", "襯衫", "Smart casual"],
+    tags: ["黑白灰", "襯衫", "正式"],
     note: "見客或開會、舒適與正式兼具的辦公風。",
   },
   {
@@ -32,29 +31,16 @@ const inspirations = [
   {
     id: "sport",
     title: "運動休閒",
-    tags: ["Athleisure", "機能", "寬鬆版型"],
+    tags: ["休閒", "機能", "寬鬆版型"],
     note: "打球、健身、夜跑，或只是想穿得很放鬆的日子。",
   },
   {
     id: "formal",
     title: "正式場合",
-    tags: ["歐美風", "西裝外套", "黑白灰"],
+    tags: ["歐美風", "西裝", "黑白灰"],
     note: "面試、簡報、朋友家族聚餐都能駕馭。",
   },
 ];
-
-/* --------------------- localStorage --------------------- */
-function saveInspiration(data) {
-  localStorage.setItem(INSP_KEY, JSON.stringify(data));
-}
-function loadInspiration() {
-  try {
-    const raw = localStorage.getItem(INSP_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
 
 /* --------------------- 生成 4 張推薦卡片 --------------------- */
 function generateMiniCards(base) {
@@ -96,7 +82,6 @@ function generateMiniCards(base) {
   }
 
   area.innerHTML = html.join("");
-
   setupMiniCardClick();
 }
 
@@ -125,53 +110,38 @@ function setupMiniCardClick() {
   });
 }
 
-/* --------------------- 主流程 --------------------- */
+/* --------------------- 主流程（最終版本） --------------------- */
 document.addEventListener("DOMContentLoaded", () => {
   const cards = document.querySelectorAll(".insp-card");
   const detail = document.getElementById("insp-selected");
-  const toOutfitBtn = document.getElementById("insp-to-outfit");
+  const detailSection = document.getElementById("insp-detail");
 
-  // 恢復之前選過的
-  const stored = loadInspiration();
-  if (stored) {
-    const card = document.querySelector(`.insp-card[data-scene="${stored.id}"]`);
-    if (card) card.classList.add("active");
+  // 預設一定隱藏
+  detailSection.classList.add("hidden");
 
-    detail.innerHTML = `
-      上次你選擇的是：<strong>${stored.title}</strong><br>
-      建議關鍵字：${stored.tags.join("、")}<br>
-      ${stored.note}
-    `;
-
-    generateMiniCards(stored);
-    toOutfitBtn.disabled = false;
-  }
-
-  // 點擊上方 insp-card
+  // 點擊上方靈感卡片
   cards.forEach((card) => {
     card.addEventListener("click", () => {
       const id = card.dataset.scene;
       const data = inspirations.find((x) => x.id === id);
       if (!data) return;
 
+      // 標記 active 樣式
       cards.forEach((c) => c.classList.remove("active"));
       card.classList.add("active");
 
+      // 顯示下方文字
       detail.innerHTML = `
         你選擇的是：<strong>${data.title}</strong><br>
         建議關鍵字：${data.tags.join("、")}<br>
         ${data.note}
       `;
 
-      saveInspiration(data);
+      // 生成小卡片
       generateMiniCards(data);
 
-      toOutfitBtn.disabled = false;
+      // 顯示下方區塊
+      detailSection.classList.remove("hidden");
     });
-  });
-
-  // 跳到 outfit.html
-  toOutfitBtn.addEventListener("click", () => {
-    window.location.href = "outfit.html";
   });
 });
