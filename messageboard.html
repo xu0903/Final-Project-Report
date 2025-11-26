@@ -35,8 +35,16 @@
             <input type="text" id="nickname" class="input" placeholder="怎麼稱呼你？" />
 
             <label class="label" for="content">內容</label>
-            <textarea id="content" class="input" rows="5" placeholder="分享你的穿搭心得..." required></textarea>
-
+        <div class="input-wrapper">
+          <textarea 
+            id="content" 
+            class="input" 
+            rows="5" 
+            placeholder="分享你的穿搭心得..." 
+            maxlength="500" 
+            required></textarea>
+          <span id="main-char-count" class="char-count">0/500</span>
+        </div>
             <label class="label" for="msg-image">上傳穿搭照 (PNG / JPG 可選填)</label>
             <input
               type="file"
