@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>註冊</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">FitMatch</a>
+      <nav>
+        <a href="index.html">主頁</a>
+        <a href="login.html">登入/註冊</a>
+        <a href="outfit.html">風格篩選</a>
+        <a href="idea.html">找靈感</a>
+        <a href="ID.html">會員</a>
+        <a href="messageboard.html">留言板</a>
+      </nav>
+    </div>
+  </header>
+
+   <main class="container grid register-wrap">
+    <section class="card">
+      <h2>建立帳號</h2>
+      <form class="grid" id="reg-form" novalidate>
+        <label class="label" for="name">名稱</label>
+        <input class="input" id="name" placeholder="小黑" required />
+
+        <label class="label" for="email">Email</label>
+        <input class="input" id="email" type="email" placeholder="you@example.com" required />
+
+        <label class="label" for="pwd">密碼（至少 6 碼，需含數字）</label>
+        <input class="input" id="pwd" type="password" minlength="6" required />
+
+        <label class="label" for="confirmPwd">確認密碼</label>
+        <input class="input" id="confirmPwd" type="password" minlength="6" required />
+
+        <button class="btn" type="submit">建立帳號</button>
+        <p class="muted">已有帳號？<a href="./login.html">前往登入</a></p>
+      </form>
+    </section>
+  </main>
+  <footer class="footer container">© <span id="y"></span> FitMatch</footer>
+  <script type="module" src="register.js"></script>
+  <script>document.getElementById('y').textContent = new Date().getFullYear()</script>
+</body>
+</html>
+
