@@ -1,42 +1,66 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // 1. 從 LocalStorage 讀取使用者資料
-  const userJson = localStorage.getItem("fitmatch_user");
-  
-  // 取得頁面上的顯示元素
-  const nickNameEl = document.getElementById("display-nickname");
-  const accountEl = document.getElementById("display-account");
-  const logoutBtn = document.getElementById("btn-logout");
-  const loginLink = document.getElementById("link-login");
+  let userJson = null; // 全域變數
 
-  if (userJson) {
-    // --- 狀況 A：使用者已登入（有資料）---
-    const user = JSON.parse(userJson);
+  function updateUI(user) {
+    console.log("Updating UI with user data:", user);
+    console.log("user type:", typeof(user));
+    const nickNameEl = document.getElementById("display-nickname");
+    const accountEl = document.getElementById("display-account");
+    const logoutBtn = document.getElementById("btn-logout");
+    const loginLink = document.getElementById("link-login");
+    console.log("NickName Element:", user.Username);
+    console.log("Account Element:", user.Email); 
 
-    // 更新畫面文字
-    if (nickNameEl) nickNameEl.textContent = user.nickname;
-    if (accountEl) accountEl.textContent = user.account; // 或者 user.account
+    if (user) {
+      // 使用者已登入
+      if (nickNameEl) nickNameEl.textContent = user.Username;
+      if (accountEl) accountEl.textContent = user.Email;
 
-    // 顯示登出按鈕，隱藏登入連結
-    if (logoutBtn) logoutBtn.style.display = "inline-block";
-    if (loginLink) loginLink.style.display = "none";
+      if (logoutBtn) logoutBtn.style.display = "inline-block";
+      if (loginLink) loginLink.style.display = "none";
+    } else {
+      // 未登入
+      if (nickNameEl) nickNameEl.textContent = "訪客";
+      if (accountEl) accountEl.textContent = "尚無資料";
 
-  } else {
-    // --- 狀況 B：未登入（無資料）---
-    if (nickNameEl) nickNameEl.textContent = "訪客";
-    if (accountEl) accountEl.textContent = "請先登入或註冊";
-
-    // 隱藏登出按鈕，顯示登入連結
-    if (logoutBtn) logoutBtn.style.display = "none";
-    if (loginLink) loginLink.style.display = "inline-block";
+      if (logoutBtn) logoutBtn.style.display = "none";
+      if (loginLink) loginLink.style.display = "inline-block";
+    }
   }
 
-  // 2. 實作登出功能
+  async function loadUserData() {
+    try {
+      const res = await fetch('/getUserData', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      const data = await res.json();
+
+      if (!data.loggedIn) {
+        return null;
+      }
+
+      return data.user; // 已經是物件
+    } catch (err) {
+      console.error('取得使用者資料失敗', err);
+      return null;
+    }
+  }
+
+  (async () => {
+    userJson = await loadUserData();
+
+    console.log("Loaded user data:", userJson);
+    updateUI(userJson);
+  })();
+
+  // 登出功能
+  const logoutBtn = document.getElementById("btn-logout");
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
+    logoutBtn.addEventListener("click", async () => {
       if (confirm("確定要登出嗎？")) {
-        // 清除使用者資料
-        localStorage.removeItem("fitmatch_user");
-        // 重新整理頁面以更新狀態
+        // 呼叫後端登出 API 清除 cookie
+        await fetch('/logout', { method: 'POST', credentials: 'include' });
         window.location.reload();
       }
     });

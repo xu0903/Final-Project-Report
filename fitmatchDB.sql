@@ -1,11 +1,15 @@
 -- 建立資料表
 CREATE TABLE users (
     UserID INT AUTO_INCREMENT PRIMARY KEY,
-    Username VARCHAR(50),
-    Email VARCHAR(100) UNIQUE,
-    PasswordHash VARCHAR(255),
+    Username VARCHAR(50) NOT NULL,
+    PasswordHash VARCHAR(255) NOT NULL,
+    Email VARCHAR(100) NOT NULL UNIQUE,
+    Height INT,
+    Weight INT,
+    BMI DECIMAL(5,2),
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 
 -- 插入初始使用者資料
 INSERT INTO users (UserID, Username, PasswordHash, Email, CreatedAt)

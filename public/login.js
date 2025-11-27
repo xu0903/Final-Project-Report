@@ -76,7 +76,7 @@ function pickRandomCaptcha() {
 // ===== 使用者帳號相關(MySQL版本) =====
 async function loadUsers() {
   try {
-    const response = await fetch('/fetch-users');
+    const response = await fetch('/get-all-UserData');
     const users = await response.json();
 
     console.log("Users from database:", users);

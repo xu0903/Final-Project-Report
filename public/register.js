@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // 清除錯誤訊息
         msgBox.textContent = "";
 
-        // 2. 檢查使用者是否有輸入完整資料
+        // 檢查使用者是否有輸入完整資料
         if (!nickname || !email || !password || !confirmPassword) {
             msgBox.classList.remove("success");
             msgBox.classList.add("warning");
@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // 3. 確認兩次輸入的密碼要相同
+        // 確認兩次輸入的密碼要相同
         if (password !== confirmPassword) {
             msgBox.classList.remove("success");
             msgBox.classList.add("warning");
@@ -62,4 +62,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         addUser(nickname, email, password);
     });
+});
+
+//連接至login.html
+document.querySelector('.btn-text').addEventListener('click', () => {
+    window.location.href = 'login.html';
 });

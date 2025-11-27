@@ -1,12 +1,17 @@
 const express = require('express');
 const mysql = require('mysql2');
 const path = require('path');
+const jwt = require('jsonwebtoken');// 引入 jsonwebtoken 套件以處理 JWT
 const app = express();
 const port = 3000;
 
 
 // 解析 JSON
 app.use(express.json());
+
+// 解析 Cookie
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
 
 // 解析 URL-encoded
 app.use(express.urlencoded({ extended: true }));
@@ -39,7 +44,7 @@ connection.connect(err => {
 });
 
 // 取得使用者帳號資料從 DataBase 的 users Table
-app.get('/fetch-users', (req, res) => {
+app.get('/get-all-UserData', (req, res) => {
   connection.query('SELECT * FROM users', (err, results) => {
     if (err) {
       res.send('資料庫查詢錯誤');
@@ -50,6 +55,7 @@ app.get('/fetch-users', (req, res) => {
     res.json(results);
   });
 });
+
 
 // 使用者登入身分驗證
 app.post('/authenticate', async (req, res) => {
@@ -66,15 +72,81 @@ app.post('/authenticate', async (req, res) => {
       const user = results[0];
 
       const match = await bcrypt.compare(password, user.PasswordHash);
-
       if (!match) {
         return res.status(401).json({ message: '密碼錯誤' });
       }
 
-      res.json({ message: '登入成功', user });
+      // 產生 JWT Token
+      const token = jwt.sign(
+        { userId: user.UserID, username: user.Username },
+        process.env.JWT_SECRET || "mySecretKey",
+        { expiresIn: "7d" }
+      );
+
+      // 把 token 放進 Cookie（HttpOnly 前端 JavaScript 無法讀）
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: false, // 如果上傳到 HTTPS 改 true
+        sameSite: "lax"
+      });
+
+      return res.json({
+        message: "登入成功",
+        user: {
+          userId: user.UserID,
+          username: user.Username,
+          email: user.Email
+        }
+      });
     }
   );
 });
+
+// 中介軟體：驗證 JWT Token
+function authMiddleware(req, res, next) {
+  const token = req.cookies.token; // 從 cookie 取 token
+
+  if (!token) {
+    return res.status(401).json({ message: "未登入" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "mySecretKey");
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "登入過期或無效" });
+  }
+}
+
+//保持登入狀態，取得使用者資料
+// 取得使用者完整資料
+app.get('/getUserData', authMiddleware, (req, res) => {
+  const userId = req.user.userId;
+
+  // 從資料庫拿完整 user 資料
+  connection.query(
+    'SELECT UserID, Username, Email, Height, Weight, BMI, CreatedAt FROM users WHERE UserID = ?',
+    [userId],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: '資料庫查詢失敗' });
+      if (results.length === 0) return res.status(404).json({ message: '使用者不存在' });
+
+      res.json({
+        loggedIn: true,
+        user: results[0]
+      });
+    }
+  );
+});
+
+
+// 使用者登出
+app.post('/logout', (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "已登出" });
+});
+
 
 // 新增使用者帳號資料至 DataBase 的 users Table
 app.post('/add-user', async (req, res) => {
