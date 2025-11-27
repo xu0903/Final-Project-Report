@@ -87,13 +87,13 @@ app.post('/add-user', async (req, res) => {
   const query = 'INSERT INTO users (Username, PasswordHash, Email) VALUES (?, ?, ?)';
   connection.query(query, [name, hashedPassword, email], (err, results) => {
     if (err) {
+      if (err.code === 'ER_DUP_ENTRY') {
+        return res.status(400).json({ message: '該 Email 已被註冊過' });
+      }
       console.log(err);
       return res.status(500).json({ success: false, message: '新增使用者失敗' });
-    }    
-    if (err && err.code === 'ER_DUP_ENTRY') {
-      return res.status(400).json({ message: 'Email 已存在' });
     }
-    res.json({ success: true, message: '新增使用者成功' });
+    res.json({ success: true, message: '註冊成功，即將前往會員頁…' });
   });
 });
 

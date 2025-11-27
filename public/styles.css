@@ -153,7 +153,7 @@ nav a:hover {
   color: var(--text-dark);
 }
 
-.small { font-size: 12px; color: var(--text-light); }
+.small { font-size: 16px; color: var(--text-light); }
 .muted { color: var(--text-light); }
 
 .badge {
@@ -1448,12 +1448,12 @@ button,
   }
 }
 
-#msg.warning {
+.warning {
   color: #c00;
   font-weight: bold;
 }
 
-#msg.success {
+.success {
   color: #0a0;
   font-weight: bold;
 }
@@ -1559,4 +1559,78 @@ button,
   .insp-mini-cards {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+
+/* 範例樣式 */
+.btn-fav.saved {
+  background-color: #8e877f; /* 變成深灰色或你喜歡的顏色 */
+  color: #fff;
+  /* border-color: #555; */
+}
+
+
+/* --- 按鈕 Hover 互動效果 --- */
+
+/* 1. 基礎設定：加入過渡動畫，讓變化平滑 */
+.btn {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer; /* 確保游標變成手指 */
+}
+
+/* 2. 「產生靈感」按鈕 (Primary) */
+.btn.primary:hover {
+  background: #e8dcd5;
+  transform: translateY(-2px);
+  transition: 0.2s;
+}
+
+/* 3. 「清除篩選」按鈕 (Secondary) */
+.btn.secondary:hover {
+  background: #e8dcd5;
+  transform: translateY(-2px);
+  transition: 0.2s;
+}
+
+/* 4. 點擊時的效果 (Active) - 讓按鈕有被壓下去的感覺 */
+.btn:active {
+  transform: translateY(0);      /* 回復原位 */
+  box-shadow: none;              /* 陰影消失 */
+  filter: brightness(0.95);      /* 稍微變暗 */
+}
+
+.idea-card button.btn-fav {
+  cursor: pointer;
+  position: relative;
+  z-index: 5;
+}
+
+#regenerate {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
+}
+
+#regenerate:hover {
+  background: #e8dcd5;
+  transform: translateY(-2px);
+  transition: 0.2s;
+}
+
+
+/* === 特例修正：取消收藏按鈕的 Hover 變色效果 === */
+/* 
+1. 未收藏時：Hover 維持白色背景，不要變淺棕色 */
+.btn.secondary.btn-fav:hover {
+  background: #fff; 
+  /* 如果也不想要上浮效果，可以把下面這行註解拿掉 */
+  /* transform: none; */
+}
+
+/* 2. 已收藏時：Hover 維持深棕色背景，不要變回淺色 */
+.btn.secondary.btn-fav.saved:hover {
+  background: #8e877f;
+  color: #fff;
+  /* border-color: #555; */
 }
