@@ -25,7 +25,7 @@ app.get('/', (req, res) => {
 const bcrypt = require('bcrypt');// 引入 bcrypt 套件以進行密碼雜湊
 
 // 載入環境變數
-require('dotenv').config({ path: path.join(__dirname, 'mySQLAccount(DoNotUpload).env') });
+require('dotenv').config({ path: path.join(__dirname, 'sample.env') });
 // 連線 MySQL
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
