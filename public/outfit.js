@@ -123,17 +123,39 @@ function loadFavorites() {
   }
 }
 
-function saveFavorites(list) {
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(list));
+function saveFavorites(outfitID) {
+  fetch('/save-favorite', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ outfitID })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) {
+        console.error("儲存收藏到伺服器失敗：", data.message);
+      }
+    })
+    .catch(error => {
+      console.error("儲存收藏到伺服器時發生錯誤：", error);
+    });
 }
 
-function addFavorite(item) {
-  const list = loadFavorites();
-  const exist = list.some((x) => x.id === item.id);
-  if (!exist) {
-    list.push(item);
-    saveFavorites(list);
-  }
+function deleteFavorite(outfitID) {
+  console.log("Deleting favorite outfitID:", outfitID);
+  fetch('/delete-favorite', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ outfitID })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) {
+        console.error("刪除收藏到伺服器失敗：", data.message);
+      }
+    })
+    .catch(error => {
+      console.error("刪除收藏到伺服器時發生錯誤：", error);
+    });
 }
 
 /* --------------------------------------------
@@ -154,13 +176,14 @@ function escapeHTML(str) {
 function createIdeaCardHTML(data) {
   const { id, title, colorLabel, styleLabel, genderLabel,
     colorKey, styleKey, genderKey } = data;
+  console.log("createIdeaCardHTML data:", data);
 
   const bg = colorBG[colorKey] || "#e5e7eb";
 
   // 1. 讀取目前的收藏清單
   const currentFavorites = loadFavorites();
   // 2. 檢查這張卡片是否已在清單中
-  const isFav = currentFavorites.some(item => item.id === id);
+  const isFav = currentFavorites.some(item => item.id == id);
 
   // 3. 根據狀態決定按鈕文字與樣式
   const btnText = isFav ? "★ 已收藏" : "★ 收藏";
@@ -241,37 +264,54 @@ function getCurrentSelection() {
 /* --------------------------------------------
    按鈕：產生靈感卡片（含性別）
 --------------------------------------------- */
-function renderIdeas() {
+let currentOutfit = [];
+async function renderIdeas() {
   const grid = document.getElementById("idea-grid");
   const tip = document.getElementById("idea-tip");
   const regenBtn = document.getElementById("regenerate");
 
   if (!grid) return;
 
-  // 取得選擇
   const selection = getCurrentSelection();
   const { colorKey, colorLabel, styleKey, styleLabel, genderKey, genderLabel } = selection;
 
   if (!colorKey || !styleKey || !genderKey) {
-    grid.innerHTML = `
-      <div class="muted">
-        請先在左側選擇 <strong>性別</strong>、<strong>顏色</strong>、<strong>風格</strong> 再點「產生靈感」。
-      </div>
-    `;
-    tip.textContent = "";
+    grid.innerHTML = `<div class="muted">請先選擇性別、顏色、風格再點「產生靈感」。</div>`;
+    if (tip) tip.textContent = "";
     if (regenBtn) regenBtn.style.display = "none";
     return;
   }
 
-  // 呼叫紀錄功能
   recordPreference(selection);
 
   const ideas = [];
+  const savedOutfitIDs = []; // ✅ 初始化
   const count = 3;
 
   for (let i = 1; i <= count; i++) {
+    // 1. 先呼叫後端存入 outfits table
+    const res = await fetch('/save-outfit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        genderKey, genderLabel, styleKey, styleLabel, colorKey, colorLabel,
+        title: `${colorLabel} × ${styleLabel} × ${genderLabel} Look ${i}`,
+        description: null,
+        imageURL: null
+      })
+    });
+    currentOutfit[i - 1] = await res.json();
+
+    console.log("儲存 outfit 回傳結果之1：", currentOutfit[i - 1]);
+
+    if (!currentOutfit[i - 1].success) {
+      console.error("儲存 outfit 失敗：", currentOutfit[i - 1].message);
+      continue;
+    }
+
+    savedOutfitIDs.push(currentOutfit[i - 1].outfitID);
     ideas.push({
-      id: `${colorKey}-${styleKey}-${genderKey}-${Date.now()}-${i}`,
+      id: currentOutfit[i - 1].outfitID, // 使用後端的 ID
       title: `${colorLabel} × ${styleLabel} × ${genderLabel} Look ${i}`,
       colorKey,
       colorLabel,
@@ -281,35 +321,20 @@ function renderIdeas() {
       genderLabel,
     });
   }
+  console.log("已儲存的 outfit IDs：", ideas.map(x => x.id));
 
-  grid.innerHTML = ideas.map((x) => createIdeaCardHTML(x)).join("");
+  grid.innerHTML = ideas.map(x => createIdeaCardHTML(x)).join("");
 
-  // 顯示重新生成按鈕
   if (regenBtn) regenBtn.style.display = "inline-block";
+  tip.textContent = `已根據「${colorLabel} × ${styleLabel} × ${genderLabel}」產生 ${count} 個靈感格子！`;
 
-  tip.textContent =
-    `已根據「${colorLabel} × ${styleLabel} × ${genderLabel}」產生 ${count} 個靈感格子！`;
-
-  // 將當前狀態存入 localStorage
   localStorage.setItem("fitmatch_lastIdeas", JSON.stringify({
     colorKey, styleKey, genderKey,
     colorLabel, styleLabel, genderLabel,
     ideas
   }));
-  // 將以產生的outfits存入mySQL的outfits table
-  fetch('/save-outfit', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      genderKey, genderLabel, styleKey, styleLabel, colorKey, colorLabel,
-      title: `${colorLabel} × ${styleLabel} × ${genderLabel} Look`,
-      description: null,
-      imageURL: null
-    })
-  });
 }
+
 
 /* --------------------------------------------
    收藏按鈕功能
@@ -318,38 +343,61 @@ function setupFavoriteButtons() {
   const grid = document.getElementById("idea-grid");
   if (!grid) return;
 
-  grid.addEventListener("click", (e) => {
+  grid.addEventListener("click", async (e) => {
     const btn = e.target.closest(".btn-fav");
     if (!btn) return;
 
-    e.stopPropagation();
-
-    const card = e.target.closest(".idea-card");
+    const card = btn.closest(".idea-card");
     if (!card) return;
 
-    const id = card.dataset.id;
-    const title = card.dataset.title;
-    const color = card.dataset.color;
-    const style = card.dataset.style;
-    const note = `${color} · ${style} 靈感`;
+    const outfitID = card.dataset.id;
+    const cardData = {
+      title: card.dataset.title,
+      style: card.dataset.style,
+      color: card.dataset.color,
+      note: `${card.dataset.color} · ${card.dataset.style} 靈感`,
+    };
 
-    let list = loadFavorites();
-    const index = list.findIndex(item => item.id === id);
+    await toggleFavorite(btn, outfitID, cardData);
+  });
+}
 
-    if (index !== -1) {
-      list.splice(index, 1);
-      saveFavorites(list);
+
+async function toggleFavorite(btn, outfitID, cardData) {
+  try {
+    // 1. 先檢查後端是否已收藏
+    const res = await fetch(`/check-favorite?outfitID=${encodeURIComponent(outfitID)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+
+    if (data.isFavorite) {
+      // 已收藏 → 取消收藏
+      await fetch('/delete-favorite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outfitID })
+      });
       btn.textContent = "★ 收藏";
       btn.classList.remove("saved");
+
     } else {
-      const favItem = { id, title, style, color, note, image: null };
-      list.push(favItem);
-      saveFavorites(list);
+      // 尚未收藏 → 新增收藏
+      await fetch('/save-favorite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outfitID })
+      });
       btn.textContent = "★ 已收藏";
       btn.classList.add("saved");
     }
-  });
+
+  } catch (error) {
+    console.error("收藏操作失敗", error);
+  }
 }
+
 
 /* --------------------------------------------
    ⭐ 卡片點擊 → 跳轉 gallery.html

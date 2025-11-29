@@ -148,7 +148,7 @@ app.post('/logout', (req, res) => {
 
 //取得user-favorites
 // 需要 authMiddleware 取得登入使用者資訊
-app.get('/api/user-favorites', authMiddleware, (req, res) => {
+app.get('/get-user-favorites', authMiddleware, (req, res) => {
   const userId = req.user.userId;
 
   const query = `
@@ -174,21 +174,20 @@ app.get('/api/user-favorites', authMiddleware, (req, res) => {
 });
 
 // 儲存favorite
-app.post('/favorite', authMiddleware, (req, res) => {
+app.post('/save-favorite', authMiddleware, (req, res) => {
   const userId = req.user.userId; // authMiddleware 應該會把 userId 放在 req.user
-  const { outfitId } = req.body;
+  const { outfitID } = req.body;
   console.log("req.user =", req.user);
 
 
-  if (!outfitId) return res.status(400).json({ success: false, message: '缺少 outfitId' });
-
+  if (!outfitID) return res.status(400).json({ success: false, message: '缺少 outfitID' });
   const query = `
     INSERT INTO user_favorites (UserID, OutfitID) 
     VALUES (?, ?) 
     ON DUPLICATE KEY UPDATE FavoritedAt = CURRENT_TIMESTAMP
   `;
 
-  connection.query(query, [userId, outfitId], (err, results) => {
+  connection.query(query, [userId, outfitID], (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ success: false, message: '儲存收藏失敗' });
@@ -197,7 +196,40 @@ app.post('/favorite', authMiddleware, (req, res) => {
   });
 });
 
+// 刪除favorite
+app.post('/delete-favorite', authMiddleware, (req, res) => {
+  const userId = req.user.userId;
+  const { outfitID } = req.body;
 
+  if (!outfitID) return res.status(400).json({ success: false, message: '缺少 outfitID' });
+
+  const query = 'DELETE FROM user_favorites WHERE UserID = ? AND OutfitID = ?';
+
+  connection.query(query, [userId, outfitID], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: '刪除收藏失敗' });
+    }
+    res.json({ success: true, message: '已刪除收藏' });
+  });
+});
+
+// 檢查是否已收藏該 outfit
+app.get('/check-favorite', authMiddleware, (req, res) => {
+  const userId = req.user.userId;
+  const outfitID = req.query.outfitID;
+  if (!outfitID) return res.status(400).json({ success: false, message: '缺少 outfitID' });
+  const query = 'SELECT * FROM user_favorites WHERE UserID = ? AND OutfitID = ?';
+
+  connection.query(query, [userId, outfitID], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: '查詢收藏狀態失敗' });
+    }
+
+    res.json({ success: true, isFavorite: results.length > 0 });
+  });
+});
 
 // 新增使用者帳號資料至 DataBase 的 users Table
 app.post('/add-user', async (req, res) => {

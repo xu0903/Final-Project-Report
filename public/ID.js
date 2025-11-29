@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!grid) return;
 
     try {
-      const res = await fetch('/api/user-favorites');
+      const res = await fetch('/get-user-favorites');
       const data = await res.json();
 
       if (!data.success) {
