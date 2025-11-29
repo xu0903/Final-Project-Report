@@ -25,8 +25,7 @@ app.get('/', (req, res) => {
 const bcrypt = require('bcrypt');// 引入 bcrypt 套件以進行密碼雜湊
 
 // 載入環境變數
-require('dotenv').config({ path: path.join(__dirname, 'mine.env') });
-// 連線 MySQL
+require('dotenv').config({ path: path.join(__dirname, '../mine.env') });// 連線 MySQL
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,//root
@@ -147,6 +146,58 @@ app.post('/logout', (req, res) => {
   res.json({ message: "已登出" });
 });
 
+//取得user-favorites
+// 需要 authMiddleware 取得登入使用者資訊
+app.get('/api/user-favorites', authMiddleware, (req, res) => {
+  const userId = req.user.userId;
+
+  const query = `
+    SELECT o.OutfitID, o.Title, o.Description, o.ImageURL,
+           o.GenderKey, o.GenderLabel,
+           o.StyleKey, o.StyleLabel,
+           o.ColorKey, o.ColorLabel,
+           uf.FavoritedAt
+    FROM user_favorites uf
+    JOIN outfits o ON uf.OutfitID = o.OutfitID
+    WHERE uf.UserID = ?
+    ORDER BY uf.FavoritedAt DESC
+  `;
+
+  connection.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: '無法取得收藏資料' });
+    }
+
+    res.json({ success: true, favorites: results });
+  });
+});
+
+// 儲存favorite
+app.post('/favorite', authMiddleware, (req, res) => {
+  const userId = req.user.userId; // authMiddleware 應該會把 userId 放在 req.user
+  const { outfitId } = req.body;
+  console.log("req.user =", req.user);
+
+
+  if (!outfitId) return res.status(400).json({ success: false, message: '缺少 outfitId' });
+
+  const query = `
+    INSERT INTO user_favorites (UserID, OutfitID) 
+    VALUES (?, ?) 
+    ON DUPLICATE KEY UPDATE FavoritedAt = CURRENT_TIMESTAMP
+  `;
+
+  connection.query(query, [userId, outfitId], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: '儲存收藏失敗' });
+    }
+    res.json({ success: true, message: '已加入收藏' });
+  });
+});
+
+
 
 // 新增使用者帳號資料至 DataBase 的 users Table
 app.post('/add-user', async (req, res) => {
@@ -204,6 +255,8 @@ app.post('/save-outfit', (req, res) => {
     }
   );
 });
+
+
 
 
 // 啟動伺服器

@@ -40,6 +40,16 @@ CREATE TABLE user_favorites (
     FOREIGN KEY (OutfitID) REFERENCES outfits(OutfitID)
 );
 
+CREATE TABLE outfitHistory (
+    HistoryID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT NOT NULL,
+    OutfitID INT NOT NULL,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (UserID) REFERENCES users(UserID),
+    FOREIGN KEY (OutfitID) REFERENCES outfits(OutfitID)
+);
+
+
 
 -- 插入初始使用者資料
 INSERT INTO users (UserID, Username, PasswordHash, Email, CreatedAt)
