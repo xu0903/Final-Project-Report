@@ -25,7 +25,7 @@ app.get('/', (req, res) => {
 const bcrypt = require('bcrypt');// 引入 bcrypt 套件以進行密碼雜湊
 
 // 載入環境變數
-require('dotenv').config({ path: path.join(__dirname, 'sample.env') });
+require('dotenv').config({ path: path.join(__dirname, 'mine.env') });
 // 連線 MySQL
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -167,6 +167,42 @@ app.post('/add-user', async (req, res) => {
     }
     res.json({ success: true, message: '註冊成功，即將前往會員頁…' });
   });
+});
+
+//從mySQL取得tags資料
+app.get('/get-all-tags', (req, res) => {
+  connection.query('SELECT * FROM tags', (err, results) => {
+    if (err) {
+      res.send('資料庫查詢錯誤');
+      return;
+    }
+
+    // 將查到的資料以 JSON 格式回傳
+    res.json(results);
+  });
+});
+
+//儲存產生的outfit資料到mySQL的outfits table
+app.post('/save-outfit', (req, res) => {
+  const { genderKey, genderLabel, styleKey, styleLabel, colorKey, colorLabel, title, description, imageURL } = req.body;
+
+  const query = `
+    INSERT INTO outfits 
+      (GenderKey, GenderLabel, StyleKey, StyleLabel, ColorKey, ColorLabel, Title, Description, ImageURL) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  connection.query(
+    query,
+    [genderKey, genderLabel, styleKey, styleLabel, colorKey, colorLabel, title, description || null, imageURL || null],
+    (err, results) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({ success: false, message: '儲存 outfit 失敗' });
+      }
+      res.json({ success: true, message: '儲存 outfit 成功', outfitID: results.insertId });
+    }
+  );
 });
 
 

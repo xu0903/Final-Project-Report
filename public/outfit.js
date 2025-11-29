@@ -1,4 +1,56 @@
 /* --------------------------------------------
+   由mySQL的tags table動態生成靈感標籤
+--------------------------------------------- */
+
+// 渲染標籤群組
+function renderTagsByType(tags) {
+  const genderContainer = document.getElementById("gender-tags");
+  const colorContainer = document.getElementById("color-tags");
+  const styleContainer = document.getElementById("style-tags");
+
+  // 清空原本寫死在 HTML 的 button
+  genderContainer.innerHTML = "";
+  colorContainer.innerHTML = "";
+  styleContainer.innerHTML = "";
+
+  tags.forEach(tag => {
+    // 建立按鈕
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tag-pill";
+    btn.dataset.group = tag.type;
+    btn.dataset.key = tag.key;
+    btn.dataset.label = tag.label;
+
+    btn.innerHTML = `<span class="dot"></span> ${tag.label}`;
+
+    // 依 type 渲染到不同區塊
+    if (tag.type === "gender") genderContainer.appendChild(btn);
+    if (tag.type === "color") colorContainer.appendChild(btn);
+    if (tag.type === "style") styleContainer.appendChild(btn);
+  });
+}
+
+
+
+async function fetchAndRenderTags() {
+  try {
+    const response = await fetch('/get-all-tags');
+    if (!response.ok) {
+      throw new Error('無法取得標籤資料');
+    }
+    const tags = await response.json();
+    //console.log("取得的標籤資料：", tags);
+
+    renderTagsByType(tags);
+  } catch (error) {
+    console.error("取得標籤失敗：", error);
+  }
+}
+
+fetchAndRenderTags();
+
+/* --------------------------------------------
    紀錄功能 (History / Preference)
 --------------------------------------------- */
 const HISTORY_KEY = "fitmatch_history";
@@ -10,7 +62,7 @@ function loadHistory() {
 
 function recordPreference(data) {
   const list = loadHistory();
-  
+
   // 建立一筆新的紀錄
   const newRecord = {
     timestamp: new Date().toISOString(), // 紀錄時間
@@ -29,13 +81,13 @@ function recordPreference(data) {
   }
 
   list.push(newRecord);
-  
+
   // 存入 LocalStorage
   localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
-  
+
   // 在 Console 顯示紀錄結果 (開發用)
   console.log("已新增一筆風格紀錄：", newRecord);
-  console.table(list); 
+  console.table(list);
 }
 
 const FAVORITES_KEY = "fitmatch_favorites";
@@ -101,7 +153,7 @@ function escapeHTML(str) {
 --------------------------------------------- */
 function createIdeaCardHTML(data) {
   const { id, title, colorLabel, styleLabel, genderLabel,
-          colorKey, styleKey, genderKey } = data;
+    colorKey, styleKey, genderKey } = data;
 
   const bg = colorBG[colorKey] || "#e5e7eb";
 
@@ -146,7 +198,7 @@ function createIdeaCardHTML(data) {
 }
 
 /* --------------------------------------------
-   標籤（圓框點）二擇一
+   "已選取" 按鈕css樣式切換
 --------------------------------------------- */
 function setupTagPills() {
   const groups = document.querySelectorAll(".tag-pills");
@@ -195,7 +247,7 @@ function renderIdeas() {
   const regenBtn = document.getElementById("regenerate");
 
   if (!grid) return;
-  
+
   // 取得選擇
   const selection = getCurrentSelection();
   const { colorKey, colorLabel, styleKey, styleLabel, genderKey, genderLabel } = selection;
@@ -207,7 +259,7 @@ function renderIdeas() {
       </div>
     `;
     tip.textContent = "";
-    if(regenBtn) regenBtn.style.display = "none";
+    if (regenBtn) regenBtn.style.display = "none";
     return;
   }
 
@@ -233,7 +285,7 @@ function renderIdeas() {
   grid.innerHTML = ideas.map((x) => createIdeaCardHTML(x)).join("");
 
   // 顯示重新生成按鈕
-  if(regenBtn) regenBtn.style.display = "inline-block";
+  if (regenBtn) regenBtn.style.display = "inline-block";
 
   tip.textContent =
     `已根據「${colorLabel} × ${styleLabel} × ${genderLabel}」產生 ${count} 個靈感格子！`;
@@ -244,6 +296,19 @@ function renderIdeas() {
     colorLabel, styleLabel, genderLabel,
     ideas
   }));
+  // 將以產生的outfits存入mySQL的outfits table
+  fetch('/save-outfit', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      genderKey, genderLabel, styleKey, styleLabel, colorKey, colorLabel,
+      title: `${colorLabel} × ${styleLabel} × ${genderLabel} Look`,
+      description: null,
+      imageURL: null
+    })
+  });
 }
 
 /* --------------------------------------------
@@ -256,7 +321,7 @@ function setupFavoriteButtons() {
   grid.addEventListener("click", (e) => {
     const btn = e.target.closest(".btn-fav");
     if (!btn) return;
-    
+
     e.stopPropagation();
 
     const card = e.target.closest(".idea-card");
@@ -275,7 +340,7 @@ function setupFavoriteButtons() {
       list.splice(index, 1);
       saveFavorites(list);
       btn.textContent = "★ 收藏";
-      btn.classList.remove("saved"); 
+      btn.classList.remove("saved");
     } else {
       const favItem = { id, title, style, color, note, image: null };
       list.push(favItem);
@@ -349,7 +414,7 @@ function setupClearButton() {
       `;
     }
     if (tip) tip.textContent = "";
-    
+
     // 3. 隱藏重新生成按鈕
     if (regenBtn) regenBtn.style.display = "none";
 
@@ -364,13 +429,13 @@ function setupClearButton() {
 document.addEventListener("DOMContentLoaded", () => {
   setupTagPills();
   setupGenerateButton();
-  setupFavoriteButtons(); 
+  setupFavoriteButtons();
   setupCardClickJump();
   setupRegenerateButton();
   setupClearButton(); // ★ 啟用清除按鈕功能
 
   const grid = document.getElementById("idea-grid");
-  const regenBtn = document.getElementById("regenerate"); 
+  const regenBtn = document.getElementById("regenerate");
 
   // 嘗試讀取上一次的狀態
   const last = localStorage.getItem("fitmatch_lastIdeas");
@@ -391,10 +456,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const tip = document.getElementById("idea-tip");
     if (tip) {
-        tip.textContent = `已恢復先前產生的靈感：${data.colorLabel} × ${data.styleLabel} × ${data.genderLabel}`;
+      tip.textContent = `已恢復先前產生的靈感：${data.colorLabel} × ${data.styleLabel} × ${data.genderLabel}`;
     }
-      
-    if(regenBtn) regenBtn.style.display = "inline-block";
+
+    if (regenBtn) regenBtn.style.display = "inline-block";
 
   } else {
     grid.innerHTML = `
@@ -402,7 +467,7 @@ document.addEventListener("DOMContentLoaded", () => {
         尚未產生任何靈感。請在左側選擇顏色與風格，然後點「產生靈感」。
       </div>
     `;
-    if(regenBtn) regenBtn.style.display = "none";
+    if (regenBtn) regenBtn.style.display = "none";
   }
 });
 
