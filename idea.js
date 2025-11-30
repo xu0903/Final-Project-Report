@@ -1,5 +1,6 @@
 // idea.js — 找靈感頁
 
+const INSP_KEY = "fitmatch_inspiration";
 const RESULT_KEY = "fitmatch_result";
 
 /* --------------------- 靈感資料 --------------------- */
@@ -42,10 +43,26 @@ const inspirations = [
   },
 ];
 
+/* --------------------- localStorage --------------------- */
+function saveInspiration(data) {
+  localStorage.setItem(INSP_KEY, JSON.stringify(data));
+}
+function loadInspiration() {
+  try {
+    const raw = localStorage.getItem(INSP_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 /* --------------------- 生成 4 張推薦卡片 --------------------- */
 function generateMiniCards(base) {
   const area = document.getElementById("insp-recommend");
   if (!area) return;
+
+  // ⭐ 把 base（上方靈感卡的資料）一起存到 DOM，等等小卡片要用
+  area.dataset.base = JSON.stringify(base);
 
   const html = [];
 
@@ -85,13 +102,20 @@ function generateMiniCards(base) {
   setupMiniCardClick();
 }
 
-/* --------------------- 小卡片點擊 → gallery --------------------- */
+/* --------------------- 小卡片點擊 → gallery2 --------------------- */
 function setupMiniCardClick() {
   const area = document.getElementById("insp-recommend");
   if (!area) return;
 
+  // ⭐ 取回上方靈感卡資料（非常重要）
+  const base = JSON.parse(area.dataset.base || "null");
+
   area.querySelectorAll(".idea-card").forEach((card) => {
     card.addEventListener("click", () => {
+
+      // ⭐ 在跳進 gallery2 前，也保存上方靈感卡
+      if (base) saveInspiration(base);
+
       const data = {
         id: card.dataset.id,
         title: card.dataset.title,
@@ -105,42 +129,68 @@ function setupMiniCardClick() {
       };
 
       localStorage.setItem(RESULT_KEY, JSON.stringify(data));
-      window.location.href = "gallery.html";
+
+      window.location.href = "gallery2.html";
     });
   });
 }
 
-/* --------------------- 主流程（最終版本） --------------------- */
+/* --------------------- 主流程 --------------------- */
 document.addEventListener("DOMContentLoaded", () => {
   const cards = document.querySelectorAll(".insp-card");
   const detail = document.getElementById("insp-selected");
   const detailSection = document.getElementById("insp-detail");
 
-  // 預設一定隱藏
+  // ⭐ 預設隱藏（第一次進站）
   detailSection.classList.add("hidden");
 
-  // 點擊上方靈感卡片
+  // ⭐ 若 localStorage 仍保存靈感 → 自動還原
+  const stored = loadInspiration();
+
+  if (stored) {
+    // 標示 active
+    const card = document.querySelector(`.insp-card[data-scene="${stored.id}"]`);
+    if (card) card.classList.add("active");
+
+    // 還原文字
+    detail.innerHTML = `
+      你選擇的是：<strong>${stored.title}</strong><br>
+      建議關鍵字：${stored.tags.join("、")}<br>
+      ${stored.note}
+    `;
+
+    // 還原四張小卡片
+    generateMiniCards(stored);
+
+    // 顯示下方區塊
+    detailSection.classList.remove("hidden");
+  }
+
+  // ⭐ 點上方六張 insp-card
   cards.forEach((card) => {
     card.addEventListener("click", () => {
       const id = card.dataset.scene;
       const data = inspirations.find((x) => x.id === id);
       if (!data) return;
 
-      // 標記 active 樣式
+      // active 樣式
       cards.forEach((c) => c.classList.remove("active"));
       card.classList.add("active");
 
-      // 顯示下方文字
+      // 插入文字
       detail.innerHTML = `
         你選擇的是：<strong>${data.title}</strong><br>
         建議關鍵字：${data.tags.join("、")}<br>
         ${data.note}
       `;
 
-      // 生成小卡片
+      // ⭐ 儲存上方靈感卡（正式寫入 localStorage）
+      saveInspiration(data);
+
+      // 產生小卡片
       generateMiniCards(data);
 
-      // 顯示下方區塊
+      // 顯示下方
       detailSection.classList.remove("hidden");
     });
   });
