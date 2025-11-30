@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>會員 - FitMatch</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">FitMatch</a>
+      <nav>
+        <a href="index.html">主頁</a>
+        <a href="login.html">登入/註冊</a>
+        <a href="outfit.html">風格篩選</a>
+        <a href="idea.html">找靈感</a>
+        <a href="ID.html" class="active">會員</a>
+        <a href="messageboard.html">留言板</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container member-layout">
+    <!-- 左側：會員卡片資料 -->
+    <section class="member-column">
+      <div class="card">
+        <h2 style="margin-top:0;">會員資料</h2>
+
+        <!-- 顯示資料區 -->
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem;">
+          <!-- 預設頭像 -->
+          <div
+            style="width: 80px; height: 80px; background: #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #fff;">
+            ☺
+          </div>
+
+          <div>
+            <!-- ▼▼▼ 這裡是用來顯示暱稱與帳號的 ID ▼▼▼ -->
+            <h3 id="display-nickname" style="margin: 0; font-size: 1.5rem;">訪客</h3>
+            <p id="display-account" class="muted small" style="margin: 5px 0 0;">尚無資料</p>
+          </div>
+        </div>
+
+        <button id="btn-logout" class="btn small"
+          style="background: #ef4444; color: white; border: none; display: none;">
+          登出
+        </button>
+        <a href="login.html" id="link-login" class="btn primary small">前往登入/註冊</a>
+      </div>
+    </section>
+
+    <!-- 右側：收藏或其他內容 (暫時留白或放之前的 BMI 計算) -->
+    <section class="member-column">
+      <div class="card">
+        <h2>我的收藏</h2>
+        <p class="muted">這裡之後可以顯示你在風格篩選頁收藏的靈感...</p>
+        <div class="favorites-grid" id="fav-grid">
+          <!-- JS 動態填入收藏 -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="auth.js"></script>
+  <script src="ID.js"></script>
+</body>
+
+</html>

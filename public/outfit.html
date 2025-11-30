@@ -1,0 +1,84 @@
+<!-- 穿搭篩選頁 Pinky-->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>風格篩選</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">FitMatch</a>
+      <nav>
+        <a href="index.html">主頁</a>
+        <a href="login.html">登入/註冊</a>
+        <a href="outfit.html">風格篩選</a>
+        <a href="idea.html">找靈感</a>
+        <a href="ID.html">會員</a>
+        <a href="messageboard.html">留言板</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container idea-layout">
+    <!-- 左側：篩選條件 -->
+    <section class="idea-filter-panel">
+      <h1>風格篩選</h1>
+      <p class="muted small">
+        先選擇一種顏色與一種風格，會隨機產生幾個穿搭靈感格子。
+      </p>
+
+
+      <!-- 性別標籤（圓框點 二擇一） -->
+      <div class="card">
+        <h2>性別</h2>
+        <div class="tag-pills" id="gender-tags"></div>
+      </div>
+
+
+      <!-- 顏色標籤（圓框點 二擇一） -->
+      <div class="card">
+      
+        <h2>Color</h2>
+        <div class="tag-pills" id="color-tags"></div>
+      </div>
+
+
+      <!-- 風格標籤（圓框點 二擇一） -->
+      <div class="card">
+        <h2>風格標籤</h2>
+        <div class="tag-pills" id="style-tags"></div>
+      </div>
+
+      <button type="button" id="generate-ideas" class="btn primary">
+        產生靈感
+      </button>
+
+      <button type="button" id="clear-filters" class="btn secondary" style="margin-left: 0.5rem;">
+        清除篩選
+      </button>
+      <p id="idea-tip" class="muted small"></p>
+    </section>
+
+    <!-- 右側：靈感格子 -->
+   <section class="idea-result-panel">
+  <h2>靈感Card</h2>
+  <p class="muted small">
+    每格代表一組穿搭靈感。你可以先試玩收藏功能，在「會員」頁面即可看到收藏紀錄。
+  </p>
+
+  <div id="idea-grid" class="idea-grid">
+    </div>
+
+  <button id="regenerate" class="btn primary small" style="margin-top: 1rem; display: none;">
+    重新生成
+  </button>
+</section>
+  </main>
+
+  <script src="outfit.js" defer></script>
+</body>
+</html>
