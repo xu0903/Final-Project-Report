@@ -365,38 +365,60 @@ function setupFavoriteButtons() {
 
 async function toggleFavorite(btn, outfitID, cardData) {
   try {
-    // 1. 先檢查後端是否已收藏
-    const res = await fetch(`/check-favorite?outfitID=${encodeURIComponent(outfitID)}`, {
+    // 驗證登入狀態 + 是否已收藏
+    const checkRes = await fetch(`/check-favorite?outfitID=${encodeURIComponent(outfitID)}`, {
       method: 'GET',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
     });
-    const data = await res.json();
 
-    if (data.isFavorite) {
-      // 已收藏 → 取消收藏
-      await fetch('/delete-favorite', {
+    if (checkRes.status === 401) {
+      alert("請先登入才能使用收藏功能！");
+      return;
+    }
+
+    const checkData = await checkRes.json();
+
+    // 取消收藏
+    if (checkData.isFavorite) {
+      const delRes = await fetch('/delete-favorite', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ outfitID })
       });
+
+      if (delRes.status === 401) {
+        alert("請先登入！");
+        return;
+      }
+
       btn.textContent = "★ 收藏";
       btn.classList.remove("saved");
-
-    } else {
-      // 尚未收藏 → 新增收藏
-      await fetch('/save-favorite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ outfitID })
-      });
-      btn.textContent = "★ 已收藏";
-      btn.classList.add("saved");
+      return;
     }
+
+    // 新增收藏
+    const saveRes = await fetch('/save-favorite', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ outfitID })
+    });
+
+    if (saveRes.status === 401) {
+      alert("請先登入！");
+      return;
+    }
+
+    btn.textContent = "★ 已收藏";
+    btn.classList.add("saved");
 
   } catch (error) {
     console.error("收藏操作失敗", error);
   }
 }
+
 
 
 /* --------------------------------------------

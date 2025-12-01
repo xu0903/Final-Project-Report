@@ -181,6 +181,7 @@ app.post('/save-favorite', authMiddleware, (req, res) => {
 
 
   if (!outfitID) return res.status(400).json({ success: false, message: '缺少 outfitID' });
+  if(!userId) return res.status(401).json({ success: false, message: '未登入' });
   const query = `
     INSERT INTO user_favorites (UserID, OutfitID) 
     VALUES (?, ?) 
@@ -202,6 +203,8 @@ app.post('/delete-favorite', authMiddleware, (req, res) => {
   const { outfitID } = req.body;
 
   if (!outfitID) return res.status(400).json({ success: false, message: '缺少 outfitID' });
+  if(!userId) return res.status(401).json({ success: false, message: '未登入' });
+
 
   const query = 'DELETE FROM user_favorites WHERE UserID = ? AND OutfitID = ?';
 
@@ -219,6 +222,7 @@ app.get('/check-favorite', authMiddleware, (req, res) => {
   const userId = req.user.userId;
   const outfitID = req.query.outfitID;
   if (!outfitID) return res.status(400).json({ success: false, message: '缺少 outfitID' });
+  if(!userId) return res.status(401).json({ success: false, message: '未登入' });
   const query = 'SELECT * FROM user_favorites WHERE UserID = ? AND OutfitID = ?';
 
   connection.query(query, [userId, outfitID], (err, results) => {

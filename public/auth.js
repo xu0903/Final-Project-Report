@@ -1,7 +1,7 @@
 function checkLoginStatus() {
   fetch('/getUserData', {
     method: 'GET',
-    credentials: 'include'  // ★ 必須帶上 cookie
+    credentials: 'include'  // cookie
   })
   .then(res => {
     if (!res.ok) {
