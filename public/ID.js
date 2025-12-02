@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
       lightblue: "#a0c4ff",
       blue: "#4361ee",
       purple: "#c77dff",
+      brown: "#8b5e3c",
     };
     return colorBG[colorKey] || "#e5e7eb";
   }

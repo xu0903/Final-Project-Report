@@ -60,9 +60,10 @@ INSERT INTO tags (type, `key`, label) VALUES
 ('gender','male','男性'),
 ('gender','female','女性'),
 ('gender','unisex','中性'),
-('color','pink','粉紅色'),
-('color','pastel','馬卡龍色系'),
+('color','blue','藍色系'),
+('color','brown','棕色系'),
 ('color','mono','黑白灰'),
-('style','jp','日系'),
-('style','kr','韓系'),
-('style','eu','歐美風');
+('style','Sweet','甜美'),
+('style','Minimalist','簡約'),
+('style','Formal','正式'),
+('style','Street','街頭');

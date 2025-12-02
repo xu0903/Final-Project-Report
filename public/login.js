@@ -61,18 +61,6 @@ function pickRandomCaptcha() {
   }
 }
 
-// ===== 使用者帳號相關(localstorage版本) =====
-// function loadUsers() {
-//   try {
-//     const raw = localStorage.getItem(USERS_KEY);
-//     const users = raw ? JSON.parse(raw) : [];
-//     return Array.isArray(users) ? users : [];
-//   } catch (e) {
-//     console.error("載入使用者失敗", e);
-//     return [];
-//   }
-// }
-
 // ===== 使用者帳號相關(MySQL版本) =====
 async function loadUsers() {
   try {
@@ -86,27 +74,6 @@ async function loadUsers() {
     return [];
   }
 }
-
-
-function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-
-// Demo 帳號
-// function seedDemoUser() {
-//   const users = loadUsers();
-//   const exists = users.some((u) => u.email === "demo@fitmatch.dev");
-//   if (!exists) {
-//     users.push({
-//       email: "demo@fitmatch.dev",
-//       password: "fitmatch",
-//       nickname: "Demo 用戶",
-//       createdAt: new Date().toISOString(),
-//     });
-//     saveUsers(users);
-//   }
-// }
-
 // ===== 表單驗證共用函式 =====
 function setFieldError(input, msg) {
   const name = input.id;
@@ -209,18 +176,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const refreshCaptchaBtn = document.getElementById("refresh-captcha");
 
   // 讀取「記住我」資料
-  try {
-    const raw = localStorage.getItem(REMEMBER_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      if (data.email) {
-        emailInput.value = data.email;
-        rememberChk.checked = !!data.remember;
-      }
-    }
-  } catch (e) {
-    console.error("載入 remember 失敗", e);
-  }
+  // try {
+  //   const raw = localStorage.getItem(REMEMBER_KEY);
+  //   if (raw) {
+  //     const data = JSON.parse(raw);
+  //     if (data.email) {
+  //       emailInput.value = data.email;
+  //       rememberChk.checked = !!data.remember;
+  //     }
+  //   }
+  // } catch (e) {
+  //   console.error("載入 remember 失敗", e);
+  // }
 
   // 控制登入按鈕是否可按
   function updateSubmitState() {
@@ -325,20 +292,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 記住我：記錄 email
-    if (rememberChk.checked) {
-      localStorage.setItem(
-        REMEMBER_KEY,
-        JSON.stringify({ email, remember: true })
-      );
-    } else {
-      localStorage.removeItem(REMEMBER_KEY);
-    }
+    // if (rememberChk.checked) {
+    //   localStorage.setItem(
+    //     REMEMBER_KEY,
+    //     JSON.stringify({ email, remember: true })
+    //   );
+    // } else {
+    //   localStorage.removeItem(REMEMBER_KEY);
+    // }
 
-    // 給會員頁用的帳號資訊
-    localStorage.setItem(
-      ACCOUNT_KEY,
-      JSON.stringify({ account: email, password })
-    );
+    // // 給會員頁用的帳號資訊
+    // localStorage.setItem(
+    //   ACCOUNT_KEY,
+    //   JSON.stringify({ account: email, password })
+    // );
 
     msgBox.textContent = "登入成功，即將前往會員頁…";
     msgBox.classList.remove("warning");

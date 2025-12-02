@@ -178,6 +178,7 @@ app.post('/save-favorite', authMiddleware, (req, res) => {
   const userId = req.user.userId; // authMiddleware 應該會把 userId 放在 req.user
   const { outfitID } = req.body;
   console.log("req.user =", req.user);
+  console.log("outfitID =", outfitID);
 
 
   if (!outfitID) return res.status(400).json({ success: false, message: '缺少 outfitID' });
@@ -291,6 +292,92 @@ app.post('/save-outfit', (req, res) => {
     }
   );
 });
+
+//取得特定 ID 的outfit table的資料
+app.get('/get-outfit/:id', (req, res) => {
+  const outfitID = req.params.id;
+  const query = 'SELECT * FROM outfits WHERE OutfitID = ?';
+
+  connection.query(query, [outfitID], (err, results) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({ success: false, message: '查詢 outfit 失敗' });
+    }
+
+    res.json({ success: true, outfit: results[0] });
+  });
+});
+
+/* --------------------------------------------
+   新增歷史紀錄
+--------------------------------------------- */
+// 新增歷史紀錄
+app.post('/add-history', authMiddleware, (req, res) => {
+  const userID = req.user.userId; // 從 JWT 取得使用者 ID
+  const { outfitID } = req.body;
+
+  console.log("req.user =", req.user);
+  console.log("History => userID =", userID);
+  console.log("History => outfitID =", outfitID);
+
+  if (!userID) {
+    return res.status(401).json({ success: false, message: '未登入' });
+  }
+  if (!outfitID) {
+    return res.status(400).json({ success: false, message: '缺少 outfitID' });
+  }
+
+  const query = `
+    INSERT INTO outfitHistory (UserID, OutfitID)
+    VALUES (?, ?)
+  `;
+
+  connection.query(query, [userID, outfitID], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+
+    res.json({
+      success: true,
+      message: '已新增歷史紀錄',
+      historyID: results.insertId
+    });
+  });
+});
+
+
+
+/* --------------------------------------------
+   取得使用者歷史紀錄
+--------------------------------------------- */
+// 取得使用者歷史紀錄
+app.get('/get-history', authMiddleware, (req, res) => {
+  const userID = req.user.userId; // 從 JWT 取得使用者 ID
+
+  if (!userID) {
+    return res.status(401).json({ success: false, message: '未登入' });
+  }
+
+  const query = `
+    SELECT h.HistoryID, h.OutfitID, h.CreatedAt, 
+           o.Title, o.ColorKey, o.StyleKey, o.GenderKey
+    FROM outfitHistory h
+    JOIN outfits o ON h.OutfitID = o.OutfitID
+    WHERE h.UserID = ?
+    ORDER BY h.CreatedAt DESC
+  `;
+
+  connection.query(query, [userID], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+
+    res.json({ success: true, history: results });
+  });
+});
+
 
 
 
