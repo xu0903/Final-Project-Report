@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const USER_KEY = "fitmatch_user";           
   const ACCOUNT_KEY = "fitmatch_account";     
   const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions"; 
+  const USERS_DB_KEY = "fitmatch_users"; 
 
   // DOM Elements
   const displayNickname = document.getElementById("display-nickname");
@@ -63,9 +64,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (displayAccount) displayAccount.textContent = "請先登入";
       if (btnLogout) btnLogout.style.display = "none";
       if (loginLink) loginLink.style.display = "inline-block";
-      // 未登入隱藏編輯按鈕
       if (btnEditNickname) btnEditNickname.style.display = "none";
-      if (avatarContainer) avatarContainer.style.pointerEvents = "none"; // 禁止點擊
+      if (avatarContainer) avatarContainer.style.pointerEvents = "none";
     }
   }
 
@@ -105,16 +105,18 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("暱稱不能為空！");
         return;
       }
+      
+      // 先更新本地 UI 和 Storage，讓使用者覺得很快
       updateLocalUser({ nickname: newName });
       
       displayNickname.textContent = newName;
-      // 如果目前是文字頭像，要更新文字
       const user = JSON.parse(localStorage.getItem(USER_KEY));
       if (!user.avatar) renderAvatarText(newName);
 
       nicknameEditMode.classList.add("hidden");
       nicknameViewMode.classList.remove("hidden");
 
+      // 再背景更新伺服器
       await updateServerProfile({ nickname: newName });
     });
   }
@@ -147,23 +149,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 4. ★ 新增：移除頭像
+  // 4. 移除頭像
   if (btnRemoveAvatar) {
     btnRemoveAvatar.addEventListener("click", async () => {
         if (!confirm("確定要移除目前的頭貼嗎？")) return;
 
-        // 恢復文字頭像
         const user = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
         const name = user.nickname || user.username || "M";
         renderAvatarText(name);
         
-        // 隱藏移除按鈕
         btnRemoveAvatar.classList.add("hidden");
 
-        // 更新資料 (設為 null)
         updateLocalUser({ avatar: null });
-        
-        // 通知後端 (傳空字串代表刪除)
         await updateServerProfile({ avatar: "" });
     });
   }
@@ -171,32 +168,57 @@ document.addEventListener("DOMContentLoaded", () => {
   // 5. 更新 LocalStorage
   function updateLocalUser(updates) {
     try {
+      // A. 更新當前登入者
       let user = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
       user = { ...user, ...updates };
       localStorage.setItem(USER_KEY, JSON.stringify(user));
 
+      // 取得 Email 用於比對 (統一轉小寫)
+      const targetEmail = (user.account || user.email || "").toLowerCase();
+      if (!targetEmail) return;
+
+      // B. 更新切換帳號列表 (Saved Sessions)
       let sessions = JSON.parse(localStorage.getItem(SAVED_SESSIONS_KEY) || "[]");
-      const idx = sessions.findIndex(s => s.account === user.account);
+      const idx = sessions.findIndex(s => (s.account || s.email || "").toLowerCase() === targetEmail);
       if (idx !== -1) {
         sessions[idx] = { ...sessions[idx], ...updates };
         localStorage.setItem(SAVED_SESSIONS_KEY, JSON.stringify(sessions));
       }
+
+      // C. 同步更新本地備份資料庫 (fitmatch_users)
+      let usersDB = JSON.parse(localStorage.getItem(USERS_DB_KEY) || "[]");
+      const dbIdx = usersDB.findIndex(u => (u.account || u.email || "").toLowerCase() === targetEmail);
+      if (dbIdx !== -1) {
+          usersDB[dbIdx] = { ...usersDB[dbIdx], ...updates };
+          localStorage.setItem(USERS_DB_KEY, JSON.stringify(usersDB));
+      }
+
     } catch (e) { console.error("Update local error", e); }
   }
 
-  // 6. 呼叫後端
+  // 6. 呼叫後端 (增加錯誤提示)
   async function updateServerProfile(data) {
     try {
       const user = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
       if (!user.account) return;
 
-      await fetch(`${API_BASE_URL}/update-user`, {
+      const response = await fetch(`${API_BASE_URL}/update-user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include', 
         body: JSON.stringify({ email: user.account, ...data })
       });
-    } catch (err) { console.error("API error", err); }
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+          throw new Error(result.message || "伺服器更新失敗");
+      }
+      console.log("伺服器資料更新成功");
+
+    } catch (err) { 
+        console.error("API error", err); 
+        alert("⚠️ 注意：無法連線到伺服器，您的變更僅暫存於本機。\n(若切換帳號或清除快取，變更可能會遺失)");
+    }
   }
 
   // 7. 登出

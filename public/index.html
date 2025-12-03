@@ -29,24 +29,33 @@
       <div class="hero-grid">
 
         <div class="hero-text">
-          <h1>FitMatch-穿搭風格篩選</h1>
+          <!-- 文案區 -->
+          <h1>FitMatch—你的專屬穿搭靈感庫</h1>
           <p>
-            使用顏色取樣與風格規則，提供多套男裝/女裝/中性風格穿搭建議。
+            告別穿搭煩惱！透過智慧色彩分析與風格篩選，輕鬆解鎖日系、韓系與歐美風的完美搭配。無論日常通勤或週末約會，都能展現最自信的自己。
           </p>
 
-          <a href="outfit.html" class="btn btn-primary">開始篩選</a>
-          <a href="idea.html" class="btn btn-outline">找靈感</a>
+          <a href="outfit.html" class="btn btn-primary">立即開始搭配</a>
+          <a href="idea.html" class="btn btn-outline">探索穿搭靈感</a>
         </div>
 
-        <div class="hero-img">
-          <!-- 修改處：加上 id 與 transition 樣式 -->
-          <!-- 請確保您的圖片資料夾名稱為 IndexPage 且路徑正確 (建議使用斜線 /) -->
-          <img 
-            id="hero-slider" 
-            src="IndexPage/indexpage_1.png" 
-            alt="穿搭展示" 
-            style="transition: opacity 0.5s ease-in-out; opacity: 1;"
-          >
+        <!-- 右側視覺區：包含大圖與下方的縮圖列 -->
+        <div class="hero-visuals">
+          
+          <!-- 上方：主大圖 -->
+          <div class="hero-img">
+            <img 
+              id="hero-slider" 
+              src="IndexPage/indexpage_1.png" 
+              alt="穿搭展示" 
+            >
+          </div>
+
+          <!-- 下方：6張小縮圖 (由 JS 動態生成，或手寫也可) -->
+          <div class="hero-thumbs" id="hero-thumbs-row">
+            <!-- JS 會在這裡產生 img 標籤 -->
+          </div>
+
         </div>
 
       </div>

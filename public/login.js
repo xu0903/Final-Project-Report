@@ -1,21 +1,21 @@
 document.addEventListener("DOMContentLoaded", () => {
   // ===== 設定區 =====
-  // 必須與 server.js 的 port 一致
   const API_BASE_URL = 'http://localhost:3000'; 
   
   // Storage Keys
   const REMEMBER_KEY = "fitmatch_remember";
   const ACCOUNT_KEY = "fitmatch_account"; 
   const USER_KEY_LEGACY = "fitmatch_user"; 
-  const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions"; // 切換帳號列表
+  const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions"; 
+  const USERS_DB_KEY = "fitmatch_users"; // 本地備份資料庫
 
   // Views & Elements
-  const loginView = document.getElementById("login-view"); // 雖然你的 HTML 目前只有 form，保留邏輯以便擴充
+  const loginView = document.getElementById("login-view");
   const loggedinView = document.getElementById("loggedin-view");
   const currentUserEmailEl = document.getElementById("current-user-email");
   const btnLogout = document.getElementById("btn-logout");
 
-  const authWrap = document.querySelector(".centered-card"); // 整個卡片容器
+  const authWrap = document.querySelector(".centered-card"); 
   const loginForm = document.getElementById("login-form");
   const emailInput = document.getElementById("email");
   const pwdInput = document.getElementById("password");
@@ -28,17 +28,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const msgBox = document.getElementById("msg");
   const forgotLink = document.getElementById("forgot");
 
-  // 動態建立「切換帳號」的 View (如果還沒有)
   let switchAccountView = document.getElementById("switch-account-view");
   if (!switchAccountView) {
     switchAccountView = document.createElement("div");
     switchAccountView.id = "switch-account-view";
     switchAccountView.className = "hidden"; 
-    // 插入到卡片開頭
     if (authWrap) authWrap.insertBefore(switchAccountView, authWrap.firstChild);
   }
 
-  // ===== 0. 狀態檢查 (切換帳號/登入頁) =====
+  // ===== 0. 狀態檢查 =====
   function checkLoginState() {
     const rawAccount = localStorage.getItem(ACCOUNT_KEY);
     let savedSessions = [];
@@ -46,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
         savedSessions = JSON.parse(localStorage.getItem(SAVED_SESSIONS_KEY) || "[]");
     } catch(e) {}
 
-    // A. 已經登入 -> 顯示切換帳號畫面 (模擬 IG)
+    // A. 已經登入
     if (rawAccount) {
       try {
         const accountData = JSON.parse(rawAccount);
@@ -62,11 +60,11 @@ document.addEventListener("DOMContentLoaded", () => {
         showLoginForm();
       }
     } 
-    // B. 沒登入但有紀錄 -> 顯示帳號列表
+    // B. 沒登入但有紀錄
     else if (savedSessions.length > 0) {
         renderSwitchAccountList(savedSessions);
     }
-    // C. 完全沒紀錄 -> 顯示表單
+    // C. 完全沒紀錄
     else {
         showLoginForm();
     }
@@ -150,7 +148,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (targetUser && targetUser.password) {
            await performApiLogin(targetUser.account, targetUser.password, false); 
         } else {
-           // 沒存密碼，跳轉回表單並填入 Email
            showLoginForm();
            if(emailInput) emailInput.value = targetUser.account;
         }
@@ -178,7 +175,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if(loginForm) loginForm.style.display = "block";
     showHeader();
     
-    // 載入記住我
     try {
         const rawRem = localStorage.getItem(REMEMBER_KEY);
         if (rawRem && emailInput) {
@@ -281,13 +277,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ===== 3. 表單送出 (核心修正) =====
+  // ===== 3. 表單送出 =====
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       if(msgBox) { msgBox.textContent = ""; msgBox.className = "msg"; }
 
-      // 檢查驗證碼
       if (!currentCaptcha || !captchaInput || captchaInput.value.toLowerCase() !== currentCaptcha.code.toLowerCase()) {
         setFieldError(captchaInput, "驗證碼錯誤");
         if(msgBox) { msgBox.textContent = "驗證碼錯誤"; msgBox.classList.add("warning"); }
@@ -305,15 +300,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 獨立出 API 登入邏輯，供表單和切換帳號使用
+  // API 登入
   async function performApiLogin(email, password, isNewLogin) {
       try {
-        // ★ 修正 1：路徑改為 /authenticate 以符合 server.js
-        // ★ 修正 2：參數名稱改為 email 與 password
         const response = await fetch(`${API_BASE_URL}/authenticate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          // 重要：傳送 email (不是 account)，server.js 才能讀到
           body: JSON.stringify({ email: email, password: password }) 
         });
 
@@ -327,7 +319,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (response.ok) {
-          // 整理後端回傳的使用者資料
           const userData = {
               nickname: data.user.username,
               account: data.user.email,
@@ -342,7 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (err) {
         console.error("Login Error:", err);
         
-        // Fallback: 本地端測試用 (Demo)
+        // Fallback: 嘗試本地備份
         if (err.message === "API_Unavailable" || err.message.includes("Failed to fetch")) {
             const localSuccess = tryLocalLogin(email, password, isNewLogin);
             if (localSuccess) return;
@@ -360,11 +351,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function tryLocalLogin(email, password, isNewLogin) {
     try {
-        const rawUsers = localStorage.getItem("fitmatch_users"); 
+        // 從本地備份資料庫讀取
+        const rawUsers = localStorage.getItem(USERS_DB_KEY); 
         if (rawUsers) {
             const users = JSON.parse(rawUsers);
             const user = users.find(u => u.account === email && u.password === password);
             if (user) {
+                console.log("使用本地備份登入:", user.nickname);
                 doLoginSuccess(user, email, password, isNewLogin);
                 return true;
             }
@@ -378,6 +371,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return false;
   }
 
+  // 登入成功處理
   function doLoginSuccess(user, email, password, isNewLogin = true) {
     if (rememberChk && rememberChk.checked) {
       localStorage.setItem(REMEMBER_KEY, JSON.stringify({ email: email, remember: true }));
@@ -385,20 +379,22 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.removeItem(REMEMBER_KEY);
     }
 
-    // 儲存狀態
     const activeUser = { ...user, account: email, password: password };
     localStorage.setItem(ACCOUNT_KEY, JSON.stringify(activeUser));
     localStorage.setItem(USER_KEY_LEGACY, JSON.stringify(activeUser));
 
-    // 如果是新登入，加入到列表
-    if (isNewLogin) {
-        let sessions = [];
-        try { sessions = JSON.parse(localStorage.getItem(SAVED_SESSIONS_KEY) || "[]"); } catch(e){}
-        const idx = sessions.findIndex(s => s.account === email);
-        if (idx >= 0) sessions[idx] = activeUser;
-        else sessions.push(activeUser);
-        localStorage.setItem(SAVED_SESSIONS_KEY, JSON.stringify(sessions));
+    // ★ 關鍵修正：無論是否為新登入 (isNewLogin)，都更新切換帳號列表
+    // 這樣才能確保從 ID.js 修改後的暱稱/頭像，在下次登入時是新的
+    let sessions = [];
+    try { sessions = JSON.parse(localStorage.getItem(SAVED_SESSIONS_KEY) || "[]"); } catch(e){}
+    
+    const idx = sessions.findIndex(s => s.account === email);
+    if (idx >= 0) {
+        sessions[idx] = { ...sessions[idx], ...activeUser }; // 更新資料
+    } else {
+        sessions.push(activeUser); // 新增資料
     }
+    localStorage.setItem(SAVED_SESSIONS_KEY, JSON.stringify(sessions));
 
     if(msgBox) {
         msgBox.textContent = "登入成功！跳轉中...";
@@ -411,3 +407,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 800);
   }
 });
+
+// ... 前面省略 ...
+  const USERS_DB_KEY = "fitmatch_users"; // 本地備份資料庫
+
+  // === 救援工具 ===
+  window.resetAllUsers = () => {
+      localStorage.removeItem(USERS_DB_KEY);
+      localStorage.removeItem(SAVED_SESSIONS_KEY);
+      localStorage.removeItem(CURRENT_USER_KEY);
+      alert("已清空所有本地使用者資料！");
+      location.reload();
+  };
+// ...
