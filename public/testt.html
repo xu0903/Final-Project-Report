@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>登入/註冊 - FitMatch</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">FitMatch</a>
+      <nav>
+        <a href="index.html">主頁</a>
+        <a href="login.html" class="active">登入/註冊</a>
+        <a href="outfit.html">風格篩選</a>
+        <a href="idea.html">找靈感</a>
+        <a href="ID.html">會員</a>
+        <a href="messageboard.html">留言板</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container auth-wrap">
+    <div class="centered-card">
+      <h2 class="section-title" style="text-align:center; margin-bottom: 1.5rem;">會員註冊</h2>
+
+      <form id="register-form" class="form-vertical">
+        
+        <div class="form-row">
+          <label for="reg-nickname">暱稱</label>
+          <input type="text" id="reg-nickname" placeholder="想怎麼被稱呼？" />
+        </div>
+
+        <div class="form-row">
+          <label for="reg-account">帳號 (Email)</label>
+          <input type="email" id="reg-account" placeholder="example@mail.com" />
+        </div>
+
+        <div class="form-row">
+          <label for="reg-password">密碼</label>
+          <input type="password" id="reg-password" placeholder="請輸入密碼" />
+        </div>
+
+        <div class="form-row">
+          <label for="reg-confirm">確認密碼</label>
+          <input type="password" id="reg-confirm" placeholder="再次輸入密碼" />
+        </div>
+
+        <!-- 新增驗證碼區塊 -->
+        <div class="form-row">
+          <label for="reg-captcha">驗證碼</label>
+          <div class="captcha-inline-row">
+            <input type="text" id="reg-captcha" placeholder="輸入圖中文字" autocomplete="off" />
+            <!-- 使用 Canvas 繪製驗證碼，點擊可刷新 -->
+            <canvas id="captcha-canvas" width="120" height="42" style="cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9;" title="點擊換一張"></canvas>
+          </div>
+        </div>
+
+        <p id="error-msg" class="small" style="color: #ef4444; min-height: 1.2em; margin-top: 5px;"></p>
+
+        <button type="button" id="btn-register" class="btn btn-login">
+          立即註冊
+        </button>
+
+        <div style="text-align: center; margin-top: 1rem;">
+          <span class="small-text">已經有帳號了嗎？</span>
+          <!-- 這裡通常是跳轉到登入頁，或是切換 Tab -->
+          <button type="button" class="btn-text" style="color: var(--accent); font-weight: bold;">
+            登入
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <script src="login.js"></script>
+</body>
+</html>

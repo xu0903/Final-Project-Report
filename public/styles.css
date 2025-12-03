@@ -1634,3 +1634,817 @@ button,
   color: #fff;
   /* border-color: #555; */
 }
+/*login*/
+.auth-wrap {
+      min-height: 80vh; /* 扣掉 header 高度 */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .centered-card {
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      border: 2px solid #ddd6cc; /* 與註冊頁一致的邊框色 */
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      margin-top: 0;
+      color: #2f2d2c;
+    }
+
+    /* 表單佈局 */
+    .form-vertical .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem; /* 標籤與輸入框的間距 */
+      margin-bottom: 1rem;
+    }
+
+    .form-vertical label {
+      font-weight: 500;
+      color: #2f2d2c;
+    }
+
+    .form-vertical input[type="text"],
+    .form-vertical input[type="email"],
+    .form-vertical input[type="password"] {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      width: 100%;
+      box-sizing: border-box; /* 確保 padding 不會撐大寬度 */
+      transition: border-color 0.2s;
+    }
+
+    .form-vertical input:focus {
+      border-color: #c7a693; /* Accent color */
+      outline: none;
+    }
+
+    /* 驗證碼區塊 */
+    .captcha-inline-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 5px;
+    }
+
+    .captcha-inline-row input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .captcha-inline-row img {
+      height: 42px;
+      width: auto;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+    }
+
+    /* 按鈕樣式 */
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-family: inherit;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #c7a693; /* Accent */
+      color: white;
+      border: none;
+      transition: background 0.2s;
+    }
+
+    .btn-login:hover {
+      background-color: #b58f7f;
+    }
+    
+    .btn-login:disabled {
+      background-color: #e5e7eb;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .btn-outline-login {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-family: inherit;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: transparent;
+      border: 1px solid #c7a693;
+      color: #c7a693;
+      transition: background 0.2s;
+    }
+
+    .btn-outline-login:hover {
+      background-color: rgba(199,166,147,0.1);
+    }
+
+    /* 其他輔助樣式 */
+    .small-text {
+      font-size: 13px;
+    }
+    
+    .ghost {
+      background: none;
+      border: none;
+      color: #7c756e;
+      cursor: pointer;
+    }
+
+    .err {
+      color: #ef4444;
+      font-size: 0.85rem;
+      margin-top: 4px;
+      display: block;
+      min-height: 1.2em;
+    }
+    
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    /* ... existing code ... */
+
+/* === Auth Pages (Login / Register) === */
+
+.auth-wrap {
+  min-height: 80vh; /* 扣掉 header 高度 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.centered-card {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border: 2px solid #ddd6cc;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+  color: #2f2d2c;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+/* 垂直表單佈局 (與註冊頁一致) */
+.form-vertical .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.2rem;
+}
+
+.form-vertical label {
+  font-weight: 600;
+  color: #2f2d2c;
+  font-size: 0.95rem;
+}
+
+.form-vertical input[type="text"],
+.form-vertical input[type="email"],
+.form-vertical input[type="password"] {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #fff;
+}
+
+.form-vertical input:focus {
+  border-color: #c7a693;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(199, 166, 147, 0.2);
+}
+
+/* 驗證碼區塊 */
+.captcha-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.captcha-inline-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.captcha-inline-row img {
+  height: 46px; /* 稍微加大一點比較好點 */
+  width: auto;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  transition: opacity 0.2s;
+}
+.captcha-inline-row img:hover {
+  opacity: 0.8;
+}
+
+/* 按鈕樣式 */
+.btn-login {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #c7a693;
+  color: white;
+  border: none;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-login:hover {
+  background-color: #b58f7f;
+  transform: translateY(-1px);
+}
+
+.btn-login:active {
+  transform: translateY(0);
+}
+
+.btn-login:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-outline-login {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-family: inherit;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: transparent;
+  border: 1px solid #c7a693;
+  color: #c7a693;
+  transition: background 0.2s;
+}
+
+.btn-outline-login:hover {
+  background-color: rgba(199,166,147,0.1);
+}
+
+/* 輔助文字與連結 */
+.ghost {
+  background: none;
+  border: none;
+  color: #7c756e;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px 8px;
+}
+.ghost:hover {
+  color: #2f2d2c;
+  text-decoration: underline;
+}
+
+.err {
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  display: block;
+  min-height: 1.2em;
+}
+
+.msg {
+  text-align: center;
+  margin-top: 15px;
+  min-height: 1.5em;
+  font-size: 14px;
+  font-weight: 500;
+}
+.msg.success { color: #10b981; }
+.msg.warning { color: #ef4444; }
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+/* === Logged In View (已登入狀態樣式) === */
+.loggedin-content {
+  text-align: center;
+  padding: 20px 0;
+}
+.user-avatar-large {
+  width: 80px;
+  height: 80px;
+  background: #f3f4f6;
+  color: #c7a693;
+  font-size: 32px;
+  font-weight: bold;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px;
+  border: 2px solid #e5e7eb;
+}
+.current-user-email {
+  font-weight: bold;
+  color: #2f2d2c;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+/* 工具 class */
+.hidden { display: none !important; }
+
+:root {
+  --cream: #f5f1eb;
+  --beige: #e8e3da;
+  --sand: #d8d2c7;
+  --sage: #b9b8a3;
+  --taupe: #a79f96;
+
+  --text-dark: #2f2d2c;
+  --text-light: #7c756e;
+
+  --line: #ddd6cc;
+  --accent: #c7a693;     /* 主要強調色 (按鈕/連結) */
+  --accent-hover: #b58f7f; /*按鈕 hover 顏色*/
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Noto Serif TC", serif;
+  background: var(--cream);
+  color: var(--text-dark);
+}
+
+a { text-decoration: none; color: inherit; }
+img { max-width: 100%; display: block; }
+
+/* 隱藏元素工具 class (JS 切換用) */
+.hidden { display: none !important; }
+
+/* =========================================
+   Layout & Components
+   ========================================= */
+.container {
+  max-width: 1280px; /* 稍微縮小一點讓閱讀更集中，原本 2160px 可能太寬 */
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Header */
+.site-header {
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+nav a {
+  margin-left: 16px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: background 0.2s;
+}
+
+nav a.active { background: var(--beige); }
+nav a:hover { background: #e1dbd0; }
+
+/* Buttons General */
+.btn {
+  padding: 10px 18px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  margin-right: 10px;
+  display: inline-block;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: white;
+}
+.btn.primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn.secondary {
+  border: 1px solid #d1d5db;
+  background: #fff;
+}
+.btn.secondary:hover {
+  background-color: #d1d5db;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================================
+   Auth Pages (Login & Register 統一風格)
+   ========================================= */
+
+.auth-wrap {
+  min-height: 80vh; /* 讓內容在垂直方向有呼吸空間 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+/* 統一的卡片樣式 */
+.centered-card {
+  width: 100%;
+  max-width: 420px; /* 適當的寬度 */
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  padding: 30px 40px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  transition: all 0.3s ease;
+}
+
+.section-title {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: var(--text-dark);
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+/* 垂直表單排版 */
+.form-vertical .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.form-vertical label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+
+/* 統一輸入框樣式 */
+.form-vertical input[type="text"],
+.form-vertical input[type="email"],
+.form-vertical input[type="password"] {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit; /* 繼承 Noto Serif */
+}
+
+.form-vertical input:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(199, 166, 147, 0.2);
+}
+
+/* 錯誤狀態 */
+.form-vertical input.invalid {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+/* 驗證碼區塊 */
+.captcha-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.captcha-inline-row input {
+  flex: 1; /* 輸入框佔滿剩餘空間 */
+  min-width: 0;
+}
+.captcha-inline-row img {
+  height: 48px;
+  width: auto;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+  transition: opacity 0.2s;
+}
+.captcha-inline-row img:hover {
+  opacity: 0.8;
+}
+
+/* Auth Buttons */
+.btn-login {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-login:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-1px);
+}
+.btn-login:active {
+  transform: translateY(0);
+}
+.btn-login:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-outline-login {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  transition: background 0.2s;
+}
+.btn-outline-login:hover {
+  background-color: rgba(199,166,147,0.1);
+}
+
+/* 輔助連結 (忘記密碼、顯示密碼、換一張) */
+.ghost {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+.ghost:hover {
+  color: var(--text-dark);
+  text-decoration: underline;
+}
+
+/* Checkbox 行 */
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.2rem;
+}
+.check-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+.check-row label {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-dark);
+}
+
+/* 錯誤與狀態訊息 */
+.err {
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  display: block;
+  min-height: 1.2em;
+}
+
+.msg {
+  text-align: center;
+  margin-top: 16px;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.msg:empty { display: none; }
+.msg.success { color: #065f46; background-color: #d1fae5; }
+.msg.warning { color: #991b1b; background-color: #fee2e2; }
+
+/* === 已登入畫面 (Logged In View) === */
+.loggedin-content {
+  text-align: center;
+  padding: 20px 0;
+}
+.user-avatar-large {
+  width: 90px;
+  height: 90px;
+  background: var(--cream);
+  color: var(--accent);
+  font-size: 40px;
+  font-weight: bold;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.current-user-email {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 24px;
+  font-size: 1.1rem;
+  padding: 8px 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+/* =========================================
+   其他頁面樣式 (Hero, Member, Idea, Gallery)
+   ========================================= */
+.small { font-size: 12px; }
+.muted { color: var(--text-light); }
+
+.hero { padding: 80px 0; }
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+.hero h1 { font-size: 40px; font-weight: 600; margin-bottom: 14px; }
+.hero p { font-size: 18px; color: var(--text-light); margin-bottom: 24px; line-height: 1.6; }
+.hero-img {
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--sand);
+  height: 360px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.hero-img img { width: 100%; height: 100%; object-fit: cover; }
+
+/* 找靈感 & 篩選 */
+.tag-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+.tag-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.tag-pill .dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  border: 2px solid #9ca3af;
+}
+.tag-pill.active {
+  border-color: #111827;
+  background: #f3f4f6;
+  box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
+}
+.tag-pill.active .dot {
+  border-color: #111827;
+  background: #111827;
+}
+
+/* 卡片 */
+.idea-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+.idea-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.6rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+.idea-card:hover:not(.active) {
+  transform: scale(1.03);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+.idea-card.active { transform: translateY(-3px); }
+.idea-card.active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid #b8c7d7;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4);
+  pointer-events: none;
+}
+.idea-thumb {
+  width: 100%;
+  padding-top: 100%;
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+}
+.idea-body { display: flex; flex-direction: column; gap: 0.35rem; }
+.idea-title { font-size: 0.95rem; margin: 0; }
+.idea-tags { margin: 0; }
+
+/* 收藏按鈕特例 */
+.btn-fav { z-index: 5; position: relative; }
+/* 未收藏：hover 維持白色，不要變色 */
+.btn.secondary.btn-fav:hover {
+  background: #fff;
+}
+/* 已收藏：樣式 */
+.btn-fav.saved {
+  background-color: #87735d;
+  color: #fff;
+  border-color: #555;
+}
+.btn.secondary.btn-fav.saved:hover {
+  background: #87735d;
+  color: #fff;
+}
+
+/* RWD */
+@media(max-width: 768px) {
+  .hero-grid { grid-template-columns: 1fr; text-align: center; }
+  .auth-wrap { padding: 20px; }
+}
