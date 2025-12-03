@@ -51,47 +51,99 @@ async function fetchAndRenderTags() {
 fetchAndRenderTags();
 
 /* --------------------------------------------
+   由ID取的outfit資料
+--------------------------------------------- */
+async function fetchOutfit(outfitID) {
+  try {
+    const res = await fetch(`/get-outfit/${encodeURIComponent(outfitID)}`, {
+      method: 'GET',
+      credentials: 'include', // 如果需要 Cookie/JWT
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error(`伺服器回傳錯誤: ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    if (!data.success) {
+      console.error("取得 outfit 失敗：", data.message);
+      return null;
+    }
+
+    return data.outfit; // 回傳 outfit 物件
+
+  } catch (err) {
+    console.error("fetchOutfit 錯誤：", err);
+    return null;
+  }
+}
+
+
+/* --------------------------------------------
    紀錄功能 (History / Preference)
 --------------------------------------------- */
-const HISTORY_KEY = "fitmatch_history";
+async function loadHistory() {
+  try {
+    const res = await fetch('/get-history', { credentials: 'include' });
+    const data = await res.json();
 
-function loadHistory() {
-  const raw = localStorage.getItem(HISTORY_KEY);
-  return raw ? JSON.parse(raw) : [];
-}
+    if (!data.success || !Array.isArray(data.history)) return [];
 
-function recordPreference(data) {
-  const list = loadHistory();
+    console.log("取得歷史紀錄：", data.history);
 
-  // 建立一筆新的紀錄
-  const newRecord = {
-    timestamp: new Date().toISOString(), // 紀錄時間
-    gender: data.genderLabel,
-    color: data.colorLabel,
-    style: data.styleLabel,
-    // 保留 key 方便之後資料庫分析
-    genderKey: data.genderKey,
-    colorKey: data.colorKey,
-    styleKey: data.styleKey
-  };
+    // 取最後三筆
+    const lastThree = data.history.slice(0, 3);
 
-  // 為了避免紀錄太長，限制只留最近 50 筆
-  if (list.length > 50) {
-    list.shift(); // 移除最舊的
+    // 用 Promise.all 同時 fetch 三筆 outfit 資料
+    const outfitPromises = lastThree.map(item => fetchOutfit(item.OutfitID));
+    const outfits = await Promise.all(outfitPromises);
+
+    // 將取得的 outfits 過濾掉 null，並轉成 idea 卡片所需格式
+    return outfits
+      .filter(o => o !== null)
+      .map(o => ({
+        id: o.OutfitID,
+        title: o.Title,
+        colorKey: o.ColorKey,
+        styleKey: o.StyleKey,
+        genderKey: o.GenderKey,
+        colorLabel: o.ColorLabel || o.ColorKey,
+        styleLabel: o.StyleLabel || o.StyleKey,
+        genderLabel: o.GenderLabel || o.GenderKey
+      }));
+
+  } catch (error) {
+    console.error("從伺服器取得歷史紀錄失敗：", error);
+    return [];
   }
-
-  list.push(newRecord);
-
-  // 存入 LocalStorage
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
-
-  // 在 Console 顯示紀錄結果 (開發用)
-  console.log("已新增一筆風格紀錄：", newRecord);
-  console.table(list);
 }
 
-const FAVORITES_KEY = "fitmatch_favorites";
-const RESULT_KEY = "fitmatch_result";
+
+
+async function saveHistory(outfitID) {
+  console.log("Saving history for outfitID:", outfitID);
+  fetch('/add-history', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ outfitID })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        console.log("已將歷史紀錄儲存到伺服器");
+      } else {
+        console.error("儲存歷史紀錄到伺服器失敗：", data.message);
+      }
+    })
+    .catch(error => {
+      console.error("儲存歷史紀錄到伺服器時發生錯誤：", error);
+    });
+}
 
 // 顏色背景（給靈感卡片顏色感）
 const colorBG = {
@@ -107,38 +159,43 @@ const colorBG = {
   lightblue: "#a0c4ff",
   blue: "#4361ee",
   purple: "#c77dff",
+  brown: "#8b5e3c",
 };
 
 /* --------------------------------------------
    收藏相關
 --------------------------------------------- */
-function loadFavorites() {
+async function loadFavorites() {
   try {
-    const raw = localStorage.getItem(FAVORITES_KEY);
-    const data = raw ? JSON.parse(raw) : [];
-    return Array.isArray(data) ? data : [];
+    const res = await fetch('/get-user-favorites', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+    return data.favorites;
   } catch (e) {
     console.error("收藏載入失敗", e);
-    return [];
   }
 }
 
-function saveFavorites(outfitID) {
-  fetch('/save-favorite', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ outfitID })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.success) {
-        console.error("儲存收藏到伺服器失敗：", data.message);
-      }
-    })
-    .catch(error => {
-      console.error("儲存收藏到伺服器時發生錯誤：", error);
+async function saveFavorites(outfitID) {
+  try {
+    const res = await fetch('/save-favorite', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ outfitID })
     });
+    const data = await res.json();
+    if (!data.success) console.error("儲存收藏失敗：", data.message);
+    return data;
+  } catch (error) {
+    console.error("儲存收藏出錯：", error);
+    return { success: false, error };
+  }
 }
+
 
 function deleteFavorite(outfitID) {
   console.log("Deleting favorite outfitID:", outfitID);
@@ -173,19 +230,19 @@ function escapeHTML(str) {
 /* --------------------------------------------
    建立靈感卡片（無性別色塊）
 --------------------------------------------- */
-function createIdeaCardHTML(data) {
+async function createIdeaCardHTML(data, favorites = []) {
   const { id, title, colorLabel, styleLabel, genderLabel,
     colorKey, styleKey, genderKey } = data;
   console.log("createIdeaCardHTML data:", data);
 
   const bg = colorBG[colorKey] || "#e5e7eb";
 
-  // 1. 讀取目前的收藏清單
-  const currentFavorites = loadFavorites();
-  // 2. 檢查這張卡片是否已在清單中
-  const isFav = currentFavorites.some(item => item.id == id);
+  console.log('favorites:', favorites);
+  // 判斷是否已收藏
+  const isFav = favorites.some(item => item.OutfitID == id);
+  console.log('isFav for outfitID', id, ':', isFav);
 
-  // 3. 根據狀態決定按鈕文字與樣式
+  // 根據狀態決定按鈕文字與樣式
   const btnText = isFav ? "★ 已收藏" : "★ 收藏";
   const btnClass = isFav ? "btn secondary btn-fav saved" : "btn secondary btn-fav";
 
@@ -264,7 +321,6 @@ function getCurrentSelection() {
 /* --------------------------------------------
    按鈕：產生靈感卡片（含性別）
 --------------------------------------------- */
-let currentOutfit = [];
 async function renderIdeas() {
   const grid = document.getElementById("idea-grid");
   const tip = document.getElementById("idea-tip");
@@ -282,10 +338,7 @@ async function renderIdeas() {
     return;
   }
 
-  recordPreference(selection);
-
   const ideas = [];
-  const savedOutfitIDs = []; // ✅ 初始化
   const count = 3;
 
   for (let i = 1; i <= count; i++) {
@@ -300,18 +353,13 @@ async function renderIdeas() {
         imageURL: null
       })
     });
-    currentOutfit[i - 1] = await res.json();
 
-    console.log("儲存 outfit 回傳結果之1：", currentOutfit[i - 1]);
+    const data = await res.json();
+    console.log("儲存 outfit 回傳資料：", data.outfitID);
+    await saveHistory(data.outfitID); // 儲存歷史紀錄
 
-    if (!currentOutfit[i - 1].success) {
-      console.error("儲存 outfit 失敗：", currentOutfit[i - 1].message);
-      continue;
-    }
-
-    savedOutfitIDs.push(currentOutfit[i - 1].outfitID);
     ideas.push({
-      id: currentOutfit[i - 1].outfitID, // 使用後端的 ID
+      id: data.outfitID, // 使用後端的 ID
       title: `${colorLabel} × ${styleLabel} × ${genderLabel} Look ${i}`,
       colorKey,
       colorLabel,
@@ -323,16 +371,11 @@ async function renderIdeas() {
   }
   console.log("已儲存的 outfit IDs：", ideas.map(x => x.id));
 
-  grid.innerHTML = ideas.map(x => createIdeaCardHTML(x)).join("");
+  const favorites = await loadFavorites();
+  grid.innerHTML = (await Promise.all(ideas.map(x => createIdeaCardHTML(x, favorites)))).join("");
 
   if (regenBtn) regenBtn.style.display = "inline-block";
   tip.textContent = `已根據「${colorLabel} × ${styleLabel} × ${genderLabel}」產生 ${count} 個靈感格子！`;
-
-  localStorage.setItem("fitmatch_lastIdeas", JSON.stringify({
-    colorKey, styleKey, genderKey,
-    colorLabel, styleLabel, genderLabel,
-    ideas
-  }));
 }
 
 
@@ -399,12 +442,8 @@ async function toggleFavorite(btn, outfitID, cardData) {
     }
 
     // 新增收藏
-    const saveRes = await fetch('/save-favorite', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ outfitID })
-    });
+    const saveRes = await saveFavorites(outfitID);
+    console.log("Save favorite response:", saveRes);
 
     if (saveRes.status === 401) {
       alert("請先登入！");
@@ -451,8 +490,6 @@ function setupCardClickJump() {
       note: `${color} × ${style} Look`,
     };
 
-    localStorage.setItem("fitmatch_result", JSON.stringify(result));
-
     setTimeout(() => {
       window.location.href = "gallery.html";
     }, 150);
@@ -467,11 +504,11 @@ function setupClearButton() {
   if (!btn) return;
 
   btn.addEventListener("click", () => {
-    // 1. 清除所有選中的標籤 (.active)
+    // 清除所有選中的標籤 (.active)
     document.querySelectorAll(".tag-pill.active")
       .forEach((el) => el.classList.remove("active"));
 
-    // 2. 清除右側格子與提示
+    // 清除右側格子與提示
     const grid = document.getElementById("idea-grid");
     const tip = document.getElementById("idea-tip");
     const regenBtn = document.getElementById("regenerate");
@@ -485,52 +522,33 @@ function setupClearButton() {
     }
     if (tip) tip.textContent = "";
 
-    // 3. 隱藏重新生成按鈕
+    // 隱藏重新生成按鈕
     if (regenBtn) regenBtn.style.display = "none";
-
-    // 4. 清除 localStorage 暫存 (只清除當前狀態，保留歷史紀錄與收藏)
-    localStorage.removeItem("fitmatch_lastIdeas");
   });
 }
 
 /* --------------------------------------------
    DOMContentLoaded
 --------------------------------------------- */
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   setupTagPills();
   setupGenerateButton();
   setupFavoriteButtons();
   setupCardClickJump();
   setupRegenerateButton();
-  setupClearButton(); // ★ 啟用清除按鈕功能
+  setupClearButton();
 
   const grid = document.getElementById("idea-grid");
   const regenBtn = document.getElementById("regenerate");
 
-  // 嘗試讀取上一次的狀態
-  const last = localStorage.getItem("fitmatch_lastIdeas");
+  // 從後端抓歷史紀錄
+  const history = await loadHistory();
+  const favorites = await loadFavorites();
+  console.log("Loaded favorites:", favorites);
 
-  // 只要有資料就載入
-  if (last) {
-    const data = JSON.parse(last);
-
-    grid.innerHTML = data.ideas.map(x => createIdeaCardHTML(x)).join("");
-
-    const colorBtn = document.querySelector(`.tag-pill[data-key="${data.colorKey}"]`);
-    const styleBtn = document.querySelector(`.tag-pill[data-key="${data.styleKey}"]`);
-    const genderBtn = document.querySelector(`.tag-pill[data-key="${data.genderKey}"]`);
-
-    if (colorBtn) colorBtn.classList.add("active");
-    if (styleBtn) styleBtn.classList.add("active");
-    if (genderBtn) genderBtn.classList.add("active");
-
-    const tip = document.getElementById("idea-tip");
-    if (tip) {
-      tip.textContent = `已恢復先前產生的靈感：${data.colorLabel} × ${data.styleLabel} × ${data.genderLabel}`;
-    }
-
+  if (history.length > 0) {
+    grid.innerHTML = (await Promise.all(history.map(x => createIdeaCardHTML(x, favorites)))).join("");
     if (regenBtn) regenBtn.style.display = "inline-block";
-
   } else {
     grid.innerHTML = `
       <div class="muted">
@@ -540,6 +558,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (regenBtn) regenBtn.style.display = "none";
   }
 });
+
 
 /* --------------------------------------------
    setupGenerateButton
@@ -553,11 +572,11 @@ function setupGenerateButton() {
 /* --------------------------------------------
    重新生成
 --------------------------------------------- */
-function setupRegenerateButton() {
+async function setupRegenerateButton() {
   const btn = document.getElementById("regenerate");
   if (!btn) return;
 
-  btn.addEventListener("click", () => {
+  btn.addEventListener("click", async () => {
     const selection = getCurrentSelection();
     const { colorKey, colorLabel, styleKey, styleLabel, genderKey, genderLabel } = selection;
 
@@ -565,8 +584,6 @@ function setupRegenerateButton() {
       alert("請先選擇顏色、風格與性別！");
       return;
     }
-
-    recordPreference(selection);
 
     const grid = document.getElementById("idea-grid");
     const tip = document.getElementById("idea-tip");
@@ -587,15 +604,11 @@ function setupRegenerateButton() {
       });
     }
 
-    grid.innerHTML = ideas.map(x => createIdeaCardHTML(x)).join("");
+    const favorites = await loadFavorites();
+
+    grid.innerHTML = (await Promise.all(ideas.map(x => createIdeaCardHTML(x, favorites)))).join("");
 
     tip.textContent =
       `已重新為你產生新的靈感：${colorLabel} × ${styleLabel} × ${genderLabel}`;
-
-    localStorage.setItem("fitmatch_lastIdeas", JSON.stringify({
-      colorKey, styleKey, genderKey,
-      colorLabel, styleLabel, genderLabel,
-      ideas
-    }));
   });
 }

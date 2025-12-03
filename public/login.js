@@ -1,3 +1,4 @@
+
 document.addEventListener("DOMContentLoaded", () => {
   // ===== 設定區 =====
   const API_BASE_URL = 'http://localhost:3000'; // 你的後端網址
@@ -32,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const rememberChk = document.getElementById("remember");
   const submitBtn = document.getElementById("submit");
   const msgBox = document.getElementById("msg");
+
 
   // 動態建立「切換帳號」的 View
   let switchAccountView = document.getElementById("switch-account-view");
@@ -288,6 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
     else input.classList.remove("invalid");
   }
 
+
   function updateSubmitState() {
     if (!submitBtn || !emailInput || !pwdInput || !captchaInput) return;
     const hasEmail = emailInput.value.trim().length > 0;
@@ -433,6 +436,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const activeUser = { ...user, account: email, password: password };
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(activeUser));
 
+<<<<<<< HEAD
     if (rememberChk && rememberChk.checked) {
       localStorage.setItem(REMEMBER_KEY, JSON.stringify({ email: email, remember: true }));
     } else if (rememberChk && !rememberChk.checked) {
@@ -453,6 +457,40 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         localStorage.setItem(SAVED_SESSIONS_KEY, JSON.stringify(sessions));
     }
+=======
+    const email = emailInput.value.trim();
+    const password = pwdInput.value;
+
+    // 呼叫伺服器端驗證使用者
+    const authResult = await authenticateUser(email, password);
+    if (!authResult.success || !authResult.user) {
+      msgBox.textContent = authResult.message;
+      msgBox.classList.add("warning"); // ★ 新增：錯誤也讓訊息變紅
+      pickRandomCaptcha();
+      submitBtn.disabled = true;
+      return;
+    }
+    else {
+      // 登入成功
+      console.log("User authenticated:", authResult.user);
+    }
+
+    // 記住我：記錄 email
+    // if (rememberChk.checked) {
+    //   localStorage.setItem(
+    //     REMEMBER_KEY,
+    //     JSON.stringify({ email, remember: true })
+    //   );
+    // } else {
+    //   localStorage.removeItem(REMEMBER_KEY);
+    // }
+
+    // // 給會員頁用的帳號資訊
+    // localStorage.setItem(
+    //   ACCOUNT_KEY,
+    //   JSON.stringify({ account: email, password })
+    // );
+>>>>>>> bd3b5a91b39c4499210c9a3bc755822345bd8bc3
 
     if(msgBox) {
         msgBox.textContent = "登入成功！跳轉中...";
