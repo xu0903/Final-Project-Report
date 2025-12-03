@@ -1,5 +1,4 @@
 <!-- 主頁（網站介紹）Pinky-->
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -40,14 +39,20 @@
         </div>
 
         <div class="hero-img">
-          <!-- 你可以換自己的圖片 -->
-          <img src="IndexPage\indexpage_1.png" alt="">
+          <!-- 修改處：加上 id 與 transition 樣式 -->
+          <!-- 請確保您的圖片資料夾名稱為 IndexPage 且路徑正確 (建議使用斜線 /) -->
+          <img 
+            id="hero-slider" 
+            src="IndexPage/indexpage_1.png" 
+            alt="穿搭展示" 
+            style="transition: opacity 0.5s ease-in-out; opacity: 1;"
+          >
         </div>
 
       </div>
     </section>
   </main>
+  
   <script src="index.js"></script>
 </body>
 </html>
-

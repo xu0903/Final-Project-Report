@@ -31,20 +31,23 @@
         <div class="card sticky-card">
           <h2>留言分享</h2>
           <form id="new-message-form">
-            <label class="label" for="nickname">暱稱</label>
-            <input type="text" id="nickname" class="input" placeholder="怎麼稱呼你？" />
+            <!-- 移除暱稱輸入框，改為顯示目前身分 (由 JS 動態顯示) -->
+            <div id="posting-as" style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">
+               <!-- JS 會在這裡插入 "正在以 [你的暱稱] 發文..." -->
+            </div>
 
             <label class="label" for="content">內容</label>
-        <div class="input-wrapper">
-          <textarea 
-            id="content" 
-            class="input" 
-            rows="5" 
-            placeholder="分享你的穿搭心得..." 
-            maxlength="500" 
-            required></textarea>
-          <span id="main-char-count" class="char-count">0/500</span>
-        </div>
+            <div class="input-wrapper">
+              <textarea 
+                id="content" 
+                class="input" 
+                rows="5" 
+                placeholder="分享你的穿搭心得..." 
+                maxlength="500" 
+                required></textarea>
+              <span id="main-char-count" class="char-count">0/500</span>
+            </div>
+            
             <label class="label" for="msg-image">上傳穿搭照 (PNG / JPG 可選填)</label>
             <input
               type="file"
