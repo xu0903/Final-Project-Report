@@ -306,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateLocalUser(updates) {
     try {
       // A. 更新當前登入者
-      let user = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
+      let user = JSON.parse(userJson);
       user = { ...user, ...updates };
       localStorage.setItem(USER_KEY, JSON.stringify(user));
 
@@ -336,14 +336,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // 6. 呼叫後端 (增加錯誤提示)
   async function updateServerProfile(data) {
     try {
-      const user = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
-      if (!user.account) return;
+      const user = JSON.parse(userJson);
+      if (!user) return;
 
       const response = await fetch(`${API_BASE_URL}/update-user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email: user.account, ...data })
+        body: JSON.stringify({ email: user.Email, ...data })
       });
 
       const result = await response.json();
