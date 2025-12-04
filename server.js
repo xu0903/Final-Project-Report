@@ -153,7 +153,6 @@ app.get('/get-user-favorites', authMiddleware, (req, res) => {
 
   const query = `
     SELECT o.OutfitID, o.Title, o.Description, o.ImageURL,
-           o.GenderKey, o.GenderLabel,
            o.StyleKey, o.StyleLabel,
            o.ColorKey, o.ColorLabel,
            uf.FavoritedAt
@@ -272,17 +271,17 @@ app.get('/get-all-tags', (req, res) => {
 
 //儲存產生的outfit資料到mySQL的outfits table
 app.post('/save-outfit', (req, res) => {
-  const { genderKey, genderLabel, styleKey, styleLabel, colorKey, colorLabel, title, description, imageURL } = req.body;
+  const {styleKey, styleLabel, colorKey, colorLabel, title, description, imageURL } = req.body;
 
   const query = `
     INSERT INTO outfits 
-      (GenderKey, GenderLabel, StyleKey, StyleLabel, ColorKey, ColorLabel, Title, Description, ImageURL) 
+      (StyleKey, StyleLabel, ColorKey, ColorLabel, Title, Description, ImageURL) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   connection.query(
     query,
-    [genderKey, genderLabel, styleKey, styleLabel, colorKey, colorLabel, title, description || null, imageURL || null],
+    [styleKey, styleLabel, colorKey, colorLabel, title, description || null, imageURL || null],
     (err, results) => {
       if (err) {
         console.log(err);
@@ -328,7 +327,7 @@ app.post('/add-history', authMiddleware, (req, res) => {
   }
 
   const query = `
-    INSERT INTO outfitHistory (UserID, OutfitID)
+    INSERT INTO outfithistory (UserID, OutfitID)
     VALUES (?, ?)
   `;
 
@@ -361,8 +360,8 @@ app.get('/get-history', authMiddleware, (req, res) => {
 
   const query = `
     SELECT h.HistoryID, h.OutfitID, h.CreatedAt, 
-           o.Title, o.ColorKey, o.StyleKey, o.GenderKey
-    FROM outfitHistory h
+           o.Title, o.ColorKey, o.StyleKey
+    FROM outfithistory h
     JOIN outfits o ON h.OutfitID = o.OutfitID
     WHERE h.UserID = ?
     ORDER BY h.CreatedAt DESC
