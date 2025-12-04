@@ -1,18 +1,131 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const API_BASE_URL = 'http://localhost:3000'; 
-  
+  // 載入使用者收藏
+  async function loadUserFavorites() {
+    const grid = document.getElementById("fav-grid");
+    if (!grid) return;
+
+    try {
+      const res = await fetch('/get-user-favorites');
+      const data = await res.json();
+
+      if (!data.success) {
+        grid.innerHTML = `<p class="muted">無法取得收藏資料</p>`;
+        return;
+      }
+
+      if (data.favorites.length === 0) {
+        grid.innerHTML = `<p class="muted">你尚未收藏任何 outfit</p>`;
+        return;
+      }
+
+      grid.innerHTML = data.favorites.map(fav => createFavoriteCardHTML(fav)).join("");
+    } catch (err) {
+      console.error(err);
+      grid.innerHTML = `<p class="muted">載入收藏時發生錯誤</p>`;
+    }
+  }
+
+  function getColorBG(colorKey) {
+    const colorBG = {
+      earth: "#d4b89f",
+      mono: "#c4c4c4",
+      pastel: "#f9dfe5",
+      pink: "#ffb3c6",
+      red: "#e26d5a",
+      orange: "#ffb84c",
+      yellow: "#ffe26a",
+      lightgreen: "#b7e4c7",
+      darkgreen: "#588157",
+      lightblue: "#a0c4ff",
+      blue: "#4361ee",
+      purple: "#c77dff",
+      brown: "#8b5e3c",
+    };
+    return colorBG[colorKey] || "#e5e7eb";
+  }
+  loadUserFavorites();// 載入使用者收藏
+
+  // 產生收藏卡片 HTML
+  function createFavoriteCardHTML(fav) {
+    const bgColor = getColorBG(fav.ColorKey);
+
+    return `
+    <div class="idea-card">
+      <div class="idea-thumb" style="background-color:${bgColor};">
+        ${fav.ImageURL ? `<img src="${fav.ImageURL}" alt="${fav.Title}">` : ''}
+      </div>
+      <div class="idea-body">
+        <h3 class="idea-title">${fav.Title}</h3>
+        <p class="idea-tags muted small">
+          #${fav.ColorLabel} #${fav.StyleLabel} #${fav.GenderLabel}
+        </p>
+        <p class="muted small">收藏時間：${new Date(fav.FavoritedAt).toLocaleString()}</p>
+      </div>
+    </div>
+  `;
+  }
+
+
+  let userJson = null;
+
+  function updateUI(user) {
+    console.log("Updating UI with user data:", user);
+    console.log("user type:", typeof (user));
+    const nickNameEl = document.getElementById("display-nickname");
+    const accountEl = document.getElementById("display-account");
+    const logoutBtn = document.getElementById("btn-logout");
+    const loginLink = document.getElementById("link-login");
+    console.log("NickName Element:", user.Username);
+    console.log("Account Element:", user.Email);
+
+    if (user) {
+      // 使用者已登入
+      if (nickNameEl) nickNameEl.textContent = user.Username;
+      if (accountEl) accountEl.textContent = user.Email;
+
+      if (logoutBtn) logoutBtn.style.display = "inline-block";
+      if (loginLink) loginLink.style.display = "none";
+    } else {
+      // 未登入
+      if (nickNameEl) nickNameEl.textContent = "訪客";
+      if (accountEl) accountEl.textContent = "尚無資料";
+
+      if (logoutBtn) logoutBtn.style.display = "none";
+      if (loginLink) loginLink.style.display = "inline-block";
+    }
+  }
+
+
+
+  // 登出功能
+  const logoutBtn = document.getElementById("btn-logout");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      if (confirm("確定要登出嗎？")) {
+        // 呼叫後端登出 API 清除 cookie
+        await fetch('/logout', { method: 'POST', credentials: 'include' });
+        window.location.reload();
+      }
+    });
+  }
+
+
+
+  //=================================================================
+  const API_BASE_URL = 'http://localhost:3000';
+
   // Storage Keys
-  const USER_KEY = "fitmatch_user";           
-  const ACCOUNT_KEY = "fitmatch_account";     
-  const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions"; 
-  const USERS_DB_KEY = "fitmatch_users"; 
+  const USER_KEY = "fitmatch_user";
+  const ACCOUNT_KEY = "fitmatch_account";
+  const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions";
+  const USERS_DB_KEY = "fitmatch_users";
 
   // DOM Elements
   const displayNickname = document.getElementById("display-nickname");
   const displayAccount = document.getElementById("display-account");
   const btnLogout = document.getElementById("btn-logout");
   const loginLink = document.getElementById("link-login");
-  
+
   // 編輯與頭像 DOM
   const nicknameViewMode = document.getElementById("nickname-view-mode");
   const nicknameEditMode = document.getElementById("nickname-edit-mode");
@@ -26,29 +139,53 @@ document.addEventListener("DOMContentLoaded", () => {
   const avatarDisplayArea = document.getElementById("avatar-display-area");
   const btnRemoveAvatar = document.getElementById("btn-remove-avatar");
 
-  // 1. 初始化載入
-  loadUserProfile();
+  // 1. 載入使用者資料
+  async function loadUserData() {
+    try {
+      const res = await fetch('/getUserData', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      const data = await res.json();
 
+      if (!data.loggedIn) {
+        return null;
+      }
+
+      return data.user; // 已經是物件
+    } catch (err) {
+      console.error('取得使用者資料失敗', err);
+      return null;
+    }
+  }
+
+  (async () => {//立即執行函式載入使用者資料
+    userJson = await loadUserData();
+
+    console.log("Loaded user data:", userJson);
+    updateUI(userJson);
+  })();
+
+  //初始化渲染user資料
+  loadUserProfile();
   function loadUserProfile() {
-    const userJson = localStorage.getItem(USER_KEY);
-    
     if (userJson) {
       try {
         const user = JSON.parse(userJson);
-        
+
         // 基本資料
-        const name = user.nickname || user.username || "會員";
+        const name = user.Username || "會員";
         if (displayNickname) displayNickname.textContent = name;
-        if (displayAccount) displayAccount.textContent = user.account || user.email || "";
+        if (displayAccount) displayAccount.textContent = user.Email || "";
         if (inputNickname) inputNickname.value = name;
 
         // 頭像處理
         if (user.avatar) {
-            renderAvatarImage(user.avatar);
-            if(btnRemoveAvatar) btnRemoveAvatar.classList.remove("hidden");
+          renderAvatarImage(user.avatar);
+          if (btnRemoveAvatar) btnRemoveAvatar.classList.remove("hidden");
         } else {
-            renderAvatarText(name);
-            if(btnRemoveAvatar) btnRemoveAvatar.classList.add("hidden");
+          renderAvatarText(name);
+          if (btnRemoveAvatar) btnRemoveAvatar.classList.add("hidden");
         }
 
         // 按鈕狀態
@@ -105,12 +242,12 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("暱稱不能為空！");
         return;
       }
-      
+
       // 先更新本地 UI 和 Storage，讓使用者覺得很快
       updateLocalUser({ nickname: newName });
-      
+
       displayNickname.textContent = newName;
-      const user = JSON.parse(localStorage.getItem(USER_KEY));
+      const user = JSON.parse(userJson);
       if (!user.avatar) renderAvatarText(newName);
 
       nicknameEditMode.classList.add("hidden");
@@ -137,11 +274,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const reader = new FileReader();
-      reader.onload = async function(event) {
+      reader.onload = async function (event) {
         const base64String = event.target.result;
         renderAvatarImage(base64String);
-        if(btnRemoveAvatar) btnRemoveAvatar.classList.remove("hidden");
-        
+        if (btnRemoveAvatar) btnRemoveAvatar.classList.remove("hidden");
+
         updateLocalUser({ avatar: base64String });
         await updateServerProfile({ avatar: base64String });
       };
@@ -152,16 +289,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // 4. 移除頭像
   if (btnRemoveAvatar) {
     btnRemoveAvatar.addEventListener("click", async () => {
-        if (!confirm("確定要移除目前的頭貼嗎？")) return;
+      if (!confirm("確定要移除目前的頭貼嗎？")) return;
 
-        const user = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
-        const name = user.nickname || user.username || "M";
-        renderAvatarText(name);
-        
-        btnRemoveAvatar.classList.add("hidden");
+      const user = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
+      const name = user.nickname || user.username || "M";
+      renderAvatarText(name);
 
-        updateLocalUser({ avatar: null });
-        await updateServerProfile({ avatar: "" });
+      btnRemoveAvatar.classList.add("hidden");
+
+      updateLocalUser({ avatar: null });
+      await updateServerProfile({ avatar: "" });
     });
   }
 
@@ -189,8 +326,8 @@ document.addEventListener("DOMContentLoaded", () => {
       let usersDB = JSON.parse(localStorage.getItem(USERS_DB_KEY) || "[]");
       const dbIdx = usersDB.findIndex(u => (u.account || u.email || "").toLowerCase() === targetEmail);
       if (dbIdx !== -1) {
-          usersDB[dbIdx] = { ...usersDB[dbIdx], ...updates };
-          localStorage.setItem(USERS_DB_KEY, JSON.stringify(usersDB));
+        usersDB[dbIdx] = { ...usersDB[dbIdx], ...updates };
+        localStorage.setItem(USERS_DB_KEY, JSON.stringify(usersDB));
       }
 
     } catch (e) { console.error("Update local error", e); }
@@ -205,19 +342,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch(`${API_BASE_URL}/update-user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', 
+        credentials: 'include',
         body: JSON.stringify({ email: user.account, ...data })
       });
 
       const result = await response.json();
       if (!response.ok || !result.success) {
-          throw new Error(result.message || "伺服器更新失敗");
+        throw new Error(result.message || "伺服器更新失敗");
       }
       console.log("伺服器資料更新成功");
 
-    } catch (err) { 
-        console.error("API error", err); 
-        alert("⚠️ 注意：無法連線到伺服器，您的變更僅暫存於本機。\n(若切換帳號或清除快取，變更可能會遺失)");
+    } catch (err) {
+      console.error("API error", err);
+      alert("⚠️ 注意：無法連線到伺服器，您的變更僅暫存於本機。\n(若切換帳號或清除快取，變更可能會遺失)");
     }
   }
 

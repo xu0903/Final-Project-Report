@@ -4,12 +4,10 @@
 
 // 渲染標籤群組
 function renderTagsByType(tags) {
-  const genderContainer = document.getElementById("gender-tags");
   const colorContainer = document.getElementById("color-tags");
   const styleContainer = document.getElementById("style-tags");
 
   // 清空原本寫死在 HTML 的 button
-  genderContainer.innerHTML = "";
   colorContainer.innerHTML = "";
   styleContainer.innerHTML = "";
 
@@ -25,7 +23,6 @@ function renderTagsByType(tags) {
     btn.innerHTML = `<span class="dot"></span> ${tag.label}`;
 
     // 依 type 渲染到不同區塊
-    if (tag.type === "gender") genderContainer.appendChild(btn);
     if (tag.type === "color") colorContainer.appendChild(btn);
     if (tag.type === "style") styleContainer.appendChild(btn);
   });
@@ -110,10 +107,8 @@ async function loadHistory() {
         title: o.Title,
         colorKey: o.ColorKey,
         styleKey: o.StyleKey,
-        genderKey: o.GenderKey,
         colorLabel: o.ColorLabel || o.ColorKey,
-        styleLabel: o.StyleLabel || o.StyleKey,
-        genderLabel: o.GenderLabel || o.GenderKey
+        styleLabel: o.StyleLabel || o.StyleKey
       }));
 
   } catch (error) {
@@ -228,11 +223,11 @@ function escapeHTML(str) {
 }
 
 /* --------------------------------------------
-   建立靈感卡片（無性別色塊）
+   建立靈感卡片
 --------------------------------------------- */
 async function createIdeaCardHTML(data, favorites = []) {
-  const { id, title, colorLabel, styleLabel, genderLabel,
-    colorKey, styleKey, genderKey } = data;
+  const { id, title, colorLabel, styleLabel,
+    colorKey, styleKey } = data;
   console.log("createIdeaCardHTML data:", data);
 
   const bg = colorBG[colorKey] || "#e5e7eb";
@@ -252,10 +247,8 @@ async function createIdeaCardHTML(data, favorites = []) {
        data-title="${escapeHTML(title)}"
        data-color="${escapeHTML(colorLabel)}"
        data-style="${escapeHTML(styleLabel)}"
-       data-gender="${escapeHTML(genderLabel)}"
        data-colorkey="${escapeHTML(colorKey)}"
-       data-stylekey="${escapeHTML(styleKey)}"
-       data-genderkey="${escapeHTML(genderKey)}">
+       data-stylekey="${escapeHTML(styleKey)}">
 
       <div class="idea-thumb" style="background-color:${bg};"></div>
 
@@ -265,7 +258,6 @@ async function createIdeaCardHTML(data, favorites = []) {
         <p class="idea-tags muted small">
           #${escapeHTML(colorLabel)}
           #${escapeHTML(styleLabel)}
-          #${escapeHTML(genderLabel)}
         </p>
 
         <button type="button" class="${btnClass}">
@@ -304,7 +296,6 @@ function setupTagPills() {
 function getCurrentSelection() {
   const colorBtn = document.querySelector('.tag-pill[data-group="color"].active');
   const styleBtn = document.querySelector('.tag-pill[data-group="style"].active');
-  const genderBtn = document.querySelector('.tag-pill[data-group="gender"].active');
 
   return {
     colorKey: colorBtn?.dataset.key || null,
@@ -312,9 +303,6 @@ function getCurrentSelection() {
 
     styleKey: styleBtn?.dataset.key || null,
     styleLabel: styleBtn?.dataset.label || null,
-
-    genderKey: genderBtn?.dataset.key || null,
-    genderLabel: genderBtn?.dataset.label || null
   };
 }
 
@@ -329,10 +317,10 @@ async function renderIdeas() {
   if (!grid) return;
 
   const selection = getCurrentSelection();
-  const { colorKey, colorLabel, styleKey, styleLabel, genderKey, genderLabel } = selection;
+  const { colorKey, colorLabel, styleKey, styleLabel } = selection;
 
-  if (!colorKey || !styleKey || !genderKey) {
-    grid.innerHTML = `<div class="muted">請先選擇性別、顏色、風格再點「產生靈感」。</div>`;
+  if (!colorKey || !styleKey) {
+    grid.innerHTML = `<div class="muted">請先選擇顏色、風格再點「產生靈感」。</div>`;
     if (tip) tip.textContent = "";
     if (regenBtn) regenBtn.style.display = "none";
     return;
@@ -347,8 +335,8 @@ async function renderIdeas() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        genderKey, genderLabel, styleKey, styleLabel, colorKey, colorLabel,
-        title: `${colorLabel} × ${styleLabel} × ${genderLabel} Look ${i}`,
+        styleKey, styleLabel, colorKey, colorLabel,
+        title: `${colorLabel} × ${styleLabel} Look ${i}`,
         description: null,
         imageURL: null
       })
@@ -360,13 +348,11 @@ async function renderIdeas() {
 
     ideas.push({
       id: data.outfitID, // 使用後端的 ID
-      title: `${colorLabel} × ${styleLabel} × ${genderLabel} Look ${i}`,
+      title: `${colorLabel} × ${styleLabel} Look ${i}`,
       colorKey,
       colorLabel,
       styleKey,
       styleLabel,
-      genderKey,
-      genderLabel,
     });
   }
   console.log("已儲存的 outfit IDs：", ideas.map(x => x.id));
@@ -375,7 +361,7 @@ async function renderIdeas() {
   grid.innerHTML = (await Promise.all(ideas.map(x => createIdeaCardHTML(x, favorites)))).join("");
 
   if (regenBtn) regenBtn.style.display = "inline-block";
-  tip.textContent = `已根據「${colorLabel} × ${styleLabel} × ${genderLabel}」產生 ${count} 個靈感格子！`;
+  tip.textContent = `已根據「${colorLabel} × ${styleLabel}」產生 ${count} 個靈感格子！`;
 }
 
 
@@ -578,9 +564,9 @@ async function setupRegenerateButton() {
 
   btn.addEventListener("click", async () => {
     const selection = getCurrentSelection();
-    const { colorKey, colorLabel, styleKey, styleLabel, genderKey, genderLabel } = selection;
+    const { colorKey, colorLabel, styleKey, styleLabel} = selection;
 
-    if (!colorKey || !styleKey || !genderKey) {
+    if (!colorKey || !styleKey) {
       alert("請先選擇顏色、風格與性別！");
       return;
     }
@@ -593,14 +579,12 @@ async function setupRegenerateButton() {
 
     for (let i = 1; i <= count; i++) {
       ideas.push({
-        id: `${colorKey}-${styleKey}-${genderKey}-${Date.now()}-${i}`,
-        title: `${colorLabel} × ${styleLabel} × ${genderLabel} Look ${i}`,
+        id: `${colorKey}-${styleKey}-${Date.now()}-${i}`,
+        title: `${colorLabel} × ${styleLabel} Look ${i}`,
         colorKey,
         colorLabel,
         styleKey,
         styleLabel,
-        genderKey,
-        genderLabel
       });
     }
 
@@ -609,6 +593,6 @@ async function setupRegenerateButton() {
     grid.innerHTML = (await Promise.all(ideas.map(x => createIdeaCardHTML(x, favorites)))).join("");
 
     tip.textContent =
-      `已重新為你產生新的靈感：${colorLabel} × ${styleLabel} × ${genderLabel}`;
+      `已重新為你產生新的靈感：${colorLabel} × ${styleLabel}`;
   });
 }
