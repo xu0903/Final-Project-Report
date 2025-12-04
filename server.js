@@ -276,7 +276,7 @@ app.post('/save-outfit', (req, res) => {
   const query = `
     INSERT INTO outfits 
       (StyleKey, StyleLabel, ColorKey, ColorLabel, Title, Description, ImageURL) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
   connection.query(
@@ -327,7 +327,7 @@ app.post('/add-history', authMiddleware, (req, res) => {
   }
 
   const query = `
-    INSERT INTO outfithistory (UserID, OutfitID)
+    INSERT INTO outfitHistory (UserID, OutfitID)
     VALUES (?, ?)
   `;
 
@@ -361,7 +361,7 @@ app.get('/get-history', authMiddleware, (req, res) => {
   const query = `
     SELECT h.HistoryID, h.OutfitID, h.CreatedAt, 
            o.Title, o.ColorKey, o.StyleKey
-    FROM outfithistory h
+    FROM outfitHistory h
     JOIN outfits o ON h.OutfitID = o.OutfitID
     WHERE h.UserID = ?
     ORDER BY h.CreatedAt DESC
