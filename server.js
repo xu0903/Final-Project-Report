@@ -60,8 +60,9 @@ app.get('/get-all-UserData', (req, res) => {
 app.post('/authenticate', async (req, res) => {
   const { email, password } = req.body;
 
+  // 修改: 在查詢時一併取得 AvatarBase64 並別名為 avatar
   connection.query(
-    'SELECT * FROM users WHERE Email = ?',
+    'SELECT UserID, Username, Email, PasswordHash, AvatarBase64 AS avatar FROM users WHERE Email = ?', // <-- 確保取得 AvatarBase64
     [email],
     async (err, results) => {
       if (err || results.length === 0) {
@@ -94,7 +95,8 @@ app.post('/authenticate', async (req, res) => {
         user: {
           userId: user.UserID,
           username: user.Username,
-          email: user.Email
+          email: user.Email,
+          avatar: user.avatar // <-- 傳回 avatar 資料
         }
       });
     }
@@ -118,25 +120,84 @@ function authMiddleware(req, res, next) {
   }
 }
 
-//保持登入狀態，取得使用者資料
+// 5. 保持登入狀態，取得使用者資料
+// 取得使用者完整資料
+// 保持登入狀態，取得使用者資料
 // 取得使用者完整資料
 app.get('/getUserData', authMiddleware, (req, res) => {
   const userId = req.user.userId;
 
   // 從資料庫拿完整 user 資料
+  // 💡 關鍵修改：新增 AvatarBase64 欄位並使用 AS avatar 別名
+  const query = `
+    SELECT 
+      UserID, Username, Email, Height, Weight, BMI, CreatedAt, 
+      AvatarBase64 AS avatar
+    FROM users 
+    WHERE UserID = ?
+  `;
   connection.query(
-    'SELECT UserID, Username, Email, Height, Weight, BMI, CreatedAt FROM users WHERE UserID = ?',
+    query,
     [userId],
     (err, results) => {
-      if (err) return res.status(500).json({ message: '資料庫查詢失敗' });
+      if (err) {
+        console.error('資料庫查詢失敗:', err);
+        return res.status(500).json({ message: '資料庫查詢失敗' });
+      }
       if (results.length === 0) return res.status(404).json({ message: '使用者不存在' });
 
       res.json({
         loggedIn: true,
-        user: results[0]
+        user: results[0] // results[0] 現在包含 avatar 欄位
       });
     }
   );
+});
+
+// 更新使用者資料
+app.post('/update-user', authMiddleware, (req, res) => {
+  const userId = req.user.userId;
+  const updates = req.body;
+
+  let updateFields = [];
+  let updateValues = [];
+
+  // 定義前端鍵名與資料庫欄位名的映射
+  const fieldMap = {
+    nickname: 'Username',
+    avatar: 'AvatarBase64', // <-- 核心：將前端 avatar 映射到 DB 欄位
+  };
+
+  // ... (動態構建 SQL 的邏輯保持不變)
+  for (const key in updates) {
+    if (fieldMap[key] && updates[key] !== undefined) {
+      updateFields.push(`${fieldMap[key]} = ?`);
+      // 將 Base64 字串或 null (移除頭像時傳入 "") 加入參數
+      updateValues.push(updates[key] === "" ? null : updates[key]);
+    }
+  }
+
+  if (updateFields.length === 0) {
+    return res.json({ success: true, message: '沒有需要更新的欄位' });
+  }
+
+  const query = `
+        UPDATE users 
+        SET ${updateFields.join(', ')} 
+        WHERE UserID = ?
+    `;
+
+  updateValues.push(userId);
+
+  connection.query(query, updateValues, (err, results) => {
+    if (err) {
+      console.error('更新使用者資料失敗:', err);
+      // 由於 Base64 很大，確認是否有 'Payload Too Large' 或其他資料庫限制錯誤
+      return res.status(500).json({ success: false, message: '更新使用者資料失敗' });
+    }
+
+    res.json({ success: true, message: '使用者資料更新成功' });
+  });
 });
 
 
@@ -181,7 +242,7 @@ app.post('/save-favorite', authMiddleware, (req, res) => {
 
 
   if (!outfitID) return res.status(400).json({ success: false, message: '缺少 outfitID' });
-  if(!userId) return res.status(401).json({ success: false, message: '未登入' });
+  if (!userId) return res.status(401).json({ success: false, message: '未登入' });
   const query = `
     INSERT INTO user_favorites (UserID, OutfitID) 
     VALUES (?, ?) 
@@ -203,7 +264,7 @@ app.post('/delete-favorite', authMiddleware, (req, res) => {
   const { outfitID } = req.body;
 
   if (!outfitID) return res.status(400).json({ success: false, message: '缺少 outfitID' });
-  if(!userId) return res.status(401).json({ success: false, message: '未登入' });
+  if (!userId) return res.status(401).json({ success: false, message: '未登入' });
 
 
   const query = 'DELETE FROM user_favorites WHERE UserID = ? AND OutfitID = ?';
@@ -222,7 +283,7 @@ app.get('/check-favorite', authMiddleware, (req, res) => {
   const userId = req.user.userId;
   const outfitID = req.query.outfitID;
   if (!outfitID) return res.status(400).json({ success: false, message: '缺少 outfitID' });
-  if(!userId) return res.status(401).json({ success: false, message: '未登入' });
+  if (!userId) return res.status(401).json({ success: false, message: '未登入' });
   const query = 'SELECT * FROM user_favorites WHERE UserID = ? AND OutfitID = ?';
 
   connection.query(query, [userId, outfitID], (err, results) => {
@@ -236,25 +297,42 @@ app.get('/check-favorite', authMiddleware, (req, res) => {
 });
 
 // 新增使用者帳號資料至 DataBase 的 users Table
-app.post('/add-user', async (req, res) => {
+app.post('/user-register', async (req, res) => {
   const { name, email, password } = req.body;
-  //console.log('Received data:', req.body);
 
-  // 將密碼 hash 後再存入資料庫
-  const hashedPassword = await bcrypt.hash(password, 10);//salt rounds 設為 10
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  const query = 'INSERT INTO users (Username, PasswordHash, Email) VALUES (?, ?, ?)';
-  connection.query(query, [name, hashedPassword, email], (err, results) => {
-    if (err) {
-      if (err.code === 'ER_DUP_ENTRY') {
-        return res.status(400).json({ message: '該 Email 已被註冊過' });
+    const query = 'INSERT INTO users (Username, PasswordHash, Email) VALUES (?, ?, ?)';
+    connection.query(query, [name, hashedPassword, email], (err, results) => {
+      if (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+          return res.status(400).json({ message: '該 Email 已被註冊過' });
+        }
+        console.log(err);
+        return res.status(500).json({ success: false, message: '新增使用者失敗' });
       }
-      console.log(err);
-      return res.status(500).json({ success: false, message: '新增使用者失敗' });
-    }
-    res.json({ success: true, message: '註冊成功，即將前往會員頁…' });
-  });
+
+      // 回傳新產生的 userID
+      const newUser = {
+        userID: results.insertId,
+        username: name,
+        email: email,
+      };
+
+      res.json({
+        success: true,
+        message: '註冊成功，即將前往會員頁…',
+        user: newUser
+      });
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: '伺服器錯誤' });
+  }
 });
+
 
 //從mySQL取得tags資料
 app.get('/get-all-tags', (req, res) => {
@@ -271,7 +349,7 @@ app.get('/get-all-tags', (req, res) => {
 
 //儲存產生的outfit資料到mySQL的outfits table
 app.post('/save-outfit', (req, res) => {
-  const {styleKey, styleLabel, colorKey, colorLabel, title, description, imageURL } = req.body;
+  const { styleKey, styleLabel, colorKey, colorLabel, title, description, imageURL } = req.body;
 
   const query = `
     INSERT INTO outfits 

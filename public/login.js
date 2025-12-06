@@ -1,12 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   // ===== 設定區 =====
-  const API_BASE_URL = 'http://localhost:3000'; 
-  
+  const API_BASE_URL = 'http://localhost:3000';
+
   // Storage Keys
   const REMEMBER_KEY = "fitmatch_remember";
-  const ACCOUNT_KEY = "fitmatch_account"; 
-  const USER_KEY_LEGACY = "fitmatch_user"; 
-  const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions"; 
+  const ACCOUNT_KEY = "fitmatch_account";
+  const USER_KEY_LEGACY = "fitmatch_user";
+  const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions";
   const USERS_DB_KEY = "fitmatch_users"; // 本地備份資料庫
 
   // Views & Elements
@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const currentUserEmailEl = document.getElementById("current-user-email");
   const btnLogout = document.getElementById("btn-logout");
 
-  const authWrap = document.querySelector(".centered-card"); 
+  const authWrap = document.querySelector(".centered-card");
   const loginForm = document.getElementById("login-form");
   const emailInput = document.getElementById("email");
   const pwdInput = document.getElementById("password");
@@ -32,41 +32,58 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!switchAccountView) {
     switchAccountView = document.createElement("div");
     switchAccountView.id = "switch-account-view";
-    switchAccountView.className = "hidden"; 
+    switchAccountView.className = "hidden";
     if (authWrap) authWrap.insertBefore(switchAccountView, authWrap.firstChild);
   }
 
   // ===== 0. 狀態檢查 =====
-  function checkLoginState() {
-    const rawAccount = localStorage.getItem(ACCOUNT_KEY);
+  // 舊版 (已移除)：
+  // const rawAccount = localStorage.getItem(ACCOUNT_KEY);
+
+  async function checkLoginState() {
     let savedSessions = [];
     try {
-        savedSessions = JSON.parse(localStorage.getItem(SAVED_SESSIONS_KEY) || "[]");
-    } catch(e) {}
+      // 只有切換帳號列表 (SAVED_SESSIONS_KEY) 仍然使用 LocalStorage
+      savedSessions = JSON.parse(localStorage.getItem(SAVED_SESSIONS_KEY) || "[]");
+    } catch (e) { }
 
-    // A. 已經登入
-    if (rawAccount) {
-      try {
-        const accountData = JSON.parse(rawAccount);
-        // 自動補全 Saved Sessions
-        const exists = savedSessions.find(s => s.account === accountData.account);
-        if (!exists) {
-            savedSessions.push(accountData);
-            localStorage.setItem(SAVED_SESSIONS_KEY, JSON.stringify(savedSessions));
-        }
+    try {
+      // ★ 關鍵：透過 API 檢查 JWT Cookie 來判斷登入狀態
+      const response = await fetch(`${API_BASE_URL}/getUserData`, {
+        method: 'GET',
+        credentials: 'include' // 發送 JWT Cookie
+      });
+
+      // A. 已經登入 (API 回傳 200 OK)
+      if (response.ok) {
+        const data = await response.json();
+        const accountData = {
+          nickname: data.user.Username,
+          account: data.user.Email,
+          avatar: data.user.avatar,
+          userId: data.user.UserID,
+        };
+        // 登入成功後，更新 LocalStorage 裡的 savedSessions 資料
         renderLoggedInView(accountData, savedSessions);
-      } catch (e) {
-        localStorage.removeItem(ACCOUNT_KEY);
+      }
+      // B. 沒登入 (API 回傳 401 Unauthorized 或其他錯誤)
+      else {
+        if (savedSessions.length > 0) {
+          renderSwitchAccountList(savedSessions); // 顯示切換帳號列表
+        }
+        // C. 完全沒紀錄
+        else {
+          showLoginForm(); // 顯示登入表單
+        }
+      }
+    } catch (e) {
+      console.error("檢查登入狀態失敗:", e);
+      // API 連線失敗時，退回顯示登入表單或切換列表
+      if (savedSessions.length > 0) {
+        renderSwitchAccountList(savedSessions);
+      } else {
         showLoginForm();
       }
-    } 
-    // B. 沒登入但有紀錄
-    else if (savedSessions.length > 0) {
-        renderSwitchAccountList(savedSessions);
-    }
-    // C. 完全沒紀錄
-    else {
-        showLoginForm();
     }
   }
 
@@ -92,20 +109,20 @@ document.addEventListener("DOMContentLoaded", () => {
         <button id="btn-logout-current" class="ghost" style="font-size: 14px; margin-top: 10px;">登出</button>
       </div>
     `;
-    
+
     switchAccountView.innerHTML = html;
     switchAccountView.classList.remove("hidden");
 
     document.getElementById("btn-continue").onclick = () => window.location.href = "ID.html";
     const btnSwitch = document.getElementById("btn-switch");
     if (btnSwitch) btnSwitch.onclick = () => renderSwitchAccountList(savedSessions);
-    
+
     document.getElementById("btn-logout-current").onclick = async () => {
-        if(confirm("確定要登出嗎？")) {
-            try { await fetch(`${API_BASE_URL}/logout`, { method: 'POST' }); } catch(e){}
-            localStorage.removeItem(ACCOUNT_KEY);
-            checkLoginState(); 
-        }
+      if (confirm("確定要登出嗎？")) {
+        try { await fetch(`${API_BASE_URL}/logout`, { method: 'POST' }); } catch (e) { }
+        localStorage.removeItem(ACCOUNT_KEY);
+        checkLoginState();
+      }
     };
   }
 
@@ -146,10 +163,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const targetUser = sessions.find(s => s.account === item.dataset.account);
         // 如果有存密碼，嘗試自動登入
         if (targetUser && targetUser.password) {
-           await performApiLogin(targetUser.account, targetUser.password, false); 
+          await performApiLogin(targetUser.account, targetUser.password, false);
         } else {
-           showLoginForm();
-           if(emailInput) emailInput.value = targetUser.account;
+          showLoginForm();
+          if (emailInput) emailInput.value = targetUser.account;
         }
       });
     });
@@ -160,9 +177,9 @@ document.addEventListener("DOMContentLoaded", () => {
         e.stopPropagation();
         const accToRemove = btn.dataset.account;
         if (confirm(`移除 ${accToRemove} 的紀錄？`)) {
-            const newSessions = sessions.filter(s => s.account !== accToRemove);
-            localStorage.setItem(SAVED_SESSIONS_KEY, JSON.stringify(newSessions));
-            newSessions.length === 0 ? showLoginForm() : renderSwitchAccountList(newSessions);
+          const newSessions = sessions.filter(s => s.account !== accToRemove);
+          localStorage.setItem(SAVED_SESSIONS_KEY, JSON.stringify(newSessions));
+          newSessions.length === 0 ? showLoginForm() : renderSwitchAccountList(newSessions);
         }
       });
     });
@@ -171,34 +188,34 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showLoginForm() {
-    if(switchAccountView) switchAccountView.classList.add("hidden");
-    if(loginForm) loginForm.style.display = "block";
+    if (switchAccountView) switchAccountView.classList.add("hidden");
+    if (loginForm) loginForm.style.display = "block";
     showHeader();
-    
+
     try {
-        const rawRem = localStorage.getItem(REMEMBER_KEY);
-        if (rawRem && emailInput) {
-            const data = JSON.parse(rawRem);
-            if (data.email) {
-                emailInput.value = data.email;
-                if(rememberChk) rememberChk.checked = true;
-            }
+      const rawRem = localStorage.getItem(REMEMBER_KEY);
+      if (rawRem && emailInput) {
+        const data = JSON.parse(rawRem);
+        if (data.email) {
+          emailInput.value = data.email;
+          if (rememberChk) rememberChk.checked = true;
         }
-    } catch(e) {}
+      }
+    } catch (e) { }
     updateSubmitState();
   }
 
   function hideHeader() {
-      const h1 = authWrap.querySelector("h1");
-      const p = authWrap.querySelector("p.muted");
-      if(h1) h1.style.display = "none";
-      if(p) p.style.display = "none";
+    const h1 = authWrap.querySelector("h1");
+    const p = authWrap.querySelector("p.muted");
+    if (h1) h1.style.display = "none";
+    if (p) p.style.display = "none";
   }
   function showHeader() {
-      const h1 = authWrap.querySelector("h1");
-      const p = authWrap.querySelector("p.muted");
-      if(h1) h1.style.display = "block";
-      if(p) p.style.display = "block";
+    const h1 = authWrap.querySelector("h1");
+    const p = authWrap.querySelector("p.muted");
+    if (h1) h1.style.display = "block";
+    if (p) p.style.display = "block";
   }
 
   // 執行檢查
@@ -229,27 +246,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const idx = Math.floor(Math.random() * CAPTCHA_IMAGES.length);
     currentCaptcha = CAPTCHA_IMAGES[idx];
     const src = `CAPTCHA/${currentCaptcha.file}`;
-    
+
     if (captchaImg) {
-        captchaImg.src = src;
-        captchaImg.style.display = 'block';
-        captchaImg.onerror = () => { captchaImg.style.display = 'none'; };
+      captchaImg.src = src;
+      captchaImg.style.display = 'block';
+      captchaImg.onerror = () => { captchaImg.style.display = 'none'; };
     }
     if (captchaInput) {
-        captchaInput.value = "";
-        setFieldError(captchaInput, "");
+      captchaInput.value = "";
+      setFieldError(captchaInput, "");
     }
     updateSubmitState();
   }
 
   if (refreshBtn) refreshBtn.addEventListener("click", pickRandomCaptcha);
   if (captchaImg) captchaImg.addEventListener("click", pickRandomCaptcha);
-  
+
   pickRandomCaptcha();
 
   // ===== 2. 輔助函式 =====
   function setFieldError(input, msg) {
-    if(!input) return;
+    if (!input) return;
     const id = input.id;
     const small = document.querySelector(`small.err[data-for="${id}"]`);
     if (small) small.textContent = msg || "";
@@ -258,18 +275,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateSubmitState() {
-    if(!submitBtn) return;
+    if (!submitBtn) return;
     const hasEmail = emailInput && emailInput.value.trim().length > 0;
     const hasPwd = pwdInput && pwdInput.value.length >= 6;
     const hasCaptcha = captchaInput && captchaInput.value.trim().length > 0;
     submitBtn.disabled = !(hasEmail && hasPwd && hasCaptcha);
   }
 
-  if(emailInput) emailInput.addEventListener("input", updateSubmitState);
-  if(pwdInput) pwdInput.addEventListener("input", updateSubmitState);
-  if(captchaInput) captchaInput.addEventListener("input", updateSubmitState);
+  if (emailInput) emailInput.addEventListener("input", updateSubmitState);
+  if (pwdInput) pwdInput.addEventListener("input", updateSubmitState);
+  if (captchaInput) captchaInput.addEventListener("input", updateSubmitState);
 
-  if(togglePassBtn && pwdInput) {
+  if (togglePassBtn && pwdInput) {
     togglePassBtn.addEventListener("click", () => {
       const type = pwdInput.getAttribute("type") === "password" ? "text" : "password";
       pwdInput.setAttribute("type", type);
@@ -281,11 +298,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if(msgBox) { msgBox.textContent = ""; msgBox.className = "msg"; }
+      if (msgBox) { msgBox.textContent = ""; msgBox.className = "msg"; }
 
       if (!currentCaptcha || !captchaInput || captchaInput.value.toLowerCase() !== currentCaptcha.code.toLowerCase()) {
         setFieldError(captchaInput, "驗證碼錯誤");
-        if(msgBox) { msgBox.textContent = "驗證碼錯誤"; msgBox.classList.add("warning"); }
+        if (msgBox) { msgBox.textContent = "驗證碼錯誤"; msgBox.classList.add("warning"); }
         pickRandomCaptcha();
         return;
       }
@@ -302,72 +319,72 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // API 登入
   async function performApiLogin(email, password, isNewLogin) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/authenticate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      });
+
+      const text = await response.text();
+      let data;
       try {
-        const response = await fetch(`${API_BASE_URL}/authenticate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email, password: password }) 
-        });
-
-        const text = await response.text();
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (jsonErr) {
-            console.warn("API 回傳非 JSON:", text);
-            throw new Error("API_Unavailable");
-        }
-
-        if (response.ok) {
-          const userData = {
-              nickname: data.user.username,
-              account: data.user.email,
-              avatar: data.user.avatar,
-              userId: data.user.userId
-          };
-          doLoginSuccess(userData, email, password, isNewLogin);
-        } else {
-          throw new Error(data.message || "帳號或密碼錯誤");
-        }
-
-      } catch (err) {
-        console.error("Login Error:", err);
-        
-        // Fallback: 嘗試本地備份
-        if (err.message === "API_Unavailable" || err.message.includes("Failed to fetch")) {
-            const localSuccess = tryLocalLogin(email, password, isNewLogin);
-            if (localSuccess) return;
-        }
-
-        if(msgBox) {
-            msgBox.textContent = err.message === "API_Unavailable" ? "伺服器未啟動" : (err.message || "登入失敗");
-            msgBox.classList.add("warning");
-        }
-        
-        pickRandomCaptcha();
-        if(submitBtn) { submitBtn.textContent = "登入"; submitBtn.disabled = false; }
+        data = JSON.parse(text);
+      } catch (jsonErr) {
+        console.warn("API 回傳非 JSON:", text);
+        throw new Error("API_Unavailable");
       }
+
+      if (response.ok) {
+        const userData = {
+          nickname: data.user.username,
+          account: data.user.email,
+          avatar: data.user.avatar,
+          userId: data.user.userId
+        };
+        doLoginSuccess(userData, email, password, isNewLogin);
+      } else {
+        throw new Error(data.message || "帳號或密碼錯誤");
+      }
+
+    } catch (err) {
+      console.error("Login Error:", err);
+
+      // Fallback: 嘗試本地備份
+      if (err.message === "API_Unavailable" || err.message.includes("Failed to fetch")) {
+        const localSuccess = tryLocalLogin(email, password, isNewLogin);
+        if (localSuccess) return;
+      }
+
+      if (msgBox) {
+        msgBox.textContent = err.message === "API_Unavailable" ? "伺服器未啟動" : (err.message || "登入失敗");
+        msgBox.classList.add("warning");
+      }
+
+      pickRandomCaptcha();
+      if (submitBtn) { submitBtn.textContent = "登入"; submitBtn.disabled = false; }
+    }
   }
 
   function tryLocalLogin(email, password, isNewLogin) {
     try {
-        // 從本地備份資料庫讀取
-        const rawUsers = localStorage.getItem(USERS_DB_KEY); 
-        if (rawUsers) {
-            const users = JSON.parse(rawUsers);
-            const user = users.find(u => u.account === email && u.password === password);
-            if (user) {
-                console.log("使用本地備份登入:", user.nickname);
-                doLoginSuccess(user, email, password, isNewLogin);
-                return true;
-            }
+      // 從本地備份資料庫讀取
+      const rawUsers = localStorage.getItem(USERS_DB_KEY);
+      if (rawUsers) {
+        const users = JSON.parse(rawUsers);
+        const user = users.find(u => u.account === email && u.password === password);
+        if (user) {
+          console.log("使用本地備份登入:", user.nickname);
+          doLoginSuccess(user, email, password, isNewLogin);
+          return true;
         }
-        // Demo
-        if (email === "demo@fitmatch.dev" && password === "fitmatch") {
-             doLoginSuccess({ account: email, nickname: "Demo用戶" }, email, password, isNewLogin);
-             return true;
-        }
-    } catch(e) {}
+      }
+      // Demo
+      if (email === "demo@fitmatch.dev" && password === "fitmatch") {
+        doLoginSuccess({ account: email, nickname: "Demo用戶" }, email, password, isNewLogin);
+        return true;
+      }
+    } catch (e) { }
     return false;
   }
 
@@ -383,40 +400,40 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem(ACCOUNT_KEY, JSON.stringify(activeUser));
     localStorage.setItem(USER_KEY_LEGACY, JSON.stringify(activeUser));
 
-    // ★ 關鍵修正：無論是否為新登入 (isNewLogin)，都更新切換帳號列表
+    // 無論是否為新登入 (isNewLogin)，都更新切換帳號列表
     // 這樣才能確保從 ID.js 修改後的暱稱/頭像，在下次登入時是新的
     let sessions = [];
-    try { sessions = JSON.parse(localStorage.getItem(SAVED_SESSIONS_KEY) || "[]"); } catch(e){}
-    
+    try { sessions = JSON.parse(localStorage.getItem(SAVED_SESSIONS_KEY) || "[]"); } catch (e) { }
+
     const idx = sessions.findIndex(s => s.account === email);
     if (idx >= 0) {
-        sessions[idx] = { ...sessions[idx], ...activeUser }; // 更新資料
+      sessions[idx] = { ...sessions[idx], ...activeUser }; // 更新資料
     } else {
-        sessions.push(activeUser); // 新增資料
+      sessions.push(activeUser); // 新增資料
     }
     localStorage.setItem(SAVED_SESSIONS_KEY, JSON.stringify(sessions));
 
-    if(msgBox) {
-        msgBox.textContent = "登入成功！跳轉中...";
-        msgBox.className = "msg success";
+    if (msgBox) {
+      msgBox.textContent = "登入成功！跳轉中...";
+      msgBox.className = "msg success";
     }
-    if(submitBtn) submitBtn.textContent = "成功";
+    if (submitBtn) submitBtn.textContent = "成功";
 
     setTimeout(() => {
-      window.location.href = "ID.html"; 
+      window.location.href = "ID.html";
     }, 800);
   }
 });
 
 // ... 前面省略 ...
-  const USERS_DB_KEY = "fitmatch_users"; // 本地備份資料庫
+const USERS_DB_KEY = "fitmatch_users"; // 本地備份資料庫
 
-  // === 救援工具 ===
-  window.resetAllUsers = () => {
-      localStorage.removeItem(USERS_DB_KEY);
-      localStorage.removeItem(SAVED_SESSIONS_KEY);
-      localStorage.removeItem(CURRENT_USER_KEY);
-      alert("已清空所有本地使用者資料！");
-      location.reload();
-  };
+// === 救援工具 ===
+window.resetAllUsers = () => {
+  localStorage.removeItem(USERS_DB_KEY);
+  localStorage.removeItem(SAVED_SESSIONS_KEY);
+  localStorage.removeItem(CURRENT_USER_KEY);
+  alert("已清空所有本地使用者資料！");
+  location.reload();
+};
 // ...

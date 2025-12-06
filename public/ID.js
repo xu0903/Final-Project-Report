@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!grid) return;
 
     try {
+      // 後端 API 取得使用者收藏
       const res = await fetch('/get-user-favorites');
       const data = await res.json();
 
@@ -66,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  let userJson = null;
+  let userJson = null; // 儲存從後端載入的使用者物件資料
 
   function updateUI(user) {
     console.log("Updating UI with user data:", user);
@@ -75,8 +76,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const accountEl = document.getElementById("display-account");
     const logoutBtn = document.getElementById("btn-logout");
     const loginLink = document.getElementById("link-login");
-    console.log("NickName Element:", user.Username);
-    console.log("Account Element:", user.Email);
+    console.log("NickName Element:", user ? user.Username : "N/A");
+    console.log("Account Element:", user ? user.Email : "N/A");
 
     if (user) {
       // 使用者已登入
@@ -104,6 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (confirm("確定要登出嗎？")) {
         // 呼叫後端登出 API 清除 cookie
         await fetch('/logout', { method: 'POST', credentials: 'include' });
+        // 重載頁面或導向登入頁
         window.location.reload();
       }
     });
@@ -114,16 +116,12 @@ document.addEventListener("DOMContentLoaded", () => {
   //=================================================================
   const API_BASE_URL = 'http://localhost:3000';
 
-  // Storage Keys
-  const USER_KEY = "fitmatch_user";
-  const ACCOUNT_KEY = "fitmatch_account";
-  const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions";
-  const USERS_DB_KEY = "fitmatch_users";
+  // **移除 Local Storage Keys**
 
   // DOM Elements
   const displayNickname = document.getElementById("display-nickname");
   const displayAccount = document.getElementById("display-account");
-  const btnLogout = document.getElementById("btn-logout");
+  // const btnLogout = document.getElementById("btn-logout"); // 已在上方宣告
   const loginLink = document.getElementById("link-login");
 
   // 編輯與頭像 DOM
@@ -139,12 +137,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const avatarDisplayArea = document.getElementById("avatar-display-area");
   const btnRemoveAvatar = document.getElementById("btn-remove-avatar");
 
-  // 1. 載入使用者資料
+  // 1. 載入使用者資料 (從後端取得，透過 cookie 判斷登入狀態)
   async function loadUserData() {
     try {
       const res = await fetch('/getUserData', {
         method: 'GET',
-        credentials: 'include'
+        credentials: 'include' // 確保發送 cookie
       });
       const data = await res.json();
 
@@ -152,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
       }
 
-      return data.user; // 已經是物件
+      return data.user; // 假設後端返回的 data.user 是一個使用者物件
     } catch (err) {
       console.error('取得使用者資料失敗', err);
       return null;
@@ -164,14 +162,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     console.log("Loaded user data:", userJson);
     updateUI(userJson);
+    loadUserProfile(); // 資料載入後再初始化渲染
   })();
 
   //初始化渲染user資料
-  loadUserProfile();
   function loadUserProfile() {
     if (userJson) {
       try {
-        const user = JSON.parse(userJson);
+        // 假設 userJson 已經是一個物件 { Username: "...", Email: "...", avatar: "..." }
+        const user = userJson;
 
         // 基本資料
         const name = user.Username || "會員";
@@ -189,17 +188,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // 按鈕狀態
-        if (btnLogout) btnLogout.style.display = "inline-block";
+        if (logoutBtn) logoutBtn.style.display = "inline-block";
         if (loginLink) loginLink.style.display = "none";
 
       } catch (e) {
-        console.error("資料解析失敗", e);
+        console.error("資料處理失敗", e);
       }
     } else {
       // 未登入
       if (displayNickname) displayNickname.textContent = "訪客";
       if (displayAccount) displayAccount.textContent = "請先登入";
-      if (btnLogout) btnLogout.style.display = "none";
+      if (logoutBtn) logoutBtn.style.display = "none";
       if (loginLink) loginLink.style.display = "inline-block";
       if (btnEditNickname) btnEditNickname.style.display = "none";
       if (avatarContainer) avatarContainer.style.pointerEvents = "none";
@@ -230,6 +229,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnCancelNickname) {
     btnCancelNickname.addEventListener("click", () => {
+      // 取消時，將輸入框還原為當前 userJson 中的值
+      if (userJson) inputNickname.value = userJson.Username || "";
       nicknameEditMode.classList.add("hidden");
       nicknameViewMode.classList.remove("hidden");
     });
@@ -242,46 +243,75 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("暱稱不能為空！");
         return;
       }
+      if (!userJson) {
+        alert("使用者未登入，無法儲存！");
+        return;
+      }
 
-      // 先更新本地 UI 和 Storage，讓使用者覺得很快
-      updateLocalUser({ nickname: newName });
+      // 呼叫後端更新
+      const updateSuccess = await updateServerProfile({ nickname: newName });
 
-      displayNickname.textContent = newName;
-      const user = JSON.parse(userJson);
-      if (!user.avatar) renderAvatarText(newName);
+      if (updateSuccess) {
+        // 更新成功後，更新本地 userJson 和 UI
+        userJson.Username = newName; // 假設後端更新成功後，本地 userJson 更新
+        displayNickname.textContent = newName;
+        if (!userJson.avatar) renderAvatarText(newName);
 
-      nicknameEditMode.classList.add("hidden");
-      nicknameViewMode.classList.remove("hidden");
-
-      // 再背景更新伺服器
-      await updateServerProfile({ nickname: newName });
+        nicknameEditMode.classList.add("hidden");
+        nicknameViewMode.classList.remove("hidden");
+      } else {
+        // 失敗時保持編輯模式
+        alert("更新暱稱失敗，請檢查網路或稍後再試。");
+      }
     });
   }
 
   // 3. 頭像上傳
   if (avatarContainer && avatarUpload) {
+    // 點擊事件 (保持不變)
     avatarContainer.addEventListener("click", () => {
+      if (!userJson) {
+        alert("請先登入才能上傳頭像！");
+        return;
+      }
       avatarUpload.click();
     });
 
+    // 處理檔案選擇變更事件 (Change 監聽器)
     avatarUpload.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
+      // 檢查檔案大小
       if (file.size > 2 * 1024 * 1024) {
-        alert("圖片檔案過大，請選擇小於 2MB 的圖片");
+        alert("圖片檔案過大，請選擇小於 2 MB 的圖片");
         return;
       }
 
       const reader = new FileReader();
-      reader.onload = async function (event) {
-        const base64String = event.target.result;
-        renderAvatarImage(base64String);
-        if (btnRemoveAvatar) btnRemoveAvatar.classList.remove("hidden");
 
-        updateLocalUser({ avatar: base64String });
-        await updateServerProfile({ avatar: base64String });
+      // 使用箭頭函式，並在內部使用 IIFE (立即執行函式) 來處理 async/await
+      reader.onload = (event) => {
+        (async () => {
+          const base64String = event.target.result; // 取得 Base64 字串
+
+          // 1. 呼叫後端更新 API
+          const updateSuccess = await updateServerProfile({ avatar: base64String });
+
+          if (updateSuccess) {
+            // 2. 更新成功後，更新本地 UI 顯示
+            userJson.avatar = base64String;
+            renderAvatarImage(base64String); // 顯示新頭像
+            if (btnRemoveAvatar) btnRemoveAvatar.classList.remove("hidden");
+            alert("頭像上傳成功！");
+          } else {
+            // 3. 失敗時給予提示
+            alert("上傳頭像失敗，請檢查網路或稍後再試。");
+          }
+        })(); // 立即執行非同步函式
       };
+
+      // 讀取檔案，並以 Data URL (Base64) 格式儲存結果
       reader.readAsDataURL(file);
     });
   }
@@ -290,60 +320,38 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnRemoveAvatar) {
     btnRemoveAvatar.addEventListener("click", async () => {
       if (!confirm("確定要移除目前的頭貼嗎？")) return;
+      if (!userJson) return;
 
-      const user = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
-      const name = user.nickname || user.username || "M";
-      renderAvatarText(name);
+      // 呼叫後端更新
+      const updateSuccess = await updateServerProfile({ avatar: "" });
 
-      btnRemoveAvatar.classList.add("hidden");
-
-      updateLocalUser({ avatar: null });
-      await updateServerProfile({ avatar: "" });
+      if (updateSuccess) {
+        // 更新成功後，更新本地 userJson 和 UI
+        userJson.avatar = "";
+        const name = userJson.Username || "M";
+        renderAvatarText(name);
+        btnRemoveAvatar.classList.add("hidden");
+      } else {
+        alert("移除頭像失敗，請檢查網路或稍後再試。");
+      }
     });
   }
 
-  // 5. 更新 LocalStorage
-  function updateLocalUser(updates) {
-    try {
-      // A. 更新當前登入者
-      let user = JSON.parse(userJson);
-      user = { ...user, ...updates };
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-
-      // 取得 Email 用於比對 (統一轉小寫)
-      const targetEmail = (user.account || user.email || "").toLowerCase();
-      if (!targetEmail) return;
-
-      // B. 更新切換帳號列表 (Saved Sessions)
-      let sessions = JSON.parse(localStorage.getItem(SAVED_SESSIONS_KEY) || "[]");
-      const idx = sessions.findIndex(s => (s.account || s.email || "").toLowerCase() === targetEmail);
-      if (idx !== -1) {
-        sessions[idx] = { ...sessions[idx], ...updates };
-        localStorage.setItem(SAVED_SESSIONS_KEY, JSON.stringify(sessions));
-      }
-
-      // C. 同步更新本地備份資料庫 (fitmatch_users)
-      let usersDB = JSON.parse(localStorage.getItem(USERS_DB_KEY) || "[]");
-      const dbIdx = usersDB.findIndex(u => (u.account || u.email || "").toLowerCase() === targetEmail);
-      if (dbIdx !== -1) {
-        usersDB[dbIdx] = { ...usersDB[dbIdx], ...updates };
-        localStorage.setItem(USERS_DB_KEY, JSON.stringify(usersDB));
-      }
-
-    } catch (e) { console.error("Update local error", e); }
-  }
-
-  // 6. 呼叫後端 (增加錯誤提示)
+  // 5. 呼叫後端 (更新使用者資料)
   async function updateServerProfile(data) {
     try {
-      const user = JSON.parse(userJson);
-      if (!user) return;
+      if (!userJson) {
+        console.error("使用者未登入，無法更新伺服器資料");
+        return false;
+      }
+      const user = userJson;
 
       const response = await fetch(`${API_BASE_URL}/update-user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email: user.Email, ...data })
+        // 傳送 UserID 作為使用者識別
+        body: JSON.stringify({ userId: user.UserID, ...data })
       });
 
       const result = await response.json();
@@ -351,21 +359,12 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(result.message || "伺服器更新失敗");
       }
       console.log("伺服器資料更新成功");
+      return true;
 
     } catch (err) {
       console.error("API error", err);
-      alert("⚠️ 注意：無法連線到伺服器，您的變更僅暫存於本機。\n(若切換帳號或清除快取，變更可能會遺失)");
+      alert(`⚠️ 注意：伺服器更新失敗！\n錯誤訊息: ${err.message}`);
+      return false;
     }
-  }
-
-  // 7. 登出
-  if (btnLogout) {
-    btnLogout.addEventListener("click", () => {
-      if (confirm("確定要登出嗎？")) {
-        localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(ACCOUNT_KEY);
-        window.location.href = "login.html";
-      }
-    });
   }
 });
