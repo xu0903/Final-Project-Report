@@ -45,7 +45,9 @@ async function fetchAndRenderTags() {
   }
 }
 
-fetchAndRenderTags();
+fetchAndRenderTags().then(() => {
+  restoreTagSelections();
+});
 
 /* --------------------------------------------
    由ID取的outfit資料
@@ -147,19 +149,9 @@ async function saveHistory(outfitID) {
 
 // 顏色背景（給靈感卡片顏色感）
 const colorBG = {
-  earth: "#d4b89f",
-  mono: "#c4c4c4",
-  pastel: "#f9dfe5",
-  pink: "#ffb3c6",
-  red: "#e26d5a",
-  orange: "#ffb84c",
-  yellow: "#ffe26a",
-  lightgreen: "#b7e4c7",
-  darkgreen: "#588157",
-  lightblue: "#a0c4ff",
-  blue: "#4361ee",
-  purple: "#c77dff",
-  brown: "#8b5e3c",
+  mono: "#a2a1a1ff",
+  blue: "#b7d7fcff",
+  brown: "#c7ac91ff",
 };
 
 /* --------------------------------------------
@@ -291,9 +283,30 @@ function setupTagPills() {
         .forEach((el) => el.classList.remove("active"));
 
       btn.classList.add("active");
+      // ⭐ 儲存目前選取到 localStorage
+      localStorage.setItem(`fitmatch_${groupName}_selected`, btn.dataset.key);
+
     });
   });
 }
+
+function restoreTagSelections() {
+  const savedColor = localStorage.getItem("fitmatch_color_selected");
+  const savedStyle = localStorage.getItem("fitmatch_style_selected");
+
+  // 恢復顏色選擇
+  if (savedColor) {
+    const colorBtn = document.querySelector(`.tag-pill[data-group="color"][data-key="${savedColor}"]`);
+    if (colorBtn) colorBtn.classList.add("active");
+  }
+
+  // 恢復風格選擇
+  if (savedStyle) {
+    const styleBtn = document.querySelector(`.tag-pill[data-group="style"][data-key="${savedStyle}"]`);
+    if (styleBtn) styleBtn.classList.add("active");
+  }
+}
+
 
 /* --------------------------------------------
    取得目前選擇：顏色 / 風格 / 性別
@@ -525,6 +538,7 @@ function setupClearButton() {
 --------------------------------------------- */
 document.addEventListener("DOMContentLoaded", async () => {
   setupTagPills();
+  restoreTagSelections();
   setupGenerateButton();
   setupFavoriteButtons();
   setupCardClickJump();
