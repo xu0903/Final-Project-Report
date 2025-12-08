@@ -1,9 +1,16 @@
 {
   "formal": {
     "bottom": {
-      "blackgraywhite": [],
+      "blackgraywhite": [
+        "clothing/formal/bottom/blackgraywhite/IMG_4892.PNG",
+        "clothing/formal/bottom/blackgraywhite/IMG_4893.PNG",
+        "clothing/formal/bottom/blackgraywhite/IMG_4896.PNG"
+      ],
       "blue": [],
-      "brown": []
+      "brown": [
+        "clothing/formal/bottom/brown/IMG_4894.PNG",
+        "clothing/formal/bottom/brown/IMG_4895.PNG"
+      ]
     },
     "hat": {
       "blackgraywhite": [],
@@ -23,12 +30,31 @@
   },
   "simple": {
     "bottom": {
-      "blackgraywhite": [],
-      "blue": [],
+      "blackgraywhite": [
+        "clothing/simple/bottom/blackgraywhite/IMG_4882.PNG",
+        "clothing/simple/bottom/blackgraywhite/IMG_4883.PNG",
+        "clothing/simple/bottom/blackgraywhite/IMG_4884.PNG",
+        "clothing/simple/bottom/blackgraywhite/IMG_4887.PNG",
+        "clothing/simple/bottom/blackgraywhite/IMG_4888.PNG",
+        "clothing/simple/bottom/blackgraywhite/IMG_4890.PNG",
+        "clothing/simple/bottom/blackgraywhite/IMG_4905.PNG",
+        "clothing/simple/bottom/blackgraywhite/IMG_4906.PNG",
+        "clothing/simple/bottom/blackgraywhite/IMG_4908.PNG",
+        "clothing/simple/bottom/blackgraywhite/IMG_4909.PNG",
+        "clothing/simple/bottom/blackgraywhite/IMG_4910.PNG"
+      ],
+      "blue": [
+        "clothing/simple/bottom/blue/IMG_4885.PNG",
+        "clothing/simple/bottom/blue/IMG_4886.PNG",
+        "clothing/simple/bottom/blue/IMG_4889.PNG",
+        "clothing/simple/bottom/blue/IMG_4891.PNG",
+        "clothing/simple/bottom/blue/IMG_4907.PNG"
+      ],
       "brown": [
-        "clothing/simple/bottom/brown/IMG_4646.PNG",
-        "clothing/simple/bottom/brown/IMG_4648.PNG",
-        "clothing/simple/bottom/brown/IMG_4660.PNG"
+        "clothing/simple/bottom/brown/IMG_4899.PNG",
+        "clothing/simple/bottom/brown/IMG_4903.PNG",
+        "clothing/simple/bottom/brown/IMG_4904.PNG",
+        "clothing/simple/bottom/brown/IMG_4911.PNG"
       ]
     },
     "hat": {
@@ -84,9 +110,26 @@
   },
   "street": {
     "bottom": {
-      "blackgraywhite": [],
-      "blue": [],
-      "brown": []
+      "blackgraywhite": [
+        "clothing/street/bottom/blackgraywhite/IMG_4883.PNG",
+        "clothing/street/bottom/blackgraywhite/IMG_4884.PNG",
+        "clothing/street/bottom/blackgraywhite/IMG_4887.PNG",
+        "clothing/street/bottom/blackgraywhite/IMG_4888.PNG",
+        "clothing/street/bottom/blackgraywhite/IMG_4897.PNG",
+        "clothing/street/bottom/blackgraywhite/IMG_4900.PNG"
+      ],
+      "blue": [
+        "clothing/street/bottom/blue/IMG_4885.PNG",
+        "clothing/street/bottom/blue/IMG_4886.PNG",
+        "clothing/street/bottom/blue/IMG_4889.PNG",
+        "clothing/street/bottom/blue/IMG_4890.PNG",
+        "clothing/street/bottom/blue/IMG_4891.PNG",
+        "clothing/street/bottom/blue/IMG_4898.PNG",
+        "clothing/street/bottom/blue/IMG_4901.PNG"
+      ],
+      "brown": [
+        "clothing/street/bottom/brown/IMG_4899.PNG"
+      ]
     },
     "hat": {
       "blackgraywhite": [
@@ -115,9 +158,26 @@
   },
   "sweety": {
     "bottom": {
-      "blackgraywhite": [],
-      "blue": [],
-      "brown": []
+      "blackgraywhite": [
+        "clothing/sweety/bottom/blackgraywhite/IMG_4863.PNG",
+        "clothing/sweety/bottom/blackgraywhite/IMG_4864.PNG",
+        "clothing/sweety/bottom/blackgraywhite/IMG_4865.PNG",
+        "clothing/sweety/bottom/blackgraywhite/IMG_4869.PNG",
+        "clothing/sweety/bottom/blackgraywhite/IMG_4870.PNG",
+        "clothing/sweety/bottom/blackgraywhite/IMG_4871.PNG",
+        "clothing/sweety/bottom/blackgraywhite/IMG_4880.PNG"
+      ],
+      "blue": [
+        "clothing/sweety/bottom/blue/IMG_4866.PNG",
+        "clothing/sweety/bottom/blue/IMG_4867.PNG",
+        "clothing/sweety/bottom/blue/IMG_4879.PNG",
+        "clothing/sweety/bottom/blue/IMG_4881.PNG"
+      ],
+      "brown": [
+        "clothing/sweety/bottom/brown/IMG_4868.PNG",
+        "clothing/sweety/bottom/brown/IMG_4872.PNG",
+        "clothing/sweety/bottom/brown/IMG_4874.PNG"
+      ]
     },
     "hat": {
       "blackgraywhite": [

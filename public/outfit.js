@@ -521,7 +521,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupGenerateButton();
   setupFavoriteButtons();
   setupCardClickJump();
-  setupRegenerateButton();
   setupClearButton();
 
   const grid = document.getElementById("idea-grid");
@@ -553,46 +552,4 @@ function setupGenerateButton() {
   const btn = document.getElementById("generate-ideas");
   if (!btn) return;
   btn.addEventListener("click", renderIdeas);
-}
-
-/* --------------------------------------------
-   重新生成
---------------------------------------------- */
-async function setupRegenerateButton() {
-  const btn = document.getElementById("regenerate");
-  if (!btn) return;
-
-  btn.addEventListener("click", async () => {
-    const selection = getCurrentSelection();
-    const { colorKey, colorLabel, styleKey, styleLabel} = selection;
-
-    if (!colorKey || !styleKey) {
-      alert("請先選擇顏色、風格與性別！");
-      return;
-    }
-
-    const grid = document.getElementById("idea-grid");
-    const tip = document.getElementById("idea-tip");
-
-    const ideas = [];
-    const count = 3;
-
-    for (let i = 1; i <= count; i++) {
-      ideas.push({
-        id: `${colorKey}-${styleKey}-${Date.now()}-${i}`,
-        title: `${colorLabel} × ${styleLabel} Look ${i}`,
-        colorKey,
-        colorLabel,
-        styleKey,
-        styleLabel,
-      });
-    }
-
-    const favorites = await loadFavorites();
-
-    grid.innerHTML = (await Promise.all(ideas.map(x => createIdeaCardHTML(x, favorites)))).join("");
-
-    tip.textContent =
-      `已重新為你產生新的靈感：${colorLabel} × ${styleLabel}`;
-  });
 }
