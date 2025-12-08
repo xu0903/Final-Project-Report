@@ -295,6 +295,7 @@ app.post('/save-outfit', (req, res) => {
 //取得特定 ID 的outfit table的資料
 app.get('/get-outfit/:id', (req, res) => {
   const outfitID = req.params.id;
+  console.log("ID=", outfitID);
   const query = 'SELECT * FROM outfits WHERE OutfitID = ?';
 
   connection.query(query, [outfitID], (err, results) => {
