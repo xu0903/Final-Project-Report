@@ -109,7 +109,12 @@ async function loadHistory() {
         styleKey: o.StyleKey,
         colorLabel: o.ColorLabel || o.ColorKey,
         styleLabel: o.StyleLabel || o.StyleKey
-      }));
+      }))
+      .sort((a, b) => {
+          const numA = parseInt(a.title.match(/Look (\d+)/)[1]);
+          const numB = parseInt(b.title.match(/Look (\d+)/)[1]);
+          return numA - numB;
+      });
 
   } catch (error) {
     console.error("從伺服器取得歷史紀錄失敗：", error);
