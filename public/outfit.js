@@ -476,6 +476,8 @@ function setupCardClickJump() {
       note: `${color} × ${style} Look`,
     };
 
+    localStorage.setItem("fitmatch_outfit_result", JSON.stringify(result));
+
     setTimeout(() => {
       window.location.href = "gallery.html";
     }, 150);

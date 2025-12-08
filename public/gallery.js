@@ -1,6 +1,6 @@
 // gallery.js — 升級版結果展示頁邏輯
 
-const RESULT_KEY = "fitmatch_result";
+const RESULT_KEY = "fitmatch_outfit_result";
 const FAVORITES_KEY = "fitmatch_favorites";
 
 // 對照表 (需與 outfit.js 保持一致，將 UI key 轉為 JSON key)
@@ -96,9 +96,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   const tagBox = document.getElementById("look-tags");
   const tags = [resultData.color, resultData.style];
-  // 以前的版本可能沒有 gender，檢查一下
-  if(resultData.genderLabel) tags.push(resultData.genderLabel); 
-  
+
   tagBox.innerHTML = tags.map(t => `<span class="badge">${t}</span>`).join("");
 
   // 3. 等待 JSON 載入
