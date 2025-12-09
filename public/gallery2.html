@@ -37,45 +37,45 @@
          右側：標題 + 標籤 + 收藏 + 小縮圖牆
     ====================== -->
     <section class="gallery-right">
+      
 
       <!-- 主標題 -->
       <h1 id="look-title">穿搭結果</h1>
       <p id="look-note" class="muted small"></p>
-
+<div class="thumbnails-area">
+  <div class="look-tags" id="look-tags"></div>
+<button type="button" id="regen-btn" class="btn outline small">
+  返回
+</button>
+</div>
+          <h3 class="muted small" style="margin-bottom: 8px;">其他顯示角度 / 配件</h3>
+          <div id="thumbnails-grid" class="thumbnails-grid">
+            <!-- JS 會插入例如： 
+            <div class="thumb-item" data-src="looks/...jpg">
+              <img src="looks/...jpg" />
+            </div> 
+            -->
+          </div>
+        </div>
       <!-- 標籤 -->
-      <div class="look-tags" id="look-tags"></div>
-
       <!-- 收藏 + 重新搭配 -->
       <div class="gallery-buttons">
-        <button type="button" id="fav-btn" class="btn primary small">
+        <!-- <button type="button" id="fav-btn" class="btn primary small">
           ★ 收藏
-        </button>
+        </button> -->
 
-        <button type="button" id="redo-btn" class="btn outline small">
-          重新搭配
-        </button>
-      </div>
-
-      <!-- =====================
-           🔥 新增：縮圖牆 thumbnails（3–4 張）
-           點擊縮圖 → 左側大圖切換
-      ====================== -->
-      <div class="thumbnails-area">
-        <h3 class="muted small" style="margin-bottom: 8px;">其他顯示角度 / 配件</h3>
-
-        <div id="thumbnails-grid" class="thumbnails-grid">
-          <!-- JS 會插入例如： 
-              <div class="thumb-item" data-src="looks/...jpg">
-                 <img src="looks/...jpg" />
-              </div> 
-          -->
-        </div>
-      </div>
-
-    </section>
-
-  </main>
-
-  <script src="gallery2.js"></script>
-</body>
-</html>
+        
+        <!-- =====================
+        🔥 新增：縮圖牆 thumbnails（3–4 張）
+        點擊縮圖 → 左側大圖切換
+        ====================== -->
+        
+        
+      </section>
+      
+    </main>
+    
+    <script src="gallery2.js"></script>
+    
+  </body>
+  </html>
