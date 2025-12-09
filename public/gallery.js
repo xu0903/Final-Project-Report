@@ -1,255 +1,186 @@
-// gallery.js — 升級版結果展示頁邏輯
+// -------------------------------
+//   FitMatch — 完整版 gallery.js
+// -------------------------------
 
 const RESULT_KEY = "fitmatch_outfit_result";
-const FAVORITES_KEY = "fitmatch_favorites";
 
-// 對照表 (需與 outfit.js 保持一致，將 UI key 轉為 JSON key)
+// 對照：UI → JSON
 const MAP_STYLE = {
-    "eu": "formal",
-    "jp": "simple",
-    "kr": "sweety",
-    "street": "street"
+  "formal": "formal",
+  "simple": "simple",
+  "sweety": "sweety",
+  "street": "street"
 };
 
 const MAP_COLOR = {
-    "mono": "blackgraywhite",
-    "blue": "blue",
-    "lightblue": "blue",
-    "earth": "brown",
-    "orange": "brown",
-    "yellow": "brown"
+  "mono": "blackgraywhite",
+  "blackgraywhite": "blackgraywhite",
+  "blue": "blue",
+  "lightblue": "blue",
+  "brown": "brown",
+  "earth": "brown"
 };
 
 let CLOTHING_DATA = null;
-let currentOutfit = { hat: null, top: null, bottom: null }; // 儲存當前隨機生成的這套
+let current = { hat: null, top: null, bottom: null };
 
-// ---------- 載入 JSON 資料 ----------
-async function fetchClothingData() {
-  try {
-    const res = await fetch('clothingData.json');
-    if(res.ok) {
-        CLOTHING_DATA = await res.json();
-    }
-  } catch(e) {
-    console.error("無法讀取 clothingData.json", e);
-  }
+// ---------------------------
+// 載入 clothingData.json
+// ---------------------------
+async function loadClothingJSON() {
+  const res = await fetch("clothingData.json");
+  CLOTHING_DATA = await res.json();
 }
 
-// ---------- 隨機挑選一張圖片 ----------
-function getRandomItem(style, category, color) {
-    if (!CLOTHING_DATA) return null;
-    
-    // 轉換 Key
-    const jsonStyle = MAP_STYLE[style] || style;
-    const jsonColor = MAP_COLOR[color] || color;
+// ---------------------------
+// 隨機挑一張照片
+// ---------------------------
+function pickRandom(style, category, color) {
+  const s = MAP_STYLE[style] ?? style;
+  const c = MAP_COLOR[color] ?? color;
 
-    // 安全檢查
-    if (
-        CLOTHING_DATA[jsonStyle] && 
-        CLOTHING_DATA[jsonStyle][category] && 
-        CLOTHING_DATA[jsonStyle][category][jsonColor]
-    ) {
-        const list = CLOTHING_DATA[jsonStyle][category][jsonColor];
-        if (list.length > 0) {
-            const idx = Math.floor(Math.random() * list.length);
-            return list[idx];
-        }
-    }
-    // 如果找不到該顏色的，嘗試找同風格其他顏色，或回傳 null
-    return null; 
+  const list = CLOTHING_DATA?.[s]?.[category]?.[c];
+  if (!list || list.length === 0) return null;
+
+  return list[Math.floor(Math.random() * list.length)];
 }
 
-// ---------- 生成整套穿搭 ----------
-function generateFullOutfit(styleKey, colorKey) {
-    // 分別抓取三個部位
-    const hat = getRandomItem(styleKey, "hat", colorKey);
-    const top = getRandomItem(styleKey, "top", colorKey);
-    const bottom = getRandomItem(styleKey, "bottom", colorKey);
-    
-    return { hat, top, bottom };
+// ---------------------------
+// 生成整套穿搭
+// ---------------------------
+function generateOutfit(style, color) {
+  return {
+    hat: pickRandom(style, "hat", color),
+    top: pickRandom(style, "top", color),
+    bottom: pickRandom(style, "bottom", color)
+  };
 }
 
-// ---------- 收藏讀寫 ----------
-function loadFavorites() {
-  try {
-    return JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
-  } catch { return []; }
+// ---------------------------
+// 渲染左側大圖（拼貼）
+// ---------------------------
+function renderStacked() {
+  const box = document.getElementById("look-image");
+
+  box.innerHTML = `
+    ${current.hat ? `<img src="${current.hat}" class="look-stack-img">` : ""}
+    ${current.top ? `<img src="${current.top}" class="look-stack-img">` : ""}
+    ${current.bottom ? `<img src="${current.bottom}" class="look-stack-img">` : ""}
+  `;
 }
 
-function saveFavorites(list) {
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(list));
+// ---------------------------
+// 渲染左側大圖（單張）
+// ---------------------------
+function renderSingle(src) {
+  const box = document.getElementById("look-image");
+  box.innerHTML = `<img src="${src}" class="look-single-img">`;
 }
 
-// ---------- 主程式 ----------
+// ---------------------------
+// 建立縮圖牆
+// ---------------------------
+function renderThumbnails() {
+  const grid = document.getElementById("thumbnails-grid");
+
+  const list = [
+    { type: "full", src: null },
+    { type: "hat", src: current.hat },
+    { type: "top", src: current.top },
+    { type: "bottom", src: current.bottom }
+  ];
+
+  grid.innerHTML = list
+    .map((item, i) => {
+      if (item.type === "full") {
+        return `
+          <div class="thumb-item active-thumb" data-type="full">
+            <div class="thumb-stack">
+              ${current.hat ? `<img src="${current.hat}">` : ""}
+              ${current.top ? `<img src="${current.top}">` : ""}
+              ${current.bottom ? `<img src="${current.bottom}">` : ""}
+            </div>
+          </div>
+        `;
+      }
+      return `
+        <div class="thumb-item" data-type="${item.type}" data-src="${item.src}">
+          <img src="${item.src}">
+        </div>
+      `;
+    })
+    .join("");
+
+  // 綁定事件
+  document.querySelectorAll(".thumb-item").forEach(t => {
+    t.addEventListener("click", () => {
+      document
+        .querySelectorAll(".thumb-item")
+        .forEach(x => x.classList.remove("active-thumb"));
+      t.classList.add("active-thumb");
+
+      if (t.dataset.type === "full") renderStacked();
+      else renderSingle(t.dataset.src);
+    });
+  });
+}
+
+// ---------------------------
+// 主流程
+// ---------------------------
 document.addEventListener("DOMContentLoaded", async () => {
-  // 1. 讀取上一頁的篩選結果
-  const rawResult = localStorage.getItem(RESULT_KEY);
-  if (!rawResult) {
-    document.getElementById("look-title").textContent = "無法載入結果，請重新篩選";
-    return;
+  const raw = localStorage.getItem(RESULT_KEY);
+  if (!raw) return;
+  const data = JSON.parse(raw);
+
+  document.getElementById("look-title").textContent = data.title;
+  document.getElementById("look-note").textContent = data.note;
+  document.getElementById("look-tags").innerHTML = `
+      <span class="badge">${data.color}</span>
+      <span class="badge">${data.style}</span>
+  `;
+
+  await loadClothingJSON();
+  current = generateOutfit(data.styleKey, data.colorKey);
+
+  renderStacked();
+  renderThumbnails();
+
+  // ===========================================
+  // ❤️ 正確收藏按鈕（這段要加進來）
+  // ===========================================
+  const favBtn = document.getElementById("fav-btn");
+
+  function refreshFavBtn() {
+    const favs = JSON.parse(localStorage.getItem("fitmatch_favorites") || "[]");
+    favBtn.textContent = favs.includes(data.id)
+      ? "★ 已收藏"
+      : "★ 收藏";
   }
-  const resultData = JSON.parse(rawResult);
 
-  // 2. 顯示文字與標籤
-  document.getElementById("look-title").textContent = resultData.title;
-  document.getElementById("look-note").textContent = resultData.note;
-  
-  const tagBox = document.getElementById("look-tags");
-  const tags = [resultData.color, resultData.style];
+  favBtn.addEventListener("click", () => {
+    let favs = JSON.parse(localStorage.getItem("fitmatch_favorites") || "[]");
 
-  tagBox.innerHTML = tags.map(t => `<span class="badge">${t}</span>`).join("");
+    if (favs.includes(data.id)) {
+      favs = favs.filter(x => x !== data.id);
+    } else {
+      favs.push(data.id);
+    }
 
-  // 3. 等待 JSON 載入
-  await fetchClothingData();
+    localStorage.setItem("fitmatch_favorites", JSON.stringify(favs));
+    refreshFavBtn();
+  });
 
-  // 4. 生成這一次的穿搭組合 (如果 localStorage 只有一張 top/bottom，我們這裡補齊全身)
-  // 為了體驗好，我們直接根據 style/color 重新產生一套
-  currentOutfit = generateFullOutfit(resultData.colorKey, resultData.styleKey);
+  refreshFavBtn();
 
-  console.log("生成的穿搭組合:", currentOutfit);
+  // ===========================================
+  // ❤️ 重新搭配按鈕（單純跳轉）
+  // ===========================================
+  const regenBtn = document.getElementById("regen-btn");
+  regenBtn.addEventListener("click", () => {
+    window.location.href = "outfit.html";
+  });
 
-  // 5. 渲染畫面
-  renderGallery();
-  setupEvents(resultData);
 });
 
-function renderGallery() {
-    const displayContainer = document.getElementById("look-display-container");
-    const thumbGrid = document.getElementById("thumbnails-grid");
 
-    // --- A. 渲染左側大圖 (預設顯示全身堆疊) ---
-    renderStackedView(displayContainer);
-
-    // --- B. 渲染右側縮圖牆 (4張) ---
-    // 1. 全身縮圖 (用 CSS 模擬堆疊)
-    // 2. 帽子
-    // 3. 上衣
-    // 4. 褲子
-    
-    const items = [
-        { type: 'full',   img: null }, // 特殊處理
-        { type: 'hat',    img: currentOutfit.hat },
-        { type: 'top',    img: currentOutfit.top },
-        { type: 'bottom', img: currentOutfit.bottom }
-    ];
-
-    thumbGrid.innerHTML = items.map((item, index) => {
-        let content = "";
-        
-        if (item.type === 'full') {
-            // 製作一個迷你的堆疊圖
-            content = `
-                <div style="display:flex; flex-direction:column; width:100%; height:100%; padding:2px;">
-                    ${currentOutfit.hat ? `<img src="${currentOutfit.hat}" style="flex:1; object-fit:contain;">` : ''}
-                    ${currentOutfit.top ? `<img src="${currentOutfit.top}" style="flex:1; object-fit:contain;">` : ''}
-                    ${currentOutfit.bottom ? `<img src="${currentOutfit.bottom}" style="flex:1; object-fit:contain;">` : ''}
-                </div>
-            `;
-        } else {
-            // 單品圖 (若沒圖顯示 placeholder)
-            const src = item.img || 'https://placehold.co/100x100?text=No+Image';
-            content = `<img src="${src}" alt="${item.type}" />`;
-        }
-
-        return `
-            <div class="thumb-item ${index === 0 ? 'active-thumb' : ''}" data-index="${index}" data-type="${item.type}">
-                ${content}
-            </div>
-        `;
-    }).join("");
-
-    // 綁定縮圖點擊事件
-    document.querySelectorAll(".thumb-item").forEach(item => {
-        item.addEventListener("click", () => {
-            // 切換 active 樣式
-            document.querySelectorAll(".thumb-item").forEach(t => t.classList.remove("active-thumb"));
-            item.classList.add("active-thumb");
-
-            // 切換左側視圖
-            const type = item.dataset.type;
-            if (type === 'full') {
-                renderStackedView(displayContainer);
-            } else {
-                const imgSrc = currentOutfit[type];
-                renderSingleView(displayContainer, imgSrc);
-            }
-        });
-    });
-}
-
-// 渲染左側：堆疊模式 (Hat + Top + Bottom)
-function renderStackedView(container) {
-    // 加上動畫 class
-    container.style.opacity = 0;
-    
-    setTimeout(() => {
-        container.innerHTML = `
-            ${currentOutfit.hat ? `<img src="${currentOutfit.hat}" class="look-item-img" style="flex: 0.8;">` : ''}
-            ${currentOutfit.top ? `<img src="${currentOutfit.top}" class="look-item-img" style="flex: 1.2;">` : ''}
-            ${currentOutfit.bottom ? `<img src="${currentOutfit.bottom}" class="look-item-img" style="flex: 1.2;">` : ''}
-        `;
-        container.style.opacity = 1;
-    }, 150);
-}
-
-// 渲染左側：單張大圖模式
-function renderSingleView(container, src) {
-    container.style.opacity = 0;
-    
-    setTimeout(() => {
-        if (src) {
-            container.innerHTML = `<img src="${src}" class="look-single-img">`;
-        } else {
-            container.innerHTML = `<p class="muted">此部位尚無圖片</p>`;
-        }
-        container.style.opacity = 1;
-    }, 150);
-}
-
-function setupEvents(resultData) {
-    // 收藏按鈕
-    const favBtn = document.getElementById("fav-btn");
-    const favList = loadFavorites();
-    // 檢查是否收藏 (這裡簡單用 resultData.id 檢查，雖然內容圖片可能變了，但概念上是這個 "Look")
-    const isFav = favList.some(x => x.id === resultData.id);
-
-    if (isFav) {
-        favBtn.textContent = "★ 已收藏";
-        favBtn.classList.add("active-fav");
-    }
-
-    favBtn.addEventListener("click", () => {
-        const list = loadFavorites();
-        const existIdx = list.findIndex(x => x.id === resultData.id);
-
-        if (existIdx !== -1) {
-            // 取消收藏
-            list.splice(existIdx, 1);
-            saveFavorites(list);
-            favBtn.textContent = "★ 收藏";
-            favBtn.classList.remove("active-fav");
-        } else {
-            // 加入收藏 (這次我們要存真的圖片路徑!)
-            const newItem = {
-                ...resultData,
-                // 把這一次隨機生成的圖片存進去，之後在 ID.html 才能看到這套
-                outfitImages: {
-                    hat: currentOutfit.hat,
-                    top: currentOutfit.top,
-                    bottom: currentOutfit.bottom
-                },
-                // 為了相容舊版單張圖顯示，選一張主要的當代表圖 (例如 Top)
-                image: currentOutfit.top || currentOutfit.hat
-            };
-            list.push(newItem);
-            saveFavorites(list);
-            favBtn.textContent = "★ 已收藏";
-            favBtn.classList.add("active-fav");
-        }
-    });
-
-    // 重新搭配 (回到上頁)
-    document.getElementById("redo-btn").addEventListener("click", () => {
-        window.location.href = "outfit.html";
-    });
-}
