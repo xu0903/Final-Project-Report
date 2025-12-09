@@ -1376,50 +1376,50 @@ button,
 }
 
 
-/* ============================================
-   縮圖牆（Thumbnails）
-   ============================================ */
-
-.thumbnails-area {
-  margin-top: 1.5rem;
-}
-
-.thumbnails-grid {
+/* 🔥 小縮圖牆 → 2×2 Grid（加大外框） */
+#thumbnails-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;              /* 格子之間距離加大 */
+  width: 100%;
+  max-width: 420px;       /* 整個區域變寬 */
+  margin: 0 auto;
 }
 
+/* 🔥 每個縮圖格子更大、更漂亮 */
 .thumb-item {
   width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s;
-  background-color: #f9fafb;
+  height: 180px;          /* ★ ★ ★ 加大格子高度 */
+  padding: 12px;          /* ★ 保留內邊距讓圖片不會貼邊 */
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  transition: 0.2s;
 }
 
+/* 圖片等比例縮放＋不貼邊 */
 .thumb-item img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
-/* hover 效果 */
-.thumb-item:hover {
-  transform: scale(1.06);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
-  border-color: #b8c7d7;
-}
-
-/* active 效果 */
+/* 點擊時的 active 效果 */
 .thumb-item.active-thumb {
-  border: 2px solid #b8c7d7;
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.35);
-  transform: scale(1.03);
+  border-color: #b4c4ff;
+  box-shadow: 0 0 10px rgba(180, 196, 255, 0.6);
 }
+
+/* hover 效果（可選） */
+.thumb-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
 
 /* 標籤區調整 */
 .look-tags {
@@ -4778,34 +4778,6 @@ input, select, button {
   gap: 5px; /* 縮圖之間的間距 */
 }
 
-.thumb-img {
-  width: 80%; /* 讓它自動填滿 flex 空間 */
-  height: 50px; /* 固定縮圖高度 */
-  object-fit: cover; /* 保持比例裁切 */
-  border-radius: 8px;
-  cursor: pointer;
-  
-  /* 預設邊框與轉場 */
-  border: 2px solid transparent; 
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  opacity: 0.7; /* 沒選到時稍微淡一點 */
-}
-
-/* 縮圖 Hover：變大 + 變亮 */
-.thumb-img:hover {
-  transform: scale(1.15) translateY(-5px); /* 放大並稍微往上浮 */
-  opacity: 1;
-  z-index: 10; /* 確保浮在隔壁縮圖上面 */
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-/* 當前選中的縮圖：加框 + 全亮 */
-.thumb-img.active-thumb {
-  border-color: #c7a693; /* 主題色邊框 */
-  opacity: 1;
-  transform: scale(1.05);
-}
-
 /* RWD：手機版縮圖小一點或隱藏 */
 @media (max-width: 768px) {
   .hero-thumbs {
@@ -4838,37 +4810,117 @@ input, select, button {
     grid-template-columns: 1fr; 
   }
 }
-.look-stack-img {
-  width: 100%;
-  object-fit: contain;
-  display: block;
-  margin-bottom: 6px;
-}
 
-.look-single-img {
-  width: 100%;
-  object-fit: contain;
-}
-
+/* ===============================
+   🔸 通用：縮圖卡片樣式
+================================ */
 .thumb-item {
   border: 1px solid #ddd;
-  padding: 4px;
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: 8px;
   cursor: pointer;
+  background: #fff;
   transition: transform .2s ease, box-shadow .2s ease;
 }
 
 .thumb-item:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 10px rgba(0,0,0,.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
 }
 
-.active-thumb {
-  border: 2px solid #ff7995;
+
+/* ===============================
+   🔸 左側 Look 拼貼縮圖（hat/top/bottom）
+================================ */
+.thumb-stack {
+  width: 100%;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: scale(0.85);
+  transform-origin: center;
 }
 
 .thumb-stack img {
-  width: 100%;
+  width: 80%;
   object-fit: contain;
   display: block;
 }
+
+.thumb-item:first-child .thumb-stack img:nth-child(1) { transform: scale(0.45); }
+.thumb-item:first-child .thumb-stack img:nth-child(2) { transform: scale(0.75); }
+.thumb-item:first-child .thumb-stack img:nth-child(3) { transform: scale(0.75); }
+
+/* 第一張縮圖：圖片間距更緊 */
+.thumb-item:first-child .thumb-stack img {
+  margin: 0;
+}
+
+
+/* ===============================
+   🔸 右側單品縮圖（正方形）
+================================ */
+.look-single-img {
+  width: 100%;
+  aspect-ratio: 1/1;  /* 正方形框 */
+  object-fit: contain;
+  display: block;
+  padding: 8px;
+}
+
+
+/* ===============================
+   🔸 主展示區（左側大圖）
+================================ */
+.look-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 500px;
+  padding: 30px 10px;
+  background: #d8d2c8;
+  border-radius: 12px;
+  overflow-y: auto;
+}
+
+/* 單張展示圖大小控制 */
+.look-image img:nth-child(1) { /* Hat */
+  width: 70%;
+  max-width: 150px;
+}
+.look-image img:nth-child(2) { /* Top */
+  width: 70%;
+  max-width: 230px;
+}
+.look-image img:nth-child(3) { /* Bottom */
+  width: 55%;
+  max-width: 240px;
+}
+
+
+/* ===============================
+   🔸 縮圖牆布局：左 Look + 右單品三格
+================================ */
+.thumb-wall {
+  display: grid;
+  grid-template-columns: 35% 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.thumb-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* RWD 手機版改為直排 */
+@media (max-width: 768px) {
+  .thumb-wall {
+    grid-template-columns: 1fr;
+  }
+}
+
