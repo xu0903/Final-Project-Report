@@ -96,9 +96,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   const tagBox = document.getElementById("look-tags");
   const tags = [resultData.color, resultData.style];
-  // 以前的版本可能沒有 gender，檢查一下
-  if(resultData.genderLabel) tags.push(resultData.genderLabel); 
-  
+
   tagBox.innerHTML = tags.map(t => `<span class="badge">${t}</span>`).join("");
 
   // 3. 等待 JSON 載入
@@ -252,6 +250,6 @@ function setupEvents(resultData) {
 
     // 重新搭配 (回到上頁)
     document.getElementById("redo-btn").addEventListener("click", () => {
-        window.location.href = "outfit.html";
+        window.location.href = "idea.html";
     });
 }

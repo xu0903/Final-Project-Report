@@ -72,7 +72,6 @@ function generateMiniCards(base) {
       title: `${base.title} Look ${i}`,
       color: base.tags[0] || "色系",
       style: base.tags[1] || "風格",
-      gender: base.tags[2] || "中性",
     };
 
     html.push(`
@@ -81,17 +80,15 @@ function generateMiniCards(base) {
         data-title="${data.title}"
         data-color="${data.color}"
         data-style="${data.style}"
-        data-gender="${data.gender}"
         data-colorkey="earth"
-        data-stylekey="eu"
-        data-genderkey="unisex">
+        data-stylekey="eu">
 
         <div class="idea-thumb" style="background-color:#e8e3da;"></div>
 
         <div class="idea-body">
           <h3 class="idea-title">${data.title}</h3>
           <p class="idea-tags muted small">
-            #${data.color} #${data.style} #${data.gender}
+            #${data.color} #${data.style}
           </p>
         </div>
       </article>
@@ -121,11 +118,9 @@ function setupMiniCardClick() {
         title: card.dataset.title,
         color: card.dataset.color,
         style: card.dataset.style,
-        gender: card.dataset.gender,
         colorKey: card.dataset.colorkey,
         styleKey: card.dataset.stylekey,
-        genderKey: card.dataset.genderkey,
-        note: `${card.dataset.color} × ${card.dataset.style} × ${card.dataset.gender} Look`,
+        note: `${card.dataset.color} × ${card.dataset.style} Look`,
       };
 
       localStorage.setItem(RESULT_KEY, JSON.stringify(data));
