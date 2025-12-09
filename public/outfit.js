@@ -564,7 +564,7 @@ async function setupRegenerateButton() {
 
   btn.addEventListener("click", async () => {
     const selection = getCurrentSelection();
-    const { colorKey, colorLabel, styleKey, styleLabel} = selection;
+    const { colorKey, colorLabel, styleKey, styleLabel } = selection;
 
     if (!colorKey || !styleKey) {
       alert("請先選擇顏色、風格與性別！");

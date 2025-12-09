@@ -75,8 +75,7 @@ function renderStacked() {
     box.innerHTML = `
     ${current.hat ? `<img src="${current.hat}" class="look-stack-img">` : ""}
     ${current.top ? `<img src="${current.top}" class="look-stack-img">` : ""}
-    ${current.bottom ? `<img src="${current.bottom}" class="look-stack-img">` : ""}
-  `;
+    ${current.bottom ? `<img src="${current.bottom}" class="look-stack-img">` : ""}`;
 }
 
 // ---------------------------
@@ -104,20 +103,20 @@ function renderThumbnails() {
         .map((item, i) => {
             if (item.type === "full") {
                 return `
-          <div class="thumb-item active-thumb" data-type="full">
-            <div class="thumb-stack">
-              ${current.hat ? `<img src="${current.hat}">` : ""}
-              ${current.top ? `<img src="${current.top}">` : ""}
-              ${current.bottom ? `<img src="${current.bottom}">` : ""}
-            </div>
+                        <div class="thumb-item active-thumb" data-type="full">
+                            <div class="thumb-stack">
+                                ${current.hat ? `<img src="${current.hat}">` : ""}
+                        ${current.top ? `<img src="${current.top}">` : ""}
+                            ${current.bottom ? `<img src="${current.bottom}">` : ""}
+                            </div>
           </div>
         `;
             }
             return `
-        <div class="thumb-item" data-type="${item.type}" data-src="${item.src}">
-          <img src="${item.src}">
-        </div>
-      `;
+                        <div class="thumb-item" data-type="${item.type}" data-src="${item.src}">
+                            <img src="${item.src}">
+                        </div>
+                        `;
         })
         .join("");
 
@@ -189,9 +188,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("look-title").textContent = result.title;
     document.getElementById("look-note").textContent = result.note;
     document.getElementById("look-tags").innerHTML = `
-    <span class="badge">${result.color}</span>
-    <span class="badge">${result.style}</span>
-  `;
+                        <span class="badge">${result.color}</span>
+                        <span class="badge">${result.style}</span>
+                        `;
 
     renderStacked();
     renderThumbnails();
