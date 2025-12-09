@@ -157,13 +157,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  (async () => {//立即執行函式載入使用者資料
-    userJson = await loadUserData();
+  // 在 ID.js 的 (async () => { ... })(); 裡面修改
 
-    console.log("Loaded user data:", userJson);
-    updateUI(userJson);
-    loadUserProfile(); // 資料載入後再初始化渲染
-  })();
+(async () => {
+  userJson = await loadUserData();
+
+  console.log("Loaded user data:", userJson);
+  
+  // 🔥 新增這行：把抓到的資料同步到 LocalStorage，給留言板用------------local storage
+  if (userJson) {
+    localStorage.setItem("fitmatch_user", JSON.stringify({
+      nickname: userJson.Username,  // 對應 messageboard 需要的欄位
+      username: userJson.Username,
+      avatar: userJson.avatar,
+      email: userJson.Email,
+      id: userJson.UserID
+    }));
+  }
+
+  updateUI(userJson);
+  loadUserProfile(); 
+})();
 
   //初始化渲染user資料
   function loadUserProfile() {
@@ -256,7 +270,13 @@ document.addEventListener("DOMContentLoaded", () => {
         userJson.Username = newName; // 假設後端更新成功後，本地 userJson 更新
         displayNickname.textContent = newName;
         if (!userJson.avatar) renderAvatarText(newName);
-
+          localStorage.setItem("fitmatch_user", JSON.stringify({
+          nickname: userJson.Username,
+          username: userJson.Username, // 雙重保險，看你留言板讀哪個
+          avatar: userJson.avatar,
+          email: userJson.Email,
+          id: userJson.UserID
+        }));
         nicknameEditMode.classList.add("hidden");
         nicknameViewMode.classList.remove("hidden");
       } else {
@@ -303,6 +323,13 @@ document.addEventListener("DOMContentLoaded", () => {
             userJson.avatar = base64String;
             renderAvatarImage(base64String); // 顯示新頭像
             if (btnRemoveAvatar) btnRemoveAvatar.classList.remove("hidden");
+              localStorage.setItem("fitmatch_user", JSON.stringify({
+              nickname: userJson.Username,
+              username: userJson.Username,
+              avatar: userJson.avatar, // 這裡最重要！更新這一項
+              email: userJson.Email,
+              id: userJson.UserID
+            }));
             alert("頭像上傳成功！");
           } else {
             // 3. 失敗時給予提示
@@ -331,6 +358,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const name = userJson.Username || "M";
         renderAvatarText(name);
         btnRemoveAvatar.classList.add("hidden");
+        localStorage.setItem("fitmatch_user", JSON.stringify({
+        nickname: userJson.Username,
+        username: userJson.Username,
+        avatar: "", // 清空頭像
+        email: userJson.Email,
+        id: userJson.UserID
+  }));
+
       } else {
         alert("移除頭像失敗，請檢查網路或稍後再試。");
       }

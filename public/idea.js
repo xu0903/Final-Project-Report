@@ -3,6 +3,19 @@
 const INSP_KEY = "fitmatch_inspiration";
 const RESULT_KEY = "fitmatch_result";
 
+/* --------------------- 顏色對照表 (新增) --------------------- */
+// 將中文標籤轉換為 HEX 色碼
+const tagColors = {
+  "大地色": "#d4b89f",
+  "黑白灰": "#9ca3af",
+  "韓系": "#ffc8dd",   // 粉嫩色
+  "日系": "#e6ccb2",   // 米色/卡其
+  "休閒": "#bde0fe",   // 淺藍
+  "歐美風": "#787878", // 深灰
+  "正式": "#343a40",
+  "溫柔": "#ffafcc"
+};
+
 /* --------------------- 靈感資料 --------------------- */
 const inspirations = [
   {
@@ -64,6 +77,10 @@ function generateMiniCards(base) {
   // ⭐ 把 base（上方靈感卡的資料）一起存到 DOM，等等小卡片要用
   area.dataset.base = JSON.stringify(base);
 
+  // ★ 取得對應顏色：抓取第一個標籤 (如"大地色")，去查表
+  const mainTag = base.tags[0];
+  const bgColor = tagColors[mainTag] || "#e5e7eb"; // 預設灰色
+
   const html = [];
 
   for (let i = 1; i <= 4; i++) {
@@ -82,8 +99,9 @@ function generateMiniCards(base) {
         data-style="${data.style}"
         data-colorkey="earth"
         data-stylekey="eu">
-
-        <div class="idea-thumb" style="background-color:#e8e3da;"></div>
+      
+        <!-- ★ 修正處：直接填入查到的色碼 bgColor -->
+        <div class="idea-thumb" style="background-color: ${bgColor};"></div>
 
         <div class="idea-body">
           <h3 class="idea-title">${data.title}</h3>
@@ -104,7 +122,7 @@ function setupMiniCardClick() {
   const area = document.getElementById("insp-recommend");
   if (!area) return;
 
-  // ⭐ 取回上方靈感卡資料（非常重要）
+  // ⭐ 取回上方靈感卡資料
   const base = JSON.parse(area.dataset.base || "null");
 
   area.querySelectorAll(".idea-card").forEach((card) => {
@@ -154,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ${stored.note}
     `;
 
-    // 還原四張小卡片
+    // 還原四張小卡片 (會自動帶入顏色)
     generateMiniCards(stored);
 
     // 顯示下方區塊

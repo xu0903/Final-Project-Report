@@ -2,6 +2,60 @@
    由mySQL的tags table動態生成靈感標籤
 --------------------------------------------- */
 
+// --------------------------------------------
+// 生成穿搭需要用到的設定（要放在 outfit.js 上方）
+// --------------------------------------------
+
+const MAP_STYLE = {
+  "formal": "formal",
+  "simple": "simple",
+  "sweety": "sweety",
+  "street": "street"
+};
+
+const MAP_COLOR = {
+  "mono": "blackgraywhite",
+  "blackgraywhite": "blackgraywhite",
+  "blue": "blue",
+  "lightblue": "blue",
+  "brown": "brown",
+  "earth": "brown"
+};
+
+let CLOTHING_DATA = null;
+
+// --------------------------------------------
+// 載入 clothingData.json（一定要有）
+// --------------------------------------------
+async function loadClothingJSON() {
+  const res = await fetch("clothingData.json");
+  CLOTHING_DATA = await res.json();
+}
+
+// --------------------------------------------
+// 隨機挑一張照片
+// --------------------------------------------
+function pickRandom(style, category, color) {
+  const s = MAP_STYLE[style] ?? style;
+  const c = MAP_COLOR[color] ?? color;
+
+  const list = CLOTHING_DATA?.[s]?.[category]?.[c];
+  if (!list || list.length === 0) return null;
+
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// --------------------------------------------
+// ⭐ 生成整組穿搭（帽子 / 上衣 / 褲子）
+// --------------------------------------------
+function generateOutfit(style, color) {
+  return {
+    hat: pickRandom(style, "hat", color),
+    top: pickRandom(style, "top", color),
+    bottom: pickRandom(style, "bottom", color)
+  };
+}
+
 // 渲染標籤群組
 function renderTagsByType(tags) {
   const colorContainer = document.getElementById("color-tags");
@@ -45,7 +99,9 @@ async function fetchAndRenderTags() {
   }
 }
 
-fetchAndRenderTags();
+fetchAndRenderTags().then(() => {
+  restoreTagSelections();
+});
 
 /* --------------------------------------------
    由ID取的outfit資料
@@ -102,14 +158,25 @@ async function loadHistory() {
     // 將取得的 outfits 過濾掉 null，並轉成 idea 卡片所需格式
     return outfits
       .filter(o => o !== null)
-      .map(o => ({
-        id: o.OutfitID,
-        title: o.Title,
-        colorKey: o.ColorKey,
-        styleKey: o.StyleKey,
-        colorLabel: o.ColorLabel || o.ColorKey,
-        styleLabel: o.StyleLabel || o.StyleKey
-      }));
+      .map(o => {
+        const storedImages = JSON.parse(localStorage.getItem(`fitmatch_look_${o.OutfitID}`));
+
+        return {
+          id: o.OutfitID,
+          title: o.Title,
+          colorKey: o.ColorKey,
+          styleKey: o.StyleKey,
+          colorLabel: o.ColorLabel || o.ColorKey,
+          styleLabel: o.StyleLabel || o.StyleKey,
+          outfitImages: storedImages   // ⭐ 補回 outfitImages
+        };
+      })
+      .sort((a, b) => {
+        const numA = parseInt(a.title.match(/Look (\d+)/)[1]);
+        const numB = parseInt(b.title.match(/Look (\d+)/)[1]);
+        return numA - numB;
+      });
+
 
   } catch (error) {
     console.error("從伺服器取得歷史紀錄失敗：", error);
@@ -142,19 +209,9 @@ async function saveHistory(outfitID) {
 
 // 顏色背景（給靈感卡片顏色感）
 const colorBG = {
-  earth: "#d4b89f",
-  mono: "#c4c4c4",
-  pastel: "#f9dfe5",
-  pink: "#ffb3c6",
-  red: "#e26d5a",
-  orange: "#ffb84c",
-  yellow: "#ffe26a",
-  lightgreen: "#b7e4c7",
-  darkgreen: "#588157",
-  lightblue: "#a0c4ff",
-  blue: "#4361ee",
-  purple: "#c77dff",
-  brown: "#8b5e3c",
+  mono: "#a2a1a1ff",
+  blue: "#b7d7fcff",
+  brown: "#c7ac91ff",
 };
 
 /* --------------------------------------------
@@ -243,12 +300,13 @@ async function createIdeaCardHTML(data, favorites = []) {
 
   return `
     <article class="idea-card"
-       data-id="${escapeHTML(id)}"
-       data-title="${escapeHTML(title)}"
-       data-color="${escapeHTML(colorLabel)}"
-       data-style="${escapeHTML(styleLabel)}"
-       data-colorkey="${escapeHTML(colorKey)}"
-       data-stylekey="${escapeHTML(styleKey)}">
+      data-id="${escapeHTML(id)}"
+      data-title="${escapeHTML(title)}"
+      data-color="${escapeHTML(colorLabel)}"
+      data-style="${escapeHTML(styleLabel)}"
+      data-colorkey="${escapeHTML(colorKey)}"
+      data-stylekey="${escapeHTML(styleKey)}"
+      data-images='${escapeHTML(JSON.stringify(data.outfitImages || {}))}'>
 
       <div class="idea-thumb" style="background-color:${bg};"></div>
 
@@ -267,6 +325,7 @@ async function createIdeaCardHTML(data, favorites = []) {
 
     </article>
   `;
+
 }
 
 /* --------------------------------------------
@@ -286,9 +345,30 @@ function setupTagPills() {
         .forEach((el) => el.classList.remove("active"));
 
       btn.classList.add("active");
+      // ⭐ 儲存目前選取到 localStorage
+      localStorage.setItem(`fitmatch_${groupName}_selected`, btn.dataset.key);
+
     });
   });
 }
+
+function restoreTagSelections() {
+  const savedColor = localStorage.getItem("fitmatch_color_selected");
+  const savedStyle = localStorage.getItem("fitmatch_style_selected");
+
+  // 恢復顏色選擇
+  if (savedColor) {
+    const colorBtn = document.querySelector(`.tag-pill[data-group="color"][data-key="${savedColor}"]`);
+    if (colorBtn) colorBtn.classList.add("active");
+  }
+
+  // 恢復風格選擇
+  if (savedStyle) {
+    const styleBtn = document.querySelector(`.tag-pill[data-group="style"][data-key="${savedStyle}"]`);
+    if (styleBtn) styleBtn.classList.add("active");
+  }
+}
+
 
 /* --------------------------------------------
    取得目前選擇：顏色 / 風格 / 性別
@@ -346,14 +426,22 @@ async function renderIdeas() {
     console.log("儲存 outfit 回傳資料：", data.outfitID);
     await saveHistory(data.outfitID); // 儲存歷史紀錄
 
+    // ⭐ 產生固定的組合（帽子/上衣/褲子）
+    const outfitImages = generateOutfit(styleKey, colorKey);
+
+    // ⭐ 把這組 Look 存進 localStorage（用 outfitID 當 key）
+    localStorage.setItem(`fitmatch_look_${data.outfitID}`, JSON.stringify(outfitImages));
+
     ideas.push({
-      id: data.outfitID, // 使用後端的 ID
+      id: data.outfitID,
       title: `${colorLabel} × ${styleLabel} Look ${i}`,
       colorKey,
       colorLabel,
       styleKey,
       styleLabel,
+      outfitImages   // ← 直接放在卡片資料裡
     });
+
   }
   console.log("已儲存的 outfit IDs：", ideas.map(x => x.id));
 
@@ -449,21 +537,26 @@ async function toggleFavorite(btn, outfitID, cardData) {
 /* --------------------------------------------
    ⭐ 卡片點擊 → 跳轉 gallery.html
 --------------------------------------------- */
+/* --------------------------------------------
+   ⭐ 卡片點擊 → 跳轉 gallery.html（保留組合）
+--------------------------------------------- */
 function setupCardClickJump() {
   const grid = document.getElementById("idea-grid");
   if (!grid) return;
 
   grid.addEventListener("click", (e) => {
+    // 點到收藏按鈕就不要跳轉
     if (e.target.closest(".btn-fav")) return;
 
     const card = e.target.closest(".idea-card");
     if (!card) return;
 
+    // 視覺效果
     document.querySelectorAll(".idea-card.active")
       .forEach((c) => c.classList.remove("active"));
-
     card.classList.add("active");
 
+    // 準備新的 result 資料
     const id = card.dataset.id;
     const title = card.dataset.title;
     const color = card.dataset.color;
@@ -471,16 +564,43 @@ function setupCardClickJump() {
     const colorKey = card.dataset.colorkey;
     const styleKey = card.dataset.stylekey;
 
-    const result = {
-      id, title, color, style, colorKey, styleKey,
-      note: `${color} × ${style} Look`,
+    const newResult = {
+      id,
+      title,
+      color,
+      style,
+      colorKey,
+      styleKey,
+      note: `${color} × ${style} Look`
     };
 
+    // ⭐ 從卡片讀出固定組合
+    const outfitImages =
+      JSON.parse(localStorage.getItem(`fitmatch_look_${id}`)) ||
+      JSON.parse(card.dataset.images);
+
+    // ⭐ 存到 result
+    newResult.outfitImages = outfitImages;
+
+    // ⭐ 檢查 localStorage 是否已有舊資料（是否生成過 outfitImages）
+    const oldResult = JSON.parse(localStorage.getItem("fitmatch_outfit_result") || "{}");
+
+    // ⭐ 若舊 Look 與新的 Look 是同一個 → 保留 outfitImages
+    if (oldResult.id === newResult.id && oldResult.outfitImages) {
+      newResult.outfitImages = oldResult.outfitImages;
+    }
+
+
+    // ⭐ 儲存回 localStorage
+    localStorage.setItem("fitmatch_outfit_result", JSON.stringify(newResult));
+
+    // 跳轉到 gallery
     setTimeout(() => {
       window.location.href = "gallery.html";
     }, 150);
   });
 }
+
 
 /* --------------------------------------------
    清除按鈕功能 (新功能)
@@ -518,6 +638,7 @@ function setupClearButton() {
 --------------------------------------------- */
 document.addEventListener("DOMContentLoaded", async () => {
   setupTagPills();
+  restoreTagSelections();
   setupGenerateButton();
   setupFavoriteButtons();
   setupCardClickJump();
