@@ -83,47 +83,30 @@ function renderSingle(src) {
 function renderThumbnails() {
   const grid = document.getElementById("thumbnails-grid");
 
-  const list = [
-    { type: "full", src: null },
-    { type: "hat", src: current.hat },
-    { type: "top", src: current.top },
-    { type: "bottom", src: current.bottom }
-  ];
+  grid.innerHTML = `
+    <div class="thumb-rect">
+      <div class="thumb-stack-vertical">
+        ${current.hat ? `<img class="thumb-hat" src="${current.hat}" />` : ""}
+        ${current.top ? `<img class="thumb-top" src="${current.top}" />` : ""}
+        ${current.bottom ? `<img class="thumb-bottom" src="${current.bottom}" />` : ""}
+      </div>
+    </div>
 
-  grid.innerHTML = list
-    .map((item, i) => {
-      if (item.type === "full") {
-        return `
-          <div class="thumb-item active-thumb" data-type="full">
-            <div class="thumb-stack">
-              ${current.hat ? `<img src="${current.hat}">` : ""}
-              ${current.top ? `<img src="${current.top}">` : ""}
-              ${current.bottom ? `<img src="${current.bottom}">` : ""}
-            </div>
-          </div>
-        `;
-      }
-      return `
-        <div class="thumb-item" data-type="${item.type}" data-src="${item.src}">
-          <img src="${item.src}">
-        </div>
-      `;
-    })
-    .join("");
+    <div class="thumb-square"><img src="${current.hat}"></div>
+    <div class="thumb-square"><img src="${current.top}"></div>
+    <div class="thumb-square"><img src="${current.bottom}"></div>
+  `;
 
-  // 綁定事件
-  document.querySelectorAll(".thumb-item").forEach(t => {
-    t.addEventListener("click", () => {
-      document
-        .querySelectorAll(".thumb-item")
-        .forEach(x => x.classList.remove("active-thumb"));
-      t.classList.add("active-thumb");
-
-      if (t.dataset.type === "full") renderStacked();
-      else renderSingle(t.dataset.src);
+  // 綁定切換主圖
+  document.querySelector(".thumb-rect").addEventListener("click", () => renderStacked());
+  document.querySelectorAll(".thumb-square").forEach((el, idx) => {
+    el.addEventListener("click", () => {
+      const src = [current.hat, current.top, current.bottom][idx];
+      renderSingle(src);
     });
   });
 }
+
 
 // ---------------------------
 // 主流程
