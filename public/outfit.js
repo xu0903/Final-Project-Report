@@ -186,7 +186,7 @@ async function saveHistory(outfitID) {
 
 // 顏色背景（給靈感卡片顏色感）
 const colorBG = {
-  mono: "#a2a1a1ff",
+  blackgraywhite: "#a2a1a1ff",
   blue: "#b7d7fcff",
   brown: "#c7ac91ff",
 };

@@ -129,29 +129,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===========================================
   // ❤️ 正確收藏按鈕（這段要加進來）
   // ===========================================
-  const favBtn = document.getElementById("fav-btn");
+  // const favBtn = document.getElementById("fav-btn");
 
-  function refreshFavBtn() {
-    const favs = JSON.parse(localStorage.getItem("fitmatch_favorites") || "[]");
-    favBtn.textContent = favs.includes(data.id)
-      ? "★ 已收藏"
-      : "★ 收藏";
-  }
+  // function refreshFavBtn() {
+  //   const favs = JSON.parse(localStorage.getItem("fitmatch_favorites") || "[]");
+  //   favBtn.textContent = favs.includes(data.id)
+  //     ? "★ 已收藏"
+  //     : "★ 收藏";
+  // }
 
-  favBtn.addEventListener("click", () => {
-    let favs = JSON.parse(localStorage.getItem("fitmatch_favorites") || "[]");
+  // favBtn.addEventListener("click", () => {
+  //   let favs = JSON.parse(localStorage.getItem("fitmatch_favorites") || "[]");
 
-    if (favs.includes(data.id)) {
-      favs = favs.filter(x => x !== data.id);
-    } else {
-      favs.push(data.id);
-    }
+  //   if (favs.includes(data.id)) {
+  //     favs = favs.filter(x => x !== data.id);
+  //   } else {
+  //     favs.push(data.id);
+  //   }
 
-    localStorage.setItem("fitmatch_favorites", JSON.stringify(favs));
-    refreshFavBtn();
-  });
+  //   localStorage.setItem("fitmatch_favorites", JSON.stringify(favs));
+  //   refreshFavBtn();
+  // });
 
-  refreshFavBtn();
+  // refreshFavBtn();
 
   // ===========================================
   // ❤️ 重新搭配按鈕（單純跳轉）
