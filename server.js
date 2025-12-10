@@ -7,6 +7,64 @@ const fs = require('fs'); // 引入 fs 處理檔案系統操作
 const app = express();
 const port = 3000;
 
+//======
+// ... (前面的程式碼) ...
+
+// ★ 更新使用者資料 (暱稱 / 頭像 / 身高 / 體重 / BMI)
+app.post('/update-user', (req, res) => {
+  const { email, nickname, avatar, height, weight, bmi } = req.body;
+
+  if (!email) return res.status(400).json({ success: false, message: '缺少 Email 識別' });
+
+  let query = 'UPDATE users SET ';
+  let params = [];
+
+  // 動態組裝 SQL
+  if (nickname) {
+    query += 'Username = ?, ';
+    params.push(nickname);
+  }
+  if (avatar !== undefined) {
+    query += 'Avatar = ?, ';
+    params.push(avatar);
+  }
+  // ★ 新增：身高、體重、BMI
+  if (height) {
+    query += 'Height = ?, ';
+    params.push(height);
+  }
+  if (weight) {
+    query += 'Weight = ?, ';
+    params.push(weight);
+  }
+  if (bmi) {
+    query += 'BMI = ?, ';
+    params.push(bmi);
+  }
+
+  // 去掉最後多餘的逗號與空白
+  query = query.replace(/, $/, ' ');
+
+  query += 'WHERE Email = ?';
+  params.push(email);
+
+  // 如果沒有任何欄位要更新
+  if (params.length === 1) { // 只有 email 一個參數
+    return res.json({ success: true, message: '沒有資料需要更新' });
+  }
+
+  connection.query(query, params, (err, results) => {
+    if (err) {
+      console.error('更新使用者失敗:', err);
+      return res.status(500).json({ success: false, message: '資料庫錯誤' });
+    }
+    res.json({ success: true, message: '更新成功' });
+  });
+});
+
+
+
+//======
 
 // 解析 JSON
 app.use(express.json());
@@ -494,6 +552,7 @@ app.get("/api/messages", (req, res) => {
       LEFT JOIN (SELECT CommentID, COUNT(*) AS like_count FROM comments_likes GROUP BY CommentID) l ON c.CommentID=l.CommentID
       ORDER BY c.CreatedAt ASC
     `;
+    
     connection.query(commentsQuery, (err, comments) => {
       if (err) return res.status(500).json({ error: err.message });
       const messages = posts.map(p => ({
