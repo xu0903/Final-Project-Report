@@ -1,5 +1,5 @@
 // -------------------------------
-//   FitMatch — 完整版 gallery.js（無收藏版）
+//   FitMatch — 完整版 gallery.js
 // -------------------------------
 
 const RESULT_KEY = "fitmatch_outfit_result";
@@ -146,7 +146,36 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderStacked();
   renderThumbnails();
 
-  // 重新搭配（純跳轉）
+  // ===========================================
+  // ❤️ 正確收藏按鈕（這段要加進來）
+  // ===========================================
+  const favBtn = document.getElementById("fav-btn");
+
+  function refreshFavBtn() {
+    const favs = JSON.parse(localStorage.getItem("fitmatch_favorites") || "[]");
+    favBtn.textContent = favs.includes(data.id)
+      ? "★ 已收藏"
+      : "★ 收藏";
+  }
+
+  favBtn.addEventListener("click", () => {
+    let favs = JSON.parse(localStorage.getItem("fitmatch_favorites") || "[]");
+
+    if (favs.includes(data.id)) {
+      favs = favs.filter(x => x !== data.id);
+    } else {
+      favs.push(data.id);
+    }
+
+    localStorage.setItem("fitmatch_favorites", JSON.stringify(favs));
+    refreshFavBtn();
+  });
+
+  refreshFavBtn();
+
+  // ===========================================
+  // ❤️ 重新搭配按鈕（單純跳轉）
+  // ===========================================
   const regenBtn = document.getElementById("regen-btn");
   regenBtn.addEventListener("click", () => {
     window.location.href = "outfit.html";

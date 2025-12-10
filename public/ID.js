@@ -1,11 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
   // 載入使用者收藏
+  // 1. 載入使用者收藏 (已修改)
   async function loadUserFavorites() {
     const grid = document.getElementById("fav-grid");
     if (!grid) return;
 
     try {
-      // 後端 API 取得使用者收藏
       const res = await fetch('/get-user-favorites');
       const data = await res.json();
 
@@ -19,15 +19,100 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      // 渲染卡片
       grid.innerHTML = data.favorites.map(fav => createFavoriteCardHTML(fav)).join("");
+
+      // 🔥 新增：綁定刪除事件 (使用事件委派，效能較好)
+      grid.addEventListener('click', async (e) => {
+        // 檢查是否點擊到刪除按鈕 (或是按鈕內的圖示)
+        const btn = e.target.closest('.btn-delete-fav');
+        if (btn) {
+          e.preventDefault(); // 防止觸發卡片點擊
+          const favId = btn.dataset.id;
+          await deleteFavorite(favId);
+        }
+      });
+
     } catch (err) {
       console.error(err);
       grid.innerHTML = `<p class="muted">載入收藏時發生錯誤</p>`;
     }
   }
 
+  // 2. 產生收藏卡片 HTML (已修改：加入刪除按鈕)
+  // ID.js
+
+function createFavoriteCardHTML(fav) {
+    const bgColor = getColorBG(fav.ColorKey);
+
+    // 🔴 修正點 1：改抓 OutfitID
+    // 先確認你的資料庫欄位是 'OutfitID' 還是 'outfit_id' (看 console.log 最準)
+    // 這裡假設是 OutfitID，如果抓不到請試試 outfit_id
+    const outfitId = fav.OutfitID || fav.outfit_id; 
+
+    if (!outfitId) console.error("❌ 抓不到 OutfitID", fav);
+
+    return `
+    <div class="idea-card" id="fav-card-${outfitId}">
+      <button class="btn-delete-fav" data-id="${outfitId}" title="移除收藏">✕</button>
+
+      <div class="idea-thumb" style="background-color:${bgColor};">
+        ${fav.ImageURL ? `<img src="${fav.ImageURL}" alt="${fav.Title}">` : ''}
+      </div>
+      <div class="idea-body">
+        <h3 class="idea-title">${fav.Title}</h3>
+        <p class="idea-tags muted small">
+          #${fav.ColorLabel} #${fav.StyleLabel} #${fav.GenderLabel}
+        </p>
+        <p class="muted small">收藏時間：${new Date(fav.FavoritedAt).toLocaleString()}</p>
+      </div>
+    </div>
+  `;
+}
+
+  // 3. 🔥 新增：呼叫後端刪除 API
+  // ID.js
+
+async function deleteFavorite(outfitId) {
+    if (!confirm("確定要移除這個收藏嗎？")) return;
+
+    try {
+      const res = await fetch('/delete-favorite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        // 🔴 修正點 3：傳送 outfitId 給後端
+        body: JSON.stringify({ outfitId: outfitId }) 
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        // 刪除成功，移除對應的卡片
+        const card = document.getElementById(`fav-card-${outfitId}`);
+        if (card) {
+          card.style.opacity = '0';
+          setTimeout(() => card.remove(), 300);
+          
+          // 檢查是否刪光了
+          const grid = document.getElementById("fav-grid");
+          setTimeout(() => {
+             if(grid.children.length === 0) grid.innerHTML = `<p class="muted">你尚未收藏任何 outfit</p>`;
+          }, 300);
+        }
+      } else {
+        // 如果後端回傳錯誤訊息，印出來看
+        alert("刪除失敗：" + (result.message || "未知錯誤"));
+      }
+    } catch (err) {
+      console.error("刪除錯誤", err);
+      alert("網路錯誤，請稍後再試");
+    }
+}
+
   function getColorBG(colorKey) {
-    const colorBG = {
+     // ... (這部分不用變，照舊) ...
+     const colorBG = {
       earth: "#d4b89f",
       mono: "#c4c4c4",
       pastel: "#f9dfe5",
@@ -44,27 +129,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     return colorBG[colorKey] || "#e5e7eb";
   }
-  loadUserFavorites();// 載入使用者收藏
 
-  // 產生收藏卡片 HTML
-  function createFavoriteCardHTML(fav) {
-    const bgColor = getColorBG(fav.ColorKey);
-
-    return `
-    <div class="idea-card">
-      <div class="idea-thumb" style="background-color:${bgColor};">
-        ${fav.ImageURL ? `<img src="${fav.ImageURL}" alt="${fav.Title}">` : ''}
-      </div>
-      <div class="idea-body">
-        <h3 class="idea-title">${fav.Title}</h3>
-        <p class="idea-tags muted small">
-          #${fav.ColorLabel} #${fav.StyleLabel} #${fav.GenderLabel}
-        </p>
-        <p class="muted small">收藏時間：${new Date(fav.FavoritedAt).toLocaleString()}</p>
-      </div>
-    </div>
-  `;
-  }
+  loadUserFavorites(); // 呼叫執行
 
 
   let userJson = null; // 儲存從後端載入的使用者物件資料
