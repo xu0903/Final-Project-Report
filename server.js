@@ -2,6 +2,8 @@ const express = require('express');
 const mysql = require('mysql2');
 const path = require('path');
 const jwt = require('jsonwebtoken');// 引入 jsonwebtoken 套件以處理 JWT
+const multer = require('multer'); // 引入 multer 處理檔案上傳
+const fs = require('fs'); // 引入 fs 處理檔案系統操作
 const app = express();
 const port = 3000;
 
@@ -15,6 +17,18 @@ app.use(cookieParser());
 
 // 解析 URL-encoded
 app.use(express.urlencoded({ extended: true }));
+
+// Multer 設定
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads"); // 存放資料夾位置
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+  }
+});
+const upload = multer({ storage });
 
 // 提供靜態檔案 (HTML + 前端 JS)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -456,7 +470,200 @@ app.get('/get-history', authMiddleware, (req, res) => {
 });
 
 
+// ------------------------
+// 留言板 API
+// ------------------------
 
+// 取得所有貼文與回覆
+app.get("/api/messages", (req, res) => {
+  const postsQuery = `
+    SELECT p.PostID, p.UserID, u.Username AS Nickname, u.AvatarBase64 AS Avatar, p.Content, p.ImageURL, p.CreatedAt,
+           IFNULL(l.like_count,0) AS Likes
+    FROM posts p
+    JOIN users u ON p.UserID=u.UserID
+    LEFT JOIN (SELECT PostID, COUNT(*) AS like_count FROM posts_likes GROUP BY PostID) l ON p.PostID=l.PostID
+    ORDER BY p.CreatedAt DESC
+  `;
+  connection.query(postsQuery, (err, posts) => {
+    if (err) return res.status(500).json({ error: err.message });
+    const commentsQuery = `
+      SELECT c.CommentID, c.PostID, c.UserID, u.Username AS Nickname, u.AvatarBase64 AS Avatar, c.Content, c.CreatedAt,
+             IFNULL(l.like_count,0) AS Likes
+      FROM comments c
+      JOIN users u ON c.UserID=u.UserID
+      LEFT JOIN (SELECT CommentID, COUNT(*) AS like_count FROM comments_likes GROUP BY CommentID) l ON c.CommentID=l.CommentID
+      ORDER BY c.CreatedAt ASC
+    `;
+    connection.query(commentsQuery, (err, comments) => {
+      if (err) return res.status(500).json({ error: err.message });
+      const messages = posts.map(p => ({
+        id: p.PostID.toString(),
+        nickname: p.Nickname,
+        userAvatar: p.Avatar,
+        content: p.Content,
+        image: p.ImageURL,
+        createdAt: p.CreatedAt,
+        likes: p.Likes,
+        userId: p.UserID,
+        comments: comments.filter(c => c.PostID === p.PostID).map(c => ({
+          id: c.CommentID.toString(),
+          nickname: c.Nickname,
+          userAvatar: c.Avatar,
+          content: c.Content,
+          createdAt: c.CreatedAt,
+          likes: c.Likes,
+          userId: c.UserID
+        }))
+      }));
+      res.json(messages);
+    });
+  });
+});
+
+// 新增貼文
+app.post("/api/messages", authMiddleware, upload.single("image"), (req, res) => {
+  const { content } = req.body;
+  const userId = req.user.userId;
+  if (!content) return res.status(400).json({ error: "Missing content" });
+
+  let imageUrl = null;
+  if (req.file) imageUrl = `uploads/${req.file.filename}`;
+
+  connection.query(
+    "INSERT INTO posts (UserID, Content, ImageURL) VALUES (?,?,?)",
+    [userId, content, imageUrl],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      const postId = result.insertId;
+      connection.query(
+        "SELECT p.PostID, u.Username AS Nickname, u.AvatarBase64 AS Avatar, p.Content, p.ImageURL, p.CreatedAt FROM posts p JOIN users u ON p.UserID=u.UserID WHERE p.PostID=?",
+        [postId],
+        (err, rows) => {
+          if (err) return res.status(500).json({ error: err.message });
+          const post = rows[0];
+          res.json({
+            id: post.PostID.toString(),
+            nickname: post.Nickname,
+            userAvatar: post.Avatar,
+            content: post.Content,
+            image: post.ImageURL,
+            createdAt: post.CreatedAt,
+            likes: 0,
+            comments: [],
+            userId
+          });
+        }
+      );
+    }
+  );
+});
+
+
+// 刪除貼文，連同uploads圖片一起刪除
+app.delete("/api/messages/:id", authMiddleware, (req, res) => {
+  const postId = req.params.id;
+  // 先取得該貼文資料，找到圖片路徑
+  connection.query("SELECT ImageURL FROM posts WHERE PostID=?", [postId], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (result.length === 0) return res.status(404).json({ error: "貼文不存在" });
+
+    const imagePath = result[0].ImageURL;
+    if (imagePath) {
+      //const fullPath = path.join(__dirname, imagePath); // 絕對路徑
+      deleteFile(imagePath); // 刪掉檔案
+    }
+
+    // 刪除貼文資料
+    connection.query("DELETE FROM posts WHERE PostID=?", [postId], (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    });
+  });
+});
+
+//刪除 uploads 圖片，用於刪除貼文或回覆時
+function deleteFile(filePath) {
+  filePath = 'public/' + filePath; //補上 public/
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      console.error('刪除檔案失敗:', filePath, err.message);
+    } else {
+      console.log('檔案已刪除:', filePath);
+    }
+  });
+}
+
+
+// 對貼文按讚 / 取消按讚
+app.post("/api/messages/:id/toggle-like", authMiddleware, (req, res) => {
+  const postId = req.params.id;
+  const userId = req.user.userId;
+  connection.query("SELECT * FROM posts_likes WHERE PostID=? AND UserID=?", [postId, userId], (err, exists) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (exists.length > 0) {
+      //已經按讚了，刪除一筆
+      connection.query("DELETE FROM posts_likes WHERE PostID=? AND UserID=?", [postId, userId], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        return res.json({ success: true, liked: false });
+      });
+    }
+    else {
+      connection.query("INSERT INTO posts_likes (PostID, UserID) VALUES (?,?)", [postId, userId], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, liked: true });
+      });
+    }
+  });
+});
+
+// 新增回覆
+app.post("/api/messages/:id/comment", authMiddleware, (req, res) => {
+  const postId = req.params.id;
+  const userId = req.user.userId;
+  const { content } = req.body;
+  if (!content) return res.status(400).json({ error: "Missing content" });
+  connection.query("INSERT INTO comments (PostID, UserID, Content) VALUES (?,?,?)", [postId, userId, content], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    const commentId = result.insertId;
+    connection.query("SELECT c.CommentID, u.Username AS Nickname, u.AvatarBase64 AS Avatar, c.Content, c.CreatedAt FROM comments c JOIN users u ON c.UserID=u.UserID WHERE c.CommentID=?", [commentId], (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      const c = rows[0];
+      res.json({ id: c.CommentID.toString(), nickname: c.Nickname, userAvatar: c.Avatar, content: c.Content, createdAt: c.CreatedAt, likes: 0, userId });
+    });
+  });
+});
+
+// 刪除回覆
+app.delete("/api/messages/:postId/comment/:commentId", authMiddleware, (req, res) => {
+  const commentId = req.params.commentId;
+  connection.query("DELETE FROM comments WHERE CommentID=?", [commentId], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// 回覆按讚 / 取消按讚
+app.post("/api/messages/:postId/comment/:commentId/toggle-like", authMiddleware, (req, res) => {
+  const commentId = req.params.commentId;
+  const userId = req.user.userId;
+  connection.query("SELECT * FROM comments_likes WHERE CommentID=? AND UserID=?", [commentId, userId], (err, exists) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (exists.length > 0) {//已經按讚了，刪除一筆
+      connection.query("DELETE FROM comments_likes WHERE CommentID=? AND UserID=?", [commentId, userId], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        return res.json({ success: true, liked: false });
+      });
+      return;
+    }
+    //還沒按讚，新增一筆
+    else {
+      connection.query("INSERT INTO comments_likes (CommentID, UserID) VALUES (?,?)", [commentId, userId], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, liked: true });
+      });
+    }
+  });
+});
 
 
 // 啟動伺服器
