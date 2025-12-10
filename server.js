@@ -227,7 +227,7 @@ app.get('/get-user-favorites', authMiddleware, (req, res) => {
   const userId = req.user.userId;
 
   const query = `
-    SELECT o.OutfitID, o.Title, o.Description, o.ImageURL,
+    SELECT o.OutfitID, o.Title, o.Description, o.ImageHat,o.ImageTop,o.ImageBottom,
            o.StyleKey, o.StyleLabel,
            o.ColorKey, o.ColorLabel,
            uf.FavoritedAt
@@ -363,17 +363,17 @@ app.get('/get-all-tags', (req, res) => {
 
 //儲存產生的outfit資料到mySQL的outfits table
 app.post('/save-outfit', (req, res) => {
-  const { styleKey, styleLabel, colorKey, colorLabel, title, description, imageURL } = req.body;
+  const { styleKey, styleLabel, colorKey, colorLabel, title, description, ImageHat, ImageTop, ImageBottom } = req.body;
 
   const query = `
     INSERT INTO outfits 
-      (StyleKey, StyleLabel, ColorKey, ColorLabel, Title, Description, ImageURL) 
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+      (StyleKey, StyleLabel, ColorKey, ColorLabel, Title, Description, ImageHat, ImageTop, ImageBottom) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   connection.query(
     query,
-    [styleKey, styleLabel, colorKey, colorLabel, title, description || null, imageURL || null],
+    [styleKey, styleLabel, colorKey, colorLabel, title, description || null, ImageHat || null, ImageTop || null, ImageBottom || null],
     (err, results) => {
       if (err) {
         console.log(err);

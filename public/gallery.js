@@ -4,11 +4,22 @@
 
 const RESULT_KEY = "fitmatch_outfit_result";
 
+// 取得 URL 內的outfitID
+const params = new URLSearchParams(window.location.search);
+const outfitID = parseInt(params.get("outfitID"), 10);
+const fromPage = params.get("from") || 'outfit.html';
+console.log("fromPage =", fromPage);
+if (!outfitID || Number.isNaN(outfitID)) {
+  console.error("outfitID 缺失！");
+  window.location.href = "outfit.html";
+}
+
+
 // 對照：UI → JSON
 const MAP_STYLE = {
   "formal": "formal",
   "simple": "simple",
-  "sweety": "sweety",
+  "sweet": "sweet",
   "street": "street"
 };
 
@@ -21,40 +32,8 @@ const MAP_COLOR = {
   "earth": "brown"
 };
 
-let CLOTHING_DATA = null;
 let current = { hat: null, top: null, bottom: null };
 
-// ---------------------------
-// 載入 clothingData.json
-// ---------------------------
-async function loadClothingJSON() {
-  const res = await fetch("clothingData.json");
-  CLOTHING_DATA = await res.json();
-}
-
-// ---------------------------
-// 隨機挑一張照片
-// ---------------------------
-function pickRandom(style, category, color) {
-  const s = MAP_STYLE[style] ?? style;
-  const c = MAP_COLOR[color] ?? color;
-
-  const list = CLOTHING_DATA?.[s]?.[category]?.[c];
-  if (!list || list.length === 0) return null;
-
-  return list[Math.floor(Math.random() * list.length)];
-}
-
-// ---------------------------
-// 生成整套穿搭
-// ---------------------------
-function generateOutfit(style, color) {
-  return {
-    hat: pickRandom(style, "hat", color),
-    top: pickRandom(style, "top", color),
-    bottom: pickRandom(style, "bottom", color)
-  };
-}
 
 // ---------------------------
 // 渲染左側大圖（拼貼）
@@ -115,19 +94,34 @@ function renderThumbnails() {
 // 主流程
 // ---------------------------
 document.addEventListener("DOMContentLoaded", async () => {
-  const raw = localStorage.getItem(RESULT_KEY);
-  if (!raw) return;
-  const data = JSON.parse(raw);
-
-  document.getElementById("look-title").textContent = data.title;
-  document.getElementById("look-note").textContent = data.note;
+  // const raw = localStorage.getItem(RESULT_KEY);
+  // if (!raw) return;
+  // const data = JSON.parse(raw);
+  console.log("outfitID =", outfitID);
+  const response = await fetch(`/get-outfit/${outfitID}`);
+  const data = await response.json();
+  const outfitData = data.outfit;
+  if (!outfitData) {
+    console.error("找不到 outfit 資料！");
+    window.location.href = "outfit.html";
+    return;
+  }
+  console.log("取得的 outfit 資料：", outfitData);
+  console.log("Title", outfitData.Title);
+  document.getElementById("look-title").textContent = outfitData.Title;
+  document.getElementById("look-note").textContent = outfitData.Description;
   document.getElementById("look-tags").innerHTML = `
-      <span class="badge">${data.color}</span>
-      <span class="badge">${data.style}</span>
+      <span class="badge">${outfitData.ColorLabel}</span>
+      <span class="badge">${outfitData.StyleLabel}</span>
   `;
+  console.log("StyleKey, ColorKey:", outfitData.StyleKey, outfitData.ColorKey);
 
-  await loadClothingJSON();
-  current = generateOutfit(data.styleKey, data.colorKey);
+
+  current.hat = outfitData.ImageHat;
+  current.top = outfitData.ImageTop;
+  current.bottom = outfitData.ImageBottom;
+
+  console.log("current：", current);
 
   renderStacked();
   renderThumbnails();
@@ -135,7 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 重新搭配（純跳轉）
   const regenBtn = document.getElementById("regen-btn");
   regenBtn.addEventListener("click", () => {
-    window.location.href = "outfit.html";
+    window.location.href = fromPage;
   });
 
 });

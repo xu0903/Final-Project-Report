@@ -22,29 +22,6 @@ const MAP_COLOR = {
   "earth": "brown"
 };
 
-let CLOTHING_DATA = null;
-
-// --------------------------------------------
-// 載入 clothingData.json（一定要有）
-// --------------------------------------------
-async function loadClothingJSON() {
-  const res = await fetch("clothingData.json");
-  CLOTHING_DATA = await res.json();
-}
-
-// --------------------------------------------
-// 隨機挑一張照片
-// --------------------------------------------
-function pickRandom(style, category, color) {
-  const s = MAP_STYLE[style] ?? style;
-  const c = MAP_COLOR[color] ?? color;
-
-  const list = CLOTHING_DATA?.[s]?.[category]?.[c];
-  if (!list || list.length === 0) return null;
-
-  return list[Math.floor(Math.random() * list.length)];
-}
-
 // --------------------------------------------
 // ⭐ 生成整組穿搭（帽子 / 上衣 / 褲子）
 // --------------------------------------------
@@ -387,7 +364,41 @@ function getCurrentSelection() {
 }
 
 /* --------------------------------------------
-   按鈕：產生靈感卡片（含性別）
+  隨機選取outfit圖片連結
+---------------------------------------------*/
+let CLOTHING_DATA = null;
+loadClothingJSON();
+// 載入 clothingData.json（一定要有）
+async function loadClothingJSON() {
+  const res = await fetch("clothingData.json");
+  const JsonData = await res.json();
+  console.log("clothingData.json 載入狀態：", JsonData);
+  CLOTHING_DATA = JsonData;
+}
+
+// 隨機挑一張照片
+function pickRandom(style, category, color) {
+  const s = (MAP_STYLE[style] ?? style).toLowerCase();
+  const c = (MAP_COLOR[color] ?? color).toLowerCase();
+
+  const list = CLOTHING_DATA?.[s]?.[category]?.[c];
+  if (!list || list.length === 0) return null;
+
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// 生成整套穿搭
+function generateOutfit(style, color) {
+  console.log("生成穿搭：", style, color);
+  return {
+    hat: pickRandom(style, "hat", color),
+    top: pickRandom(style, "top", color),
+    bottom: pickRandom(style, "bottom", color)
+  };
+}
+
+/* --------------------------------------------
+   按鈕：產生靈感卡片
 --------------------------------------------- */
 async function renderIdeas() {
   const grid = document.getElementById("idea-grid");
@@ -406,10 +417,16 @@ async function renderIdeas() {
     return;
   }
 
+
   const ideas = [];
   const count = 3;
 
   for (let i = 1; i <= count; i++) {
+    //隨機生成圖片
+    const outfitImages = generateOutfit(styleKey, colorKey);
+    const { hat, top, bottom } = outfitImages;
+    console.log('outfitImages : ', outfitImages);
+    console.log('hat top bottom : ', hat, top, bottom);
     // 1. 先呼叫後端存入 outfits table
     const res = await fetch('/save-outfit', {
       method: 'POST',
@@ -417,8 +434,10 @@ async function renderIdeas() {
       body: JSON.stringify({
         styleKey, styleLabel, colorKey, colorLabel,
         title: `${colorLabel} × ${styleLabel} Look ${i}`,
-        description: null,
-        imageURL: null
+        description: `${colorLabel} × ${styleLabel}`,
+        ImageHat: hat,
+        ImageTop: top,
+        ImageBottom: bottom
       })
     });
 
@@ -426,10 +445,7 @@ async function renderIdeas() {
     console.log("儲存 outfit 回傳資料：", data.outfitID);
     await saveHistory(data.outfitID); // 儲存歷史紀錄
 
-    // ⭐ 產生固定的組合（帽子/上衣/褲子）
-    const outfitImages = generateOutfit(styleKey, colorKey);
-
-    // ⭐ 把這組 Look 存進 localStorage（用 outfitID 當 key）
+    // 把這組 Look 存進 localStorage（用 outfitID 當 key）
     localStorage.setItem(`fitmatch_look_${data.outfitID}`, JSON.stringify(outfitImages));
 
     ideas.push({
@@ -451,7 +467,6 @@ async function renderIdeas() {
   if (regenBtn) regenBtn.style.display = "inline-block";
   tip.textContent = `已根據「${colorLabel} × ${styleLabel}」產生 ${count} 個靈感格子！`;
 }
-
 
 /* --------------------------------------------
    收藏按鈕功能
@@ -537,9 +552,6 @@ async function toggleFavorite(btn, outfitID, cardData) {
 /* --------------------------------------------
    ⭐ 卡片點擊 → 跳轉 gallery.html
 --------------------------------------------- */
-/* --------------------------------------------
-   ⭐ 卡片點擊 → 跳轉 gallery.html（保留組合）
---------------------------------------------- */
 function setupCardClickJump() {
   const grid = document.getElementById("idea-grid");
   if (!grid) return;
@@ -574,29 +586,29 @@ function setupCardClickJump() {
       note: `${color} × ${style} Look`
     };
 
-    // ⭐ 從卡片讀出固定組合
+    // 從卡片讀出固定組合
     const outfitImages =
       JSON.parse(localStorage.getItem(`fitmatch_look_${id}`)) ||
       JSON.parse(card.dataset.images);
 
-    // ⭐ 存到 result
+    // 存到 result
     newResult.outfitImages = outfitImages;
 
-    // ⭐ 檢查 localStorage 是否已有舊資料（是否生成過 outfitImages）
-    const oldResult = JSON.parse(localStorage.getItem("fitmatch_outfit_result") || "{}");
+    // 檢查 localStorage 是否已有舊資料（是否生成過 outfitImages）
+    //const oldResult = JSON.parse(localStorage.getItem("fitmatch_outfit_result") || "{}");
 
-    // ⭐ 若舊 Look 與新的 Look 是同一個 → 保留 outfitImages
-    if (oldResult.id === newResult.id && oldResult.outfitImages) {
-      newResult.outfitImages = oldResult.outfitImages;
-    }
+    // 若舊 Look 與新的 Look 是同一個 → 保留 outfitImages
+    // if (oldResult.id === newResult.id && oldResult.outfitImages) {
+    //   newResult.outfitImages = oldResult.outfitImages;
+    // }
 
 
-    // ⭐ 儲存回 localStorage
-    localStorage.setItem("fitmatch_outfit_result", JSON.stringify(newResult));
+    // 儲存回 localStorage
+    //localStorage.setItem("fitmatch_outfit_result", JSON.stringify(newResult));
 
-    // 跳轉到 gallery
+    // 跳轉到 gallery;
     setTimeout(() => {
-      window.location.href = "gallery.html";
+      window.location.href = `gallery.html?outfitID=${id}&from=${'outfit.html'}`;
     }, 150);
   });
 }
@@ -650,6 +662,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 從後端抓歷史紀錄
   const history = await loadHistory();
   const favorites = await loadFavorites();
+  console.log("History loaded:", history);
   console.log("Loaded favorites:", favorites);
 
   if (history.length > 0) {

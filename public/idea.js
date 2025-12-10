@@ -19,37 +19,37 @@ const tagColors = {
 /* --------------------- 靈感資料 --------------------- */
 const inspirations = [
   {
-    id: "campus",
+    label: "campus",
     title: "校園日常",
     tags: ["大地色", "休閒", "寬褲"],
     note: "適合上課、社團、圖書館，一整天活動量偏高的日子。",
   },
   {
-    id: "commute",
+    label: "commute",
     title: "通勤辦公",
     tags: ["黑白灰", "襯衫", "正式"],
     note: "見客或開會、舒適與正式兼具的辦公風。",
   },
   {
-    id: "date",
+    label: "date",
     title: "約會午後",
     tags: ["韓系", "溫柔", "針織"],
     note: "柔和色系上衣＋牛仔褲，乾淨好拍又不會太刻意。",
   },
   {
-    id: "weekend",
+    label: "weekend",
     title: "週末出遊",
     tags: ["日系", "大地色", "層次感"],
     note: "適合戶外走走或逛市集，照片也很好看。",
   },
   {
-    id: "sport",
+    label: "sport",
     title: "運動休閒",
     tags: ["休閒", "機能", "寬鬆版型"],
     note: "打球、健身、夜跑，或只是想穿得很放鬆的日子。",
   },
   {
-    id: "formal",
+    label: "formal",
     title: "正式場合",
     tags: ["歐美風", "西裝", "黑白灰"],
     note: "面試、簡報、朋友家族聚餐都能駕馭。",
@@ -58,11 +58,13 @@ const inspirations = [
 
 /* --------------------- localStorage --------------------- */
 function saveInspiration(data) {
+  console.log("儲存靈感：", data);
   localStorage.setItem(INSP_KEY, JSON.stringify(data));
 }
 function loadInspiration() {
   try {
     const raw = localStorage.getItem(INSP_KEY);
+    console.log("raw = ", raw);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -168,6 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ⭐ 若 localStorage 仍保存靈感 → 自動還原
   const stored = loadInspiration();
+  console.log("載入靈感：", stored);
 
   if (stored) {
     // 標示 active
@@ -190,9 +193,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ⭐ 點上方六張 insp-card
   cards.forEach((card) => {
-    card.addEventListener("click", () => {
-      const id = card.dataset.scene;
-      const data = inspirations.find((x) => x.id === id);
+    card.addEventListener("click", async () => {
+      const label = card.dataset.scene;
+      const data = inspirations.find((x) => x.label === label);
       if (!data) return;
 
       // active 樣式
