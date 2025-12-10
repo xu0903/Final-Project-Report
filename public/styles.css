@@ -5051,25 +5051,25 @@ input, select, button {
    ============================= */
 
 .thumb-stack-vertical img {
-  width: 120%;  
-  max-width: 130px;
+  width:65%;  
+  max-width: 200px;
   object-fit: contain;
 }
 
 /* 帽子 → 最小 */
 .thumb-stack-vertical .thumb-hat {
-  width: 50%;
+  width: 80%;
   max-width: 60px;
 }
 
 /* 上衣 → 中等 */
-.thumb-stack-vertical .thumb-top {
+/* .thumb-stack-vertical .thumb-top {
   width: 100%;
   max-width: 110px;
-}
+} */
 
 /* 褲子 → 稍大 */
-.thumb-stack-vertical .thumb-bottom {
+/* .thumb-stack-vertical .thumb-bottom {
   width: 100%;
   max-width: 95px;
-}
+} */ 

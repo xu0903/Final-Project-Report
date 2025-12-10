@@ -63,59 +63,54 @@ function renderSingle(src) {
 }
 
 // ---------------------------
-// 建立縮圖牆
+// 建立縮圖牆（與 gallery.js 同版型）
 // ---------------------------
 function renderThumbnails() {
   const grid = document.getElementById("thumbnails-grid");
 
-  const list = [
-    { type: "full", src: null },      // 全身
-    { type: "hat", src: current.hat },
-    { type: "top", src: current.top },
-    { type: "bottom", src: current.bottom }
-  ];
+  grid.innerHTML = `
+    <!-- 左側拼貼縮圖 -->
+    <div class="thumb-rect" data-type="full">
+      <div class="thumb-stack-vertical">
+        ${current.hat ? `<img class="thumb-hat" src="${current.hat}" onerror="this.style.display='none'">` : ""}
+        ${current.top ? `<img class="thumb-top" src="${current.top}" onerror="this.style.display='none'">` : ""}
+        ${current.bottom ? `<img class="thumb-bottom" src="${current.bottom}" onerror="this.style.display='none'">` : ""}
+      </div>
+    </div>
 
-  grid.innerHTML = list
-    .map((item) => {
-      // 1. 全身拼貼縮圖
-      if (item.type === "full") {
-        return `
-          <div class="thumb-item active-thumb" data-type="full">
-            <div class="thumb-stack">
-              <img src="${current.hat}" onerror="this.style.display='none'">
-              <img src="${current.top}" onerror="this.style.display='none'">
-              <img src="${current.bottom}" onerror="this.style.display='none'">
-            </div>
-          </div>
-        `;
-      }
-      
-      // 2. 單品縮圖 (加入 onerror，如果沒帽子，連縮圖框框都隱藏)
-      // 注意：這裡用 style="display: none" 預設隱藏，載入成功再顯示？
-      // 不，比較簡單的方法是讓 onerror 觸發時隱藏整個 .thumb-item
-      return `
-        <div class="thumb-item" data-type="${item.type}" data-src="${item.src}">
-          <img src="${item.src}" onerror="this.parentElement.style.display='none'">
-        </div>
-      `;
-    })
-    .join("");
+    <!-- 右側三格 -->
+    <div class="thumb-square" data-type="hat">
+      <img src="${current.hat}" onerror="this.parentElement.style.display='none'">
+    </div>
 
-  // 綁定點擊事件
-  document.querySelectorAll(".thumb-item").forEach(t => {
-    t.addEventListener("click", () => {
-      // 移除其他 active
-      document.querySelectorAll(".thumb-item").forEach(x => x.classList.remove("active-thumb"));
-      t.classList.add("active-thumb");
+    <div class="thumb-square" data-type="top">
+      <img src="${current.top}" onerror="this.parentElement.style.display='none'">
+    </div>
 
-      if (t.dataset.type === "full") {
-        renderStacked();
-      } else {
-        renderSingle(t.dataset.src);
-      }
+    <div class="thumb-square" data-type="bottom">
+      <img src="${current.bottom}" onerror="this.parentElement.style.display='none'">
+    </div>
+  `;
+
+  // === 左側拼貼：回到 stacked 主圖 ===
+  document.querySelector(".thumb-rect").addEventListener("click", () => {
+    renderStacked();
+  });
+
+  // === 右側三格：顯示單張 ===
+  document.querySelectorAll(".thumb-square").forEach(el => {
+    el.addEventListener("click", () => {
+      const type = el.dataset.type;
+      const map = {
+        hat: current.hat,
+        top: current.top,
+        bottom: current.bottom
+      };
+      renderSingle(map[type]);
     });
   });
 }
+
 
 // ---------------------------
 // 主流程
