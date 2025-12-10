@@ -28,7 +28,7 @@ app.post('/update-user', (req, res) => {
     query += 'Avatar = ?, ';
     params.push(avatar);
   }
-  // ★ 新增：身高、體重、BMI
+  // 新增：身高、體重、BMI
   if (height) {
     query += 'Height = ?, ';
     params.push(height);
@@ -200,7 +200,7 @@ app.get('/getUserData', authMiddleware, (req, res) => {
   const userId = req.user.userId;
 
   // 從資料庫拿完整 user 資料
-  // 💡 關鍵修改：新增 AvatarBase64 欄位並使用 AS avatar 別名
+  // 新增 AvatarBase64 欄位並使用 AS avatar 別名
   const query = `
     SELECT 
       UserID, Username, Email, Height, Weight, BMI, CreatedAt, 
@@ -277,6 +277,21 @@ app.post('/update-user', authMiddleware, (req, res) => {
 app.post('/logout', (req, res) => {
   res.clearCookie("token");
   res.json({ message: "已登出" });
+});
+
+//查詢收藏數量
+app.get("/api/users/:id/favorite-count", (req, res) => {
+  const UserID = parseInt(req.params.id, 10);
+  console.log(typeof(UserID));
+
+  const sql = "SELECT COUNT(*) AS favoriteCount FROM user_favorites WHERE UserID = ?";
+  connection.query(sql, [UserID], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    res.json({ UserID, favoriteCount: results[0].favoriteCount });
+  });
 });
 
 //取得user-favorites

@@ -205,6 +205,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 載入收藏列表
   async function loadUserFavorites() {
+
+    const userObj = JSON.parse(userJson);
+
+    const res = await fetch(`/api/users/${userObj.UserID}/favorite-count`);
+    const data = await res.json();
+
+    console.log(`${userObj.UserID} 收藏了 ${data.favoriteCount} 個`);
+
+    document.getElementById("favorite-title").textContent = `我的收藏，共 ${data.favoriteCount} 個`;
+
     const grid = document.getElementById("fav-grid");
     if (!grid) return;
 
