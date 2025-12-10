@@ -7,7 +7,10 @@
         "clothing/formal/bottom/blackgraywhite/IMG_4893.PNG",
         "clothing/formal/bottom/blackgraywhite/IMG_4896.PNG"
       ],
-      "blue": [],
+      "blue": [
+        "clothing/formal/bottom/blue/IMG_4893.PNG",
+        "clothing/formal/bottom/blue/IMG_5318.PNG"
+      ],
       "brown": [
         "clothing/formal/bottom/brown/IMG_4894.PNG",
         "clothing/formal/bottom/brown/IMG_4895.PNG"
@@ -21,11 +24,18 @@
     "top": {
       "blackgraywhite": [
         "clothing/formal/top/blackgraywhite/IMG_4691.PNG",
-        "clothing/formal/top/blackgraywhite/IMG_4695.PNG"
+        "clothing/formal/top/blackgraywhite/IMG_4695.PNG",
+        "clothing/formal/top/blackgraywhite/IMG_5272.PNG"
       ],
-      "blue": [],
+      "blue": [
+        "clothing/formal/top/blue/IMG_5266.PNG",
+        "clothing/formal/top/blue/IMG_5309.PNG",
+        "clothing/formal/top/blue/IMG_5310.PNG"
+      ],
       "brown": [
-        "clothing/formal/top/brown/IMG_4694.PNG"
+        "clothing/formal/top/brown/IMG_4694.PNG",
+        "clothing/formal/top/brown/IMG_5263.PNG",
+        "clothing/formal/top/brown/IMG_5264.PNG"
       ]
     }
   },
@@ -97,7 +107,8 @@
         "clothing/simple/top/blackgraywhite/IMG_4699.PNG"
       ],
       "blue": [
-        "clothing/simple/top/blue/IMG_4700.PNG"
+        "clothing/simple/top/blue/IMG_4700.PNG",
+        "clothing/simple/top/blue/IMG_5256.PNG"
       ],
       "brown": [
         "clothing/simple/top/brown/IMG_4594.PNG",
@@ -127,7 +138,10 @@
         "clothing/street/bottom/blue/IMG_4901.PNG"
       ],
       "brown": [
-        "clothing/street/bottom/brown/IMG_4899.PNG"
+        "clothing/street/bottom/brown/IMG_4899.PNG",
+        "clothing/street/bottom/brown/IMG_5286.PNG",
+        "clothing/street/bottom/brown/IMG_5287.PNG",
+        "clothing/street/bottom/brown/IMG_5316.PNG"
       ]
     },
     "hat": {
@@ -149,10 +163,21 @@
     },
     "top": {
       "blackgraywhite": [
-        "clothing/street/top/blackgraywhite/IMG_4601.PNG"
+        "clothing/street/top/blackgraywhite/IMG_4601.PNG",
+        "clothing/street/top/blackgraywhite/IMG_5292.PNG",
+        "clothing/street/top/blackgraywhite/IMG_5294.PNG",
+        "clothing/street/top/blackgraywhite/IMG_5299.PNG",
+        "clothing/street/top/blackgraywhite/IMG_5333.PNG"
       ],
-      "blue": [],
-      "brown": []
+      "blue": [
+        "clothing/street/top/blue/IMG_5330.PNG",
+        "clothing/street/top/blue/IMG_5331.PNG",
+        "clothing/street/top/blue/IMG_5332.PNG"
+      ],
+      "brown": [
+        "clothing/street/top/brown/IMG_5293.PNG",
+        "clothing/street/top/brown/IMG_5300.PNG"
+      ]
     }
   },
   "sweety": {
@@ -167,6 +192,7 @@
         "clothing/sweety/bottom/blackgraywhite/IMG_4880.PNG"
       ],
       "blue": [
+        "clothing/sweety/bottom/blue/IMG_4863.PNG",
         "clothing/sweety/bottom/blue/IMG_4866.PNG",
         "clothing/sweety/bottom/blue/IMG_4867.PNG",
         "clothing/sweety/bottom/blue/IMG_4879.PNG",
@@ -187,19 +213,37 @@
         "clothing/sweety/hat/blackgraywhite/IMG_4686.PNG",
         "clothing/sweety/hat/blackgraywhite/IMG_4687.PNG"
       ],
-      "blue": [],
+      "blue": [
+        "clothing/sweety/hat/blue/IMG_5322.PNG",
+        "clothing/sweety/hat/blue/IMG_5323.PNG",
+        "clothing/sweety/hat/blue/IMG_5334.PNG"
+      ],
       "brown": [
-        "clothing/sweety/hat/brown/IMG_4679.PNG"
+        "clothing/sweety/hat/brown/IMG_4679.PNG",
+        "clothing/sweety/hat/brown/IMG_5276.PNG",
+        "clothing/sweety/hat/brown/IMG_5277.PNG",
+        "clothing/sweety/hat/brown/IMG_5278.PNG"
       ]
     },
     "top": {
       "blackgraywhite": [
-        "clothing/sweety/top/blackgraywhite/IMG_4595.PNG",
-        "clothing/sweety/top/blackgraywhite/IMG_4596.PNG",
-        "clothing/sweety/top/blackgraywhite/IMG_4701.PNG"
+        "clothing/sweety/top/blackgraywhite/IMG_5251.PNG",
+        "clothing/sweety/top/blackgraywhite/IMG_5252.PNG",
+        "clothing/sweety/top/blackgraywhite/IMG_5253.PNG"
       ],
-      "blue": [],
-      "brown": []
+      "blue": [
+        "clothing/sweety/top/blue/IMG_5255.PNG",
+        "clothing/sweety/top/blue/IMG_5280.PNG",
+        "clothing/sweety/top/blue/IMG_5304.PNG",
+        "clothing/sweety/top/blue/IMG_5305.PNG",
+        "clothing/sweety/top/blue/IMG_5306.PNG"
+      ],
+      "brown": [
+        "clothing/sweety/top/brown/IMG_5248.PNG",
+        "clothing/sweety/top/brown/IMG_5249.PNG",
+        "clothing/sweety/top/brown/IMG_5250.PNG",
+        "clothing/sweety/top/brown/IMG_5254.PNG"
+      ]
     }
   }
 }
