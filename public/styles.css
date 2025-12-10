@@ -4967,18 +4967,20 @@ input, select, button {
   background: #d8d2c8;
   border-radius: 12px;
   overflow-y: auto;
+  margin-top: 25px;
+  margin-bottom: 25px;
 }
 
 /* 單張展示圖大小控制 */
-.look-image img:nth-child(1) { /* Hat */
-  width: 70%;
+.stack-mode img:nth-child(1) { /* Hat */
+  width: 50%;
   max-width: 150px;
 }
-.look-image img:nth-child(2) { /* Top */
-  width: 70%;
+.stack-mode img:nth-child(2) { /* Top */
+  width: 80%;
   max-width: 230px;
 }
-.look-image img:nth-child(3) { /* Bottom */
+.stack-mode img:nth-child(3) { /* Bottom */
   width: 55%;
   max-width: 240px;
 }
@@ -5062,14 +5064,9 @@ input, select, button {
   max-width: 60px;
 }
 
-/* 上衣 → 中等 */
-/* .thumb-stack-vertical .thumb-top {
-  width: 100%;
-  max-width: 110px;
-} */
-
-/* 褲子 → 稍大 */
-/* .thumb-stack-vertical .thumb-bottom {
-  width: 100%;
-  max-width: 95px;
-} */ 
+.single-mode img {
+  width: 80%;
+  max-width: 500px;
+  height: auto;
+  object-fit: contain;
+}
