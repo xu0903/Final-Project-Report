@@ -44,8 +44,8 @@ function resolvePath(styleId, lookIndex) {
 // ---------------------------
 function renderStacked() {
   const box = document.getElementById("look-image");
-  
-  // 注意：加入 onerror，如果找不到圖片(例如沒帽子)就自動隱藏
+  box.classList.add("stack-mode");
+  box.classList.remove("single-mode");
   box.innerHTML = `
     <img src="${current.hat}" class="look-stack-img" onerror="this.style.display='none'">
     <img src="${current.top}" class="look-stack-img" onerror="this.style.display='none'">
@@ -58,7 +58,8 @@ function renderStacked() {
 // ---------------------------
 function renderSingle(src) {
   const box = document.getElementById("look-image");
-  // 同樣加入防呆
+  box.classList.add("single-mode");
+  box.classList.remove("stack-mode");
   box.innerHTML = `<img src="${src}" class="look-single-img" onerror="this.parentElement.innerHTML='<p>圖片載入失敗</p>'">`;
 }
 

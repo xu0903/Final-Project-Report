@@ -61,7 +61,8 @@ function generateOutfit(style, color) {
 // ---------------------------
 function renderStacked() {
   const box = document.getElementById("look-image");
-
+  box.classList.add("stack-mode");
+  box.classList.remove("single-mode");
   box.innerHTML = `
     ${current.hat ? `<img src="${current.hat}" class="look-stack-img">` : ""}
     ${current.top ? `<img src="${current.top}" class="look-stack-img">` : ""}
@@ -74,6 +75,8 @@ function renderStacked() {
 // ---------------------------
 function renderSingle(src) {
   const box = document.getElementById("look-image");
+  box.classList.add("single-mode");
+  box.classList.remove("stack-mode");
   box.innerHTML = `<img src="${src}" class="look-single-img">`;
 }
 
