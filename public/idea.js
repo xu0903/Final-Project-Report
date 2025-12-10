@@ -85,7 +85,12 @@ function generateMiniCards(base) {
 
   for (let i = 1; i <= 4; i++) {
     const data = {
+
+    //後端資料庫要新增idea_outfit_id 不然收藏按鈕動不了
+
       id: `${base.id}-${Date.now()}-${i}`,
+
+
       title: `${base.title} Look ${i}`,
       color: base.tags[0] || "色系",
       style: base.tags[1] || "風格",
@@ -108,6 +113,7 @@ function generateMiniCards(base) {
           <p class="idea-tags muted small">
             #${data.color} #${data.style}
           </p>
+          <button type="button" class="btn secondary btn-fav">★ 收藏</button>
         </div>
       </article>
     `);
@@ -115,6 +121,7 @@ function generateMiniCards(base) {
 
   area.innerHTML = html.join("");
   setupMiniCardClick();
+  setupIdeaFavoriteButtons();
 }
 
 /* --------------------- 小卡片點擊 → gallery2 --------------------- */
@@ -122,11 +129,13 @@ function setupMiniCardClick() {
   const area = document.getElementById("insp-recommend");
   if (!area) return;
 
-  // ⭐ 取回上方靈感卡資料
   const base = JSON.parse(area.dataset.base || "null");
 
   area.querySelectorAll(".idea-card").forEach((card) => {
-    card.addEventListener("click", () => {
+    card.addEventListener("click", (e) => {
+
+      // ⭐ 最重要：如果點擊到收藏按鈕 → 完全不要跳轉
+      if (e.target.closest(".btn-fav")) return;
 
       // ⭐ 在跳進 gallery2 前，也保存上方靈感卡
       if (base) saveInspiration(base);
@@ -142,11 +151,11 @@ function setupMiniCardClick() {
       };
 
       localStorage.setItem(RESULT_KEY, JSON.stringify(data));
-
       window.location.href = "gallery2.html";
     });
   });
 }
+
 
 /* --------------------- 主流程 --------------------- */
 document.addEventListener("DOMContentLoaded", () => {
@@ -208,3 +217,81 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+// ==========================
+// ⭐ 收藏功能（沿用 outfit.js）
+// ==========================
+
+// 檢查是否收藏
+async function checkFavorite(outfitID) {
+  const res = await fetch(`/check-favorite?outfitID=${encodeURIComponent(outfitID)}`, {
+    method: "GET",
+    credentials: "include"
+  });
+  if (!res.ok) return { isFavorite: false };
+  return await res.json();
+}
+
+// 儲存收藏
+async function saveFavorite(outfitID) {
+  const res = await fetch('/save-favorite', {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ outfitID })
+  });
+  return await res.json();
+}
+
+// 取消收藏
+async function deleteFavorite(outfitID) {
+  const res = await fetch('/delete-favorite', {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ outfitID })
+  });
+  return await res.json();
+}
+
+function setupIdeaFavoriteButtons() {
+  const area = document.getElementById("insp-recommend");
+  if (!area) return;
+
+  area.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".btn-fav");
+    if (!btn) return;
+
+    // ⭐ 防止跳轉
+    e.stopPropagation();
+    e.preventDefault();
+
+    const card = btn.closest(".idea-card");
+    const outfitID = card.dataset.id;
+
+    // 1️⃣ 先查是否收藏
+    const check = await checkFavorite(outfitID);
+
+    // ⭐ 狀況 A：已收藏 → 取消收藏
+    if (check.isFavorite) {
+      const del = await deleteFavorite(outfitID);
+
+      if (del.success) {
+        btn.textContent = "★ 收藏";
+        btn.classList.remove("saved");
+      }
+      return;
+    }
+
+    // ⭐ 狀況 B：未收藏 → 新增收藏
+    const save = await saveFavorite(outfitID);
+
+    if (save.success) {
+      btn.textContent = "★ 已收藏";
+      btn.classList.add("saved");
+    } else {
+      console.error("收藏失敗：", save);
+      alert("收藏失敗，後端可能沒有收到 outfitID 😢");
+    }
+  });
+}

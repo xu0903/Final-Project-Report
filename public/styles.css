@@ -4977,7 +4977,7 @@ input, select, button {
   max-width: 150px;
 }
 .stack-mode img:nth-child(2) { /* Top */
-  width: 70%;
+  width: 80%;
   max-width: 230px;
 }
 .stack-mode img:nth-child(3) { /* Bottom */
