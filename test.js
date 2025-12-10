@@ -1,377 +1,455 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ===== 設定區 =====
-  const STORAGE_KEY = "fitmatch_messageboard";
-  const LIKE_STORAGE_KEY = "fitmatch_message_likes"; 
-  const USER_KEY = "fitmatch_user"; // 讀取當前登入者資料
+  const API_BASE_URL = 'http://localhost:3000';
 
-  // ===== 變數 =====
-  let messages = [];
-  let likedMessageIds = new Set(); 
+  // ==========================================
+  // 1. 設定與變數
+  // ==========================================
+  const USER_KEY = "fitmatch_user";
+  const ACCOUNT_KEY = "fitmatch_account";
+  const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions";
+  const USERS_DB_KEY = "fitmatch_users";
+  const RESULT_KEY = "fitmatch_result"; // 跳轉用的 key
 
-  // ===== DOM 元素 =====
-  const messageList = document.getElementById("message-list");
-  const msgForm = document.getElementById("new-message-form");
-  const msgContent = document.getElementById("content");
-  const msgImageInput = document.getElementById("msg-image");
-  const charCountDisplay = document.getElementById("main-char-count");
-  const postingIdentity = document.getElementById("posting-as");
+  // DOM Elements (資料顯示)
+  const displayNickname = document.getElementById("display-nickname");
+  const displayAccount = document.getElementById("display-account");
+  const btnLogout = document.getElementById("btn-logout");
+  const loginLink = document.getElementById("link-login");
 
-  // ===== 1. 初始化 =====
-  loadMessages();
-  loadLikes();
-  renderMessages();
-  updatePostingIdentity();
+  // DOM Elements (編輯暱稱)
+  const nicknameViewMode = document.getElementById("nickname-view-mode");
+  const nicknameEditMode = document.getElementById("nickname-edit-mode");
+  const btnEditNickname = document.getElementById("btn-edit-nickname");
+  const btnSaveNickname = document.getElementById("btn-save-nickname");
+  const btnCancelNickname = document.getElementById("btn-cancel-nickname");
+  const inputNickname = document.getElementById("input-nickname");
 
-  // 監聽字數輸入
-  if (msgContent && charCountDisplay) {
-    msgContent.addEventListener("input", () => {
-      updateCharCount(msgContent, charCountDisplay);
-    });
-  }
+  // DOM Elements (頭像)
+  const avatarContainer = document.getElementById("avatar-container");
+  const avatarUpload = document.getElementById("avatar-upload");
+  const avatarDisplayArea = document.getElementById("avatar-display-area");
+  const btnRemoveAvatar = document.getElementById("btn-remove-avatar");
+  const avatarText = document.getElementById("avatar-text");
 
-  // ===== 2. 發布留言功能 =====
-  if (msgForm) {
-    msgForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      
-      // 1. 檢查登入
-      const user = getCurrentUser();
-      if (!user) {
-          alert("請先登入才能留言！");
-          window.location.href = "login.html";
-          return;
-      }
+  // 全域變數
+  let userJson = null;
 
-      const content = msgContent.value.trim();
-      if (!content) {
-          alert("請輸入內容");
-          return;
-      }
+  // ==========================================
+  // 2. 初始化流程 (IIFE)
+  // ==========================================
+  (async () => {
+    // 嘗試從伺服器取得最新資料
+    const freshData = await loadUserData();
 
-      // 2. 處理圖片與發文
-      const processPost = (imgBase64) => {
-        const newMessage = {
-          id: Date.now().toString(), // 使用 String ID 避免大數問題
-          nickname: user.nickname || user.username || "會員",
-          userAvatar: user.avatar || null, // 記錄當下的頭像
-          content: content,
-          image: imgBase64 || null,
-          createdAt: new Date().toISOString(),
-          likes: 0,
-          replies: []
-        };
+    if (freshData) {
+      userJson = freshData;
+      localStorage.setItem(USER_KEY, freshData);
 
-        messages.unshift(newMessage); // 加在最前面
-        saveMessages();
-        renderMessages();
-
-        // 重置表單
-        msgContent.value = "";
-        msgImageInput.value = "";
-        if(charCountDisplay) charCountDisplay.textContent = "0/500";
-      };
-
-      // 讀取圖片 (如果有)
-      if (msgImageInput.files && msgImageInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-           processPost(evt.target.result);
-        };
-        reader.readAsDataURL(msgImageInput.files[0]);
-      } else {
-        processPost(null);
-      }
-    });
-  }
-
-  // ===== 3. 事件委派 (Event Delegation) - 核心邏輯 =====
-  // 這裡整合了所有按鈕的監聽：刪除、按讚、回覆切換、送出回覆
-  if (messageList) {
-    messageList.addEventListener("click", (e) => {
-      const target = e.target;
-      const card = target.closest(".message-card");
-      if (!card) return;
-      const id = card.dataset.id;
-      const msg = messages.find(m => m.id === id);
-      
-      if (!msg) return;
-
-      // A. 刪除主留言
-      if (target.closest(".btn-delete")) {
-        if (confirm("確定要刪除這則留言嗎？")) {
-          messages = messages.filter(m => m.id !== id);
-          // 清理 Like 紀錄
-          likedMessageIds.delete(id);
-          if(msg.replies) msg.replies.forEach(r => likedMessageIds.delete(r.id));
-          
-          saveMessages();
-          saveLikes();
-          renderMessages();
-        }
-        return;
-      }
-
-      // B. 主留言按讚
-      const likeBtn = target.closest(".btn-like");
-      if (likeBtn) {
-        if (likedMessageIds.has(id)) {
-          msg.likes = Math.max((msg.likes || 0) - 1, 0);
-          likedMessageIds.delete(id);
-        } else {
-          msg.likes = (msg.likes || 0) + 1;
-          likedMessageIds.add(id);
-        }
-        saveMessages();
-        saveLikes();
-        renderMessages(); // 重新渲染更新愛心狀態
-        return;
-      }
-
-      // C. 顯示/隱藏回覆區
-      if (target.closest(".btn-reply-toggle")) {
-        const replyArea = card.querySelector(".reply-area");
-        if (replyArea) replyArea.classList.toggle("hidden");
-        return;
-      }
-
-      // D. 回覆區按讚
-      const replyLikeBtn = target.closest(".btn-reply-like");
-      if (replyLikeBtn) {
-        const replyItem = target.closest(".reply-item");
-        const replyId = replyItem.dataset.replyId;
-        const reply = msg.replies.find(r => r.id === replyId);
-        
-        if (reply) {
-            if (likedMessageIds.has(replyId)) {
-                reply.likes = Math.max((reply.likes || 0) - 1, 0);
-                likedMessageIds.delete(replyId);
-            } else {
-                reply.likes = (reply.likes || 0) + 1;
-                likedMessageIds.add(replyId);
-            }
-            saveMessages();
-            saveLikes();
-            renderMessages();
-            // 保持回覆區開啟
-            const newCard = document.querySelector(`.message-card[data-id="${id}"]`);
-            if(newCard) newCard.querySelector(".reply-area").classList.remove("hidden");
-        }
-        return;
-      }
-
-      // E. 刪除回覆
-      if (target.closest(".btn-reply-delete")) {
-        const replyItem = target.closest(".reply-item");
-        const replyId = replyItem.dataset.replyId;
-        
-        if (confirm("確定刪除此回覆？")) {
-            msg.replies = msg.replies.filter(r => r.id !== replyId);
-            likedMessageIds.delete(replyId);
-            saveMessages();
-            saveLikes();
-            renderMessages();
-            // 保持回覆區開啟
-            const newCard = document.querySelector(`.message-card[data-id="${id}"]`);
-            if(newCard) newCard.querySelector(".reply-area").classList.remove("hidden");
-        }
-        return;
-      }
-    });
-
-    // F. 監聽回覆表單送出 (Submit 事件不能用 click 委派，要用 submit 委派)
-    messageList.addEventListener("submit", (e) => {
-      if (e.target.classList.contains("reply-form")) {
-        e.preventDefault();
-        
-        const user = getCurrentUser();
-        if (!user) {
-            alert("請先登入才能回覆！");
-            return;
-        }
-
-        const form = e.target;
-        const card = form.closest(".message-card");
-        const id = card.dataset.id;
-        const msg = messages.find(m => m.id === id);
-        
-        const content = form.replyContent.value.trim();
-        if (!content) return;
-
-        const newReply = {
-            id: Date.now().toString(),
-            nickname: user.nickname || "會員",
-            userAvatar: user.avatar || null,
-            content: content,
-            createdAt: new Date().toISOString(),
-            likes: 0
-        };
-
-        if (!msg.replies) msg.replies = [];
-        msg.replies.push(newReply);
-        
-        saveMessages();
-        renderMessages();
-        
-        // 保持開啟
-        const newCard = document.querySelector(`.message-card[data-id="${id}"]`);
-        if(newCard) newCard.querySelector(".reply-area").classList.remove("hidden");
-      }
-    });
-
-    // G. 監聽回覆輸入框字數
-    messageList.addEventListener("input", (e) => {
-        if(e.target.name === "replyContent") {
-            const wrapper = e.target.closest(".input-wrapper");
-            const countDisplay = wrapper.querySelector(".reply-char-count");
-            if(countDisplay) updateCharCount(e.target, countDisplay);
-        }
-    });
-  }
-
-  // ===== 4. 渲染函式 (UI 生成) =====
-  function renderMessages() {
-    if (!messageList) return;
-
-    if (messages.length === 0) {
-      messageList.innerHTML = `<div class="muted" style="text-align:center; padding:30px;">目前沒有留言，來搶頭香吧！</div>`;
-      return;
+      // 同步更新給留言板用的資料 (LocalStorage)
+      try {
+        const userObj = JSON.parse(freshData);
+        localStorage.setItem("fitmatch_user", JSON.stringify({
+          nickname: userObj.Username,
+          username: userObj.Username,
+          avatar: userObj.Avatar,
+          email: userObj.Email,
+          id: userObj.UserID
+        }));
+      } catch (e) { console.error("同步留言板資料錯誤", e); }
+    } else {
+      // 如果伺服器沒回應或沒登入，嘗試讀取本地快取
+      userJson = localStorage.getItem(USER_KEY);
     }
 
-    messageList.innerHTML = messages.map(msg => {
-      // 處理頭像 HTML
-      const avatarHTML = createAvatarHTML(msg.nickname, msg.userAvatar);
-      const isLiked = likedMessageIds.has(msg.id);
-      
-      // 圖片 HTML
-      const imgHTML = msg.image ? 
-        `<div class="message-media"><img src="${msg.image}" class="message-img"></div>` : "";
+    // 根據資料更新 UI
+    updateUI(userJson ? JSON.parse(userJson) : null);
+    loadUserProfile();
+    loadUserFavorites(); // 載入收藏列表
+  })();
 
-      // 回覆 HTML
-      const repliesHTML = (msg.replies || []).map(rep => {
-          const isRepLiked = likedMessageIds.has(rep.id);
-          const repAvatar = createAvatarHTML(rep.nickname, rep.userAvatar);
-          return `
-            <li class="reply-item" data-reply-id="${rep.id}">
-              <div class="reply-header">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    ${repAvatar}
-                    <span class="reply-nickname">${escapeHTML(rep.nickname)}</span>
-                </div>
-                <div class="reply-meta">
-                   <button type="button" class="btn-reply-like ${isRepLiked ? 'liked' : ''}">
-                     ${isRepLiked ? '❤️' : '♡'} ${rep.likes||0}
-                   </button>
-                   <span class="reply-time">${formatTime(rep.createdAt)}</span>
-                   <button type="button" class="btn-icon btn-reply-delete">🗑️</button>
-                </div>
-              </div>
-              <p class="reply-content" style="margin-left: 48px;">${escapeHTML(rep.content)}</p>
-            </li>
-          `;
-      }).join("");
-
-      // 主卡片 HTML (Threads 風格: 頭像在左，資訊並排)
-      return `
-        <article class="message-card" data-id="${msg.id}">
-          <div class="message-header">
-            ${avatarHTML}
-            <div class="msg-info">
-              <span class="message-nickname">${escapeHTML(msg.nickname)}</span>
-              <span class="message-time">${formatTime(msg.createdAt)}</span>
-            </div>
-          </div>
-          
-          <div class="message-content">
-            ${escapeHTML(msg.content).replace(/\n/g, "<br>")}
-          </div>
-          ${imgHTML}
-
-          <div class="message-actions">
-            <button class="btn-text btn-like ${isLiked ? 'liked' : ''}">
-               ${isLiked ? '💖' : '🤍'} <span class="like-count">${msg.likes||0}</span>
-            </button>
-            <button class="btn-text btn-reply-toggle">💬 回覆 (${(msg.replies||[]).length})</button>
-            <button class="btn-icon btn-delete">🗑️</button>
-          </div>
-
-          <!-- 回覆區塊 (預設隱藏) -->
-          <div class="reply-area hidden">
-             <form class="reply-form">
-               <div class="input-wrapper">
-                 <textarea name="replyContent" rows="1" placeholder="寫下你的回覆..." maxlength="500" required></textarea>
-                 <span class="char-count reply-char-count">0/500</span>
-               </div>
-               <button type="submit" class="btn small" style="margin-top:5px;">送出</button>
-             </form>
-             <ul class="reply-list">
-               ${repliesHTML}
-             </ul>
-          </div>
-        </article>
-      `;
-    }).join("");
+  // 從後端載入使用者資料
+  async function loadUserData() {
+    try {
+      const res = await fetch('/getUserData', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (!data.loggedIn) return null;
+      return JSON.stringify(data.user);
+    } catch (err) {
+      console.error('取得使用者資料失敗 (可能未啟動 Server)', err);
+      return null;
+    }
   }
 
-  // ===== 5. Helper 函式 =====
-  
-  function createAvatarHTML(name, base64) {
-      if (base64) {
-          return `<div class="msg-avatar" style="background-image: url('${base64}');"></div>`;
-      } else {
-          const char = (name || "?").charAt(0).toUpperCase();
-          return `<div class="msg-avatar">${char}</div>`;
-      }
+  // 更新 Header/登入按鈕狀態
+  function updateUI(user) {
+    if (user) {
+      // 已登入
+      if (displayNickname) displayNickname.textContent = user.Username || "會員";
+      if (displayAccount) displayAccount.textContent = user.Email || "";
+      if (btnLogout) btnLogout.style.display = "inline-block";
+      if (loginLink) loginLink.style.display = "none";
+    } else {
+      // 未登入
+      if (displayNickname) displayNickname.textContent = "訪客";
+      if (displayAccount) displayAccount.textContent = "尚無資料";
+      if (btnLogout) btnLogout.style.display = "none";
+      if (loginLink) loginLink.style.display = "inline-block";
+    }
   }
 
-  function getCurrentUser() {
+  // ==========================================
+  // 3. 會員資料渲染 (頭像與暱稱)
+  // ==========================================
+  function loadUserProfile() {
+    if (userJson) {
       try {
-          return JSON.parse(localStorage.getItem(USER_KEY));
-      } catch(e) { return null; }
+        const user = JSON.parse(userJson);
+        const name = user.Username || user.nickname || "會員";
+
+        // 更新文字
+        if (displayNickname) displayNickname.textContent = name;
+        if (displayAccount) displayAccount.textContent = user.Email || user.account || "";
+        if (inputNickname) inputNickname.value = name;
+
+        // 更新頭像
+        if (user.Avatar || user.avatar) {
+          const avatarSrc = user.Avatar || user.avatar;
+          renderAvatarImage(avatarSrc);
+          if (btnRemoveAvatar) btnRemoveAvatar.classList.remove("hidden");
+        } else {
+          renderAvatarText(name);
+          if (btnRemoveAvatar) btnRemoveAvatar.classList.add("hidden");
+        }
+
+      } catch (e) { console.error("解析使用者資料錯誤", e); }
+    } else {
+      // 未登入時隱藏編輯功能
+      if (btnEditNickname) btnEditNickname.style.display = "none";
+      if (avatarContainer) avatarContainer.style.pointerEvents = "none";
+    }
   }
 
-  function updatePostingIdentity() {
-      if (!postingIdentity) return;
-      const user = getCurrentUser();
-      if (user) {
-          const name = user.nickname || user.username || "會員";
-          postingIdentity.innerHTML = `正在以 <strong>${escapeHTML(name)}</strong> 的身分發文`;
-      } else {
-          postingIdentity.innerHTML = `<a href="login.html" style="color:#c7a693;">請先登入</a>`;
+  // 輔助函式：顯示文字頭像
+  function renderAvatarText(name) {
+    if (!avatarDisplayArea) return;
+    const firstChar = name ? name.charAt(0).toUpperCase() : "M";
+    avatarDisplayArea.innerHTML = `<span id="avatar-text" style="font-size: 2.5rem; font-weight: bold; color: #c7a693;">${firstChar}</span>`;
+    avatarDisplayArea.style.backgroundImage = "none";
+    if (avatarText) avatarText.style.display = "block";
+  }
+
+  // 輔助函式：顯示圖片頭像
+  function renderAvatarImage(base64Str) {
+    if (!avatarDisplayArea) return;
+    avatarDisplayArea.innerHTML = "";
+    avatarDisplayArea.style.backgroundImage = `url(${base64Str})`;
+    avatarDisplayArea.style.backgroundSize = "cover";
+    avatarDisplayArea.style.backgroundPosition = "center";
+    if (avatarText) avatarText.style.display = "none";
+  }
+
+  // ==========================================
+  // 4. 收藏功能 (Load & Jump & Delete)
+  // ==========================================
+
+  // 取得顏色背景
+  function getColorBG(colorKey) {
+    const colorBG = {
+      earth: "#d4b89f", blackgraywhite: "#a2a1a1ff", pastel: "#f9dfe5", pink: "#ffb3c6",
+      red: "#e26d5a", orange: "#ffb84c", yellow: "#ffe26a", lightgreen: "#b7e4c7",
+      darkgreen: "#588157", lightblue: "#a0c4ff", blue: "#b7d7fcff", purple: "#c77dff",
+      brown: "#c7ac91ff",
+    };
+    return colorBG[colorKey] || "#e5e7eb";
+  }
+
+  // 產生收藏卡片 HTML
+  function createFavoriteCardHTML(fav) {
+    const bgColor = getColorBG(fav.ColorKey);
+    const outfitId = fav.OutfitID;
+
+    // 若後端未來支援儲存 outfitImages 結構，可放在 data-images
+    // 目前先放 null 或嘗試讀取相關欄位
+    const imagesData = fav.OutfitImages ? JSON.stringify(fav.OutfitImages) : "null";
+
+    return `
+    <div class="idea-card" id="fav-card-${outfitId}" 
+         data-id="${outfitId}"
+         data-title="${fav.Title}"
+         data-colorkey="${fav.ColorKey}"
+         data-stylekey="${fav.StyleKey}"
+         data-color="${fav.ColorLabel}"
+         data-style="${fav.StyleLabel}"
+         data-image="${fav.ImageURL || ''}"
+         data-images='${imagesData}'
+         style="cursor: pointer;">
+         
+      <button class="btn-delete-fav" data-id="${outfitId}" title="移除收藏">✕</button>
+
+      <div class="idea-thumb" style="background-color:${bgColor}; overflow:hidden;">
+        ${fav.ImageURL ? `<img src="${fav.ImageURL}" style="width:100%; height:100%; object-fit:cover;">` : ''}
+      </div>
+      <div class="idea-body">
+        <h3 class="idea-title">${fav.Title}</h3>
+        <p class="idea-tags muted small">
+          #${fav.ColorLabel} #${fav.StyleLabel}
+        </p>
+        <p class="muted small">收藏時間：${new Date(fav.FavoritedAt).toLocaleDateString()}</p>
+      </div>
+    </div>
+    `;
+  }
+
+  // 載入收藏列表
+  async function loadUserFavorites() {
+
+    const userObj = JSON.parse(userJson);
+
+    const res = await fetch(`/api/users/${userObj.UserID}/favorite-count`);
+    const data = await res.json();
+
+    console.log(`${userObj.UserID} 收藏了 ${data.favoriteCount} 個`);
+
+    document.getElementById("favorite-title").textContent = `我的收藏，共 ${data.favoriteCount} 個`;
+
+    const grid = document.getElementById("fav-grid");
+    if (!grid) return;
+
+    try {
+      const res = await fetch('/get-user-favorites', { credentials: 'include' });
+      const data = await res.json();
+
+      if (!data.success) {
+        grid.innerHTML = `<p class="muted">無法取得收藏資料 (請確認是否登入)</p>`;
+        return;
       }
+
+      if (data.favorites.length === 0) {
+        grid.innerHTML = `<p class="muted">你尚未收藏任何 outfit</p>`;
+        return;
+      }
+
+      // 渲染卡片
+      grid.innerHTML = data.favorites.map(fav => createFavoriteCardHTML(fav)).join("");
+
+      // 綁定事件 (包含跳轉與刪除)
+      setupCardEvents(grid);
+
+    } catch (err) {
+      console.error(err);
+      grid.innerHTML = `<p class="muted">載入收藏時發生錯誤</p>`;
+    }
   }
 
-  function loadMessages() {
+  // 設定卡片事件 (跳轉與刪除)
+  function setupCardEvents(grid) {
+    grid.addEventListener('click', async (e) => {
+      // A. 刪除按鈕
+      const delBtn = e.target.closest('.btn-delete-fav');
+      if (delBtn) {
+        e.stopPropagation(); // 阻止冒泡
+        const favId = delBtn.dataset.id;
+        await deleteFavorite(favId);
+        return;
+      }
+
+
+      // B. 卡片點擊 -> 跳轉 (包含保留組合邏輯)
+      const card = e.target.closest('.idea-card');
+      if (card) {
+        // 視覺效果
+        document.querySelectorAll(".idea-card.active").forEach(c => c.classList.remove("active"));
+        card.classList.add("active");
+
+        // 準備基礎資料
+        const id = card.dataset.id;
+        const newResult = {
+          id: id,
+          title: card.dataset.title,
+          color: card.dataset.color,
+          style: card.dataset.style,
+          colorKey: card.dataset.colorkey,
+          styleKey: card.dataset.stylekey,
+          image: card.dataset.image,
+          note: `${card.dataset.color} × ${card.dataset.style} 收藏回顧`
+        };
+
+        // ⭐ 嘗試讀取固定組合 (outfitImages)
+        // 優先順序: 1. 本地暫存的 look 資料  2. 卡片上的 dataset  3. 若無則 null
+        let outfitImages = null;
+        try {
+          const localLook = localStorage.getItem(`fitmatch_look_${id}`);
+          if (localLook) {
+            outfitImages = JSON.parse(localLook);
+          } else if (card.dataset.images && card.dataset.images !== "null") {
+            outfitImages = JSON.parse(card.dataset.images);
+          }
+        } catch (e) { console.error("解析 outfitImages 錯誤", e); }
+
+        // 存到 result
+        if (outfitImages) {
+          newResult.outfitImages = outfitImages;
+        } else {
+          // 如果真的沒有 outfitImages，嘗試檢查這張卡片是否就是「上次產生結果」的那張
+          const oldResult = JSON.parse(localStorage.getItem(RESULT_KEY) || "{}");
+          if (oldResult.id === id && oldResult.outfitImages) {
+            newResult.outfitImages = oldResult.outfitImages;
+          }
+        }
+
+        // 儲存並跳轉
+        localStorage.setItem(RESULT_KEY, JSON.stringify(newResult));
+        setTimeout(() => {
+          window.location.href = `gallery.html?outfitID=${id}&from=${'ID.html'}`;
+        }, 150);
+      }
+    });
+  }
+
+  // 刪除收藏 API
+  async function deleteFavorite(outfitId) {
+    if (!confirm("確定要移除這個收藏嗎？")) return;
+
     try {
-      messages = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    } catch (e) { messages = []; }
+      const res = await fetch('/delete-favorite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ outfitID: outfitId })
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        const card = document.getElementById(`fav-card-${outfitId}`);
+        if (card) {
+          card.style.opacity = '0';
+          setTimeout(() => card.remove(), 300);
+
+          const grid = document.getElementById("fav-grid");
+          setTimeout(() => {
+            if (grid.children.length === 0) grid.innerHTML = `<p class="muted">你尚未收藏任何 outfit</p>`;
+          }, 300);
+        }
+      } else {
+        alert("刪除失敗：" + (result.message || "未知錯誤"));
+      }
+    } catch (err) {
+      console.error("刪除錯誤", err);
+      alert("網路錯誤，請稍後再試");
+    }
   }
 
-  function saveMessages() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  // ==========================================
+  // 5. 其他功能 (頭像上傳、編輯暱稱、登出)
+  // ==========================================
+
+  // 頭像上傳
+  if (avatarContainer && avatarUpload) {
+    avatarContainer.addEventListener("click", () => {
+      if (!userJson) return alert("請先登入");
+      avatarUpload.click();
+    });
+
+    avatarUpload.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) return alert("圖片太大 (限2MB)");
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64String = event.target.result;
+        renderAvatarImage(base64String);
+        if (btnRemoveAvatar) btnRemoveAvatar.classList.remove("hidden");
+
+        // 更新
+        updateLocalUser({ avatar: base64String });
+        await updateServerProfile({ avatar: base64String });
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
-  function loadLikes() {
+  // 移除頭像
+  if (btnRemoveAvatar) {
+    btnRemoveAvatar.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      if (!confirm("確定要移除頭貼嗎？")) return;
+
+      const user = JSON.parse(userJson || "{}");
+      const name = user.Username || user.nickname || "M";
+      renderAvatarText(name);
+
+      btnRemoveAvatar.classList.add("hidden");
+      updateLocalUser({ avatar: "" });
+      await updateServerProfile({ avatar: "" });
+    });
+  }
+
+  // 編輯暱稱
+  if (btnEditNickname) {
+    btnEditNickname.addEventListener("click", () => {
+      nicknameViewMode.classList.add("hidden");
+      nicknameEditMode.classList.remove("hidden");
+      inputNickname.focus();
+    });
+  }
+  if (btnCancelNickname) {
+    btnCancelNickname.addEventListener("click", () => {
+      nicknameEditMode.classList.add("hidden");
+      nicknameViewMode.classList.remove("hidden");
+    });
+  }
+  if (btnSaveNickname) {
+    btnSaveNickname.addEventListener("click", async () => {
+      const newName = inputNickname.value.trim();
+      if (!newName) return alert("暱稱不能為空");
+
+      // 更新 UI
+      displayNickname.textContent = newName;
+      if (avatarText && avatarText.style.display !== "none") {
+        avatarText.textContent = newName.charAt(0).toUpperCase();
+      }
+
+      nicknameEditMode.classList.add("hidden");
+      nicknameViewMode.classList.remove("hidden");
+
+      updateLocalUser({ nickname: newName, Username: newName });
+      await updateServerProfile({ Username: newName });
+    });
+  }
+
+  // 5. 呼叫後端 (更新使用者資料)
+  async function updateServerProfile(data) {
     try {
-      likedMessageIds = new Set(JSON.parse(localStorage.getItem(LIKE_STORAGE_KEY) || "[]"));
-    } catch (e) { likedMessageIds = new Set(); }
-  }
+      if (!userJson) {
+        console.error("使用者未登入，無法更新伺服器資料");
+        return false;
+      }
+      const user = userJson;
 
-  function saveLikes() {
-    localStorage.setItem(LIKE_STORAGE_KEY, JSON.stringify([...likedMessageIds]));
-  }
+      const response = await fetch(`${API_BASE_URL}/update-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        // 傳送 UserID 作為使用者識別
+        body: JSON.stringify({ userId: user.UserID, ...data })
+      });
 
-  function escapeHTML(str) {
-    if(!str) return "";
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "伺服器更新失敗");
+      }
+      console.log("伺服器資料更新成功");
+      return true;
 
-  function formatTime(isoString) {
-    if(!isoString) return "";
-    const d = new Date(isoString);
-    return d.toLocaleString('zh-TW', { hour12: false, month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
-  }
-
-  function updateCharCount(input, display) {
-    display.textContent = `${input.value.length}/${input.getAttribute("maxlength")}`;
+    } catch (err) {
+      console.error("API error", err);
+      alert(`⚠️ 注意：伺服器更新失敗！\n錯誤訊息: ${err.message}`);
+      return false;
+    }
   }
 });

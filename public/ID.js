@@ -366,7 +366,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (btnRemoveAvatar) btnRemoveAvatar.classList.remove("hidden");
 
         // 更新
-        updateLocalUser({ avatar: base64String });
         await updateServerProfile({ avatar: base64String });
       };
       reader.readAsDataURL(file);
@@ -384,7 +383,6 @@ document.addEventListener("DOMContentLoaded", () => {
       renderAvatarText(name);
 
       btnRemoveAvatar.classList.add("hidden");
-      updateLocalUser({ avatar: "" });
       await updateServerProfile({ avatar: "" });
     });
   }
@@ -417,57 +415,38 @@ document.addEventListener("DOMContentLoaded", () => {
       nicknameEditMode.classList.add("hidden");
       nicknameViewMode.classList.remove("hidden");
 
-      updateLocalUser({ nickname: newName, Username: newName });
-      await updateServerProfile({ nickname: newName });
+      await updateServerProfile({ Username: newName });
     });
   }
 
-  // 更新 LocalStorage Helper
-  function updateLocalUser(updates) {
-    try {
-      let user = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
-      user = { ...user, ...updates };
-      // 兼容後端欄位名
-      if (updates.nickname) user.Username = updates.nickname;
-      if (updates.avatar !== undefined) user.Avatar = updates.avatar;
-
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-      userJson = JSON.stringify(user);
-
-      // 同步到 Saved Sessions
-      let sessions = JSON.parse(localStorage.getItem(SAVED_SESSIONS_KEY) || "[]");
-      const targetEmail = (user.Email || user.account || "").toLowerCase();
-      const idx = sessions.findIndex(s => (s.account || s.email || "").toLowerCase() === targetEmail);
-      if (idx !== -1) {
-        sessions[idx] = { ...sessions[idx], ...updates };
-        localStorage.setItem(SAVED_SESSIONS_KEY, JSON.stringify(sessions));
-      }
-    } catch (e) { }
-  }
-
-  // 更新後端 Helper
+  // 5. 呼叫後端 (更新使用者資料)
   async function updateServerProfile(data) {
     try {
-      const user = JSON.parse(userJson || "{}");
-      if (!user.Email) return;
-      await fetch(`${API_BASE_URL}/update-user`, {
+      if (!userJson) {
+        console.error("使用者未登入，無法更新伺服器資料");
+        return false;
+      }
+      const user = userJson;
+
+      const response = await fetch(`${API_BASE_URL}/update-user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email: user.Email, ...data })
+        // 傳送 UserID 作為使用者識別
+        body: JSON.stringify({ userId: user.UserID, ...data })
       });
-    } catch (e) { console.error(e); }
-  }
 
-  // 登出
-  if (btnLogout) {
-    btnLogout.addEventListener("click", async () => {
-      if (confirm("確定要登出嗎？")) {
-        try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) { }
-        localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(ACCOUNT_KEY);
-        window.location.href = "login.html";
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "伺服器更新失敗");
       }
-    });
+      console.log("伺服器資料更新成功");
+      return true;
+
+    } catch (err) {
+      console.error("API error", err);
+      alert(`⚠️ 注意：伺服器更新失敗！\n錯誤訊息: ${err.message}`);
+      return false;
+    }
   }
 });
