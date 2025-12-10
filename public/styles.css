@@ -4967,6 +4967,8 @@ input, select, button {
   background: #d8d2c8;
   border-radius: 12px;
   overflow-y: auto;
+  margin-top: 25px;
+  margin-bottom: 25px;
 }
 
 /* 單張展示圖大小控制 */
