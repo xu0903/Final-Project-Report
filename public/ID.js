@@ -244,8 +244,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function refreshFavoriteCount() {
+    const userObj = JSON.parse(userJson);
+    const res = await fetch(`/api/users/${userObj.UserID}/favorite-count`);
+    const data = await res.json();
+    document.getElementById("favorite-title").textContent =
+      `我的收藏，共 ${data.favoriteCount} 個`;
+  }
+
+
   // 設定卡片事件 (跳轉與刪除)
-  function setupCardEvents(grid) {
+  async function setupCardEvents(grid) {
     grid.addEventListener('click', async (e) => {
       // A. 刪除按鈕
       const delBtn = e.target.closest('.btn-delete-fav');
@@ -253,6 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
         e.stopPropagation(); // 阻止冒泡
         const favId = delBtn.dataset.id;
         await deleteFavorite(favId);
+        await refreshFavoriteCount();
         return;
       }
 
@@ -325,6 +335,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (result.success) {
         const card = document.getElementById(`fav-card-${outfitId}`);
+
         if (card) {
           card.style.opacity = '0';
           setTimeout(() => card.remove(), 300);
@@ -426,27 +437,31 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("使用者未登入，無法更新伺服器資料");
         return false;
       }
-      const user = userJson;
 
       const response = await fetch(`${API_BASE_URL}/update-user`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        // 傳送 UserID 作為使用者識別
-        body: JSON.stringify({ userId: user.UserID, ...data })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data)
       });
 
       const result = await response.json();
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || "伺服器更新失敗");
-      }
-      console.log("伺服器資料更新成功");
-      return true;
 
+      if (result.success) {
+        console.log("更新成功", result.user);
+
+        // 更新 localStorage
+        localStorage.setItem(USER_KEY, JSON.stringify(result.user));
+        userJson = JSON.stringify(result.user);
+        return true;
+      } else {
+        console.error("更新失敗", result.message);
+        return false;
+      }
     } catch (err) {
-      console.error("API error", err);
-      alert(`⚠️ 注意：伺服器更新失敗！\n錯誤訊息: ${err.message}`);
+      console.error("更新使用者資料錯誤", err);
       return false;
     }
   }
+
 });

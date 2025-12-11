@@ -176,17 +176,14 @@ app.post('/update-user', authMiddleware, (req, res) => {
   let updateFields = [];
   let updateValues = [];
 
-  // 定義前端鍵名與資料庫欄位名的映射
   const fieldMap = {
-    nickname: 'Username',
-    avatar: 'AvatarBase64', // <-- 核心：將前端 avatar 映射到 DB 欄位
+    Username: 'Username',
+    avatar: 'AvatarBase64'
   };
 
-  // ... (動態構建 SQL 的邏輯保持不變)
   for (const key in updates) {
     if (fieldMap[key] && updates[key] !== undefined) {
       updateFields.push(`${fieldMap[key]} = ?`);
-      // 將 Base64 字串或 null (移除頭像時傳入 "") 加入參數
       updateValues.push(updates[key] === "" ? null : updates[key]);
     }
   }
@@ -203,16 +200,35 @@ app.post('/update-user', authMiddleware, (req, res) => {
 
   updateValues.push(userId);
 
-  connection.query(query, updateValues, (err, results) => {
+  connection.query(query, updateValues, (err) => {
     if (err) {
       console.error('更新使用者資料失敗:', err);
-      // 由於 Base64 很大，確認是否有 'Payload Too Large' 或其他資料庫限制錯誤
       return res.status(500).json({ success: false, message: '更新使用者資料失敗' });
     }
 
-    res.json({ success: true, message: '使用者資料更新成功' });
+    // 更新後查詢最新用戶資料
+    connection.query(
+      "SELECT UserID, Username, Email, AvatarBase64 FROM users WHERE UserID = ?",
+      [userId],
+      (err, rows) => {
+        if (err) {
+          console.error('查詢更新後的使用者失敗:', err);
+          return res.status(500).json({ success: false, message: '查詢使用者失敗' });
+        }
+
+        const user = rows[0];
+
+        // 回傳最新資料給前端
+        return res.json({
+          success: true,
+          message: "使用者資料更新成功",
+          user: user
+        });
+      }
+    );
   });
 });
+
 
 
 // 使用者登出
@@ -224,7 +240,7 @@ app.post('/logout', (req, res) => {
 //查詢收藏數量
 app.get("/api/users/:id/favorite-count", (req, res) => {
   const UserID = parseInt(req.params.id, 10);
-  console.log(typeof(UserID));
+  console.log(typeof (UserID));
 
   const sql = "SELECT COUNT(*) AS favoriteCount FROM user_favorites WHERE UserID = ?";
   connection.query(sql, [UserID], (err, results) => {
@@ -509,7 +525,7 @@ app.get("/api/messages", (req, res) => {
       LEFT JOIN (SELECT CommentID, COUNT(*) AS like_count FROM comments_likes GROUP BY CommentID) l ON c.CommentID=l.CommentID
       ORDER BY c.CreatedAt ASC
     `;
-    
+
     connection.query(commentsQuery, (err, comments) => {
       if (err) return res.status(500).json({ error: err.message });
       const messages = posts.map(p => ({
