@@ -464,4 +464,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // 登出
+  if (btnLogout) {
+    btnLogout.addEventListener("click", async () => {
+      if (confirm("確定要登出嗎？")) {
+        try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) { }
+        localStorage.removeItem(USER_KEY);
+        localStorage.removeItem(ACCOUNT_KEY);
+        window.location.href = "login.html";
+      }
+    });
+  }
+
 });
