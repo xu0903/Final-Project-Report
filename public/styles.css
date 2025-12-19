@@ -65,7 +65,7 @@ nav a.active {
 }
 
 nav a:hover {
-  background: #e1dbd0; /* 比 active 再深一點 */
+  background: #e1dbd0;
 }
 
 
@@ -306,7 +306,6 @@ input, select, button {
 .hidden { display: none; }
 
 
-/* 留言板 */
 .btn-like.liked {
   font-weight: 600;
   opacity: 1;
@@ -315,7 +314,6 @@ input, select, button {
 
 
 
-/* 會員頁版面 */
 .member-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.5fr);
@@ -357,7 +355,6 @@ input, select, button {
   padding: 0.35rem 0.9rem;
 }
 
-/* 收藏穿搭格子 */
 .favorites-grid {
   margin-top: 1rem;
   display: grid;
@@ -377,7 +374,7 @@ input, select, button {
 
 .outfit-thumb {
   width: 100%;
-  padding-top: 100%; /* 方形 */
+  padding-top: 100%;
   border-radius: 8px;
   background-color: #e5e7eb;
   background-size: cover;
@@ -403,15 +400,12 @@ input, select, button {
   background: #f3f4f6;
 }
 
-/* 手機版一欄 */
 @media (max-width: 768px) {
   .member-layout {
     grid-template-columns: 1fr;
   }
 }
 
-/*找靈感*/
-/* 找靈感 頁面 */
 .idea-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr);
@@ -428,7 +422,6 @@ input, select, button {
   margin-top: 1rem;
 }
 
-/* 圓框點 標籤樣式 */
 .tag-pills {
   display: flex;
   flex-wrap: wrap;
@@ -470,7 +463,6 @@ input, select, button {
   background: #111827;
 }
 
-/* 靈感格子 */
 .idea-result-panel h2 {
   margin-bottom: 0.5rem;
 }
@@ -494,7 +486,7 @@ input, select, button {
 
 .idea-thumb {
   width: 100%;
-  padding-top: 100%; /* 正方形 */
+  padding-top: 100%;
   border-radius: 10px;
   background-size: cover;
   background-position: center;
@@ -520,7 +512,6 @@ input, select, button {
   background: #fff;
 }
 
-/* RWD: 手機一欄 */
 @media (max-width: 768px) {
   .idea-layout {
     grid-template-columns: 1fr;
@@ -528,7 +519,6 @@ input, select, button {
 }
 
 
-/* 找靈感新樣式：一列 6 個卡片，橫向捲動 */
 .inspiration-page {
   margin-top: 2rem;
   margin-bottom: 3rem;
@@ -541,12 +531,11 @@ input, select, button {
 .inspiration-strip-wrap {
   margin-top: 1.5rem;
   overflow-x: auto;
-  overflow-y: visible;       /* 讓上下不要被裁切 */
-  padding: 0.75rem 0 0.75rem;/* 多一點頭頂空間 */
+  overflow-y: visible;       
+  padding: 0.75rem 0 0.75rem;
 }
 
 
-/* 隱藏橫向捲軸（有需要可以拿掉） */
 .inspiration-strip-wrap::-webkit-scrollbar {
   height: 6px;
 }
@@ -562,7 +551,6 @@ input, select, button {
   scroll-snap-type: x mandatory;
 }
 
-/* 卡片寬度約佔整體 30%：一次大約看到 3 個完整 + 1 個被切 */
 .insp-card {
   flex: 0 0 30%;
   min-width: 230px;
@@ -576,14 +564,12 @@ input, select, button {
   scroll-snap-align: start;
 }
 
-/* 上半部當作圖片區（先用漸層色塊代替） */
 .insp-thumb {
   height: 150px;
   background-size: cover;
   background-position: center;
 }
 
-/* 不同情境給不同色調，之後可換成真的圖 */
 .insp-thumb.campus {
   background-image: linear-gradient(135deg, #93c5fd, #d1fae5);
 }
@@ -620,14 +606,12 @@ input, select, button {
   margin: 0;
 }
 
-/* 手機版：改成一列一個較大卡片 */
 @media (max-width: 768px) {
   .insp-card {
     flex: 0 0 80%;
     min-width: 260px;
   }
 }
-/*找靈感*/
 
 .insp-card {
   flex: 0 0 30%;
@@ -641,35 +625,31 @@ input, select, button {
   display: flex;
   flex-direction: column;
   scroll-snap-align: start;
-  position: relative;   /* 給 pseudo 元件定位用 */
+  position: relative;
   transition: box-shadow 0.15s ease;
 }
 
-/* hover：微微放大 + 陰影加深（未被點選的卡片） */
 .insp-card:hover:not(.active) {
   transform: scale(1.02);
   box-shadow: 0 8px 20px rgba(0,0,0,0.10);
 }
 
 
-/* 這裡先清空，只保留你想要的東西（不要位移） */
 .insp-card.active {
 
   transform: translateY(-2px);
 }
 
-/* 預設：沒有高光 */
 .insp-card::after {
   content: "";
   position: absolute;
-  inset: 0;                  /* 完全跟卡片一樣大 */
+  inset: 0;                 
   border-radius: inherit;
   border: 2px solid transparent;
   pointer-events: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* 被選到時：在卡片「裡面」畫一圈藍色高光 */
 .insp-card.active::after {
   border-color: #b8c7d7;
   box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4);
@@ -705,13 +685,6 @@ input, select, button {
   }
 }
 
-
-/* ============================================
-   outfit.html — idea-card互動效果
-   與 insp-card 一致的 hover / active 動畫
-   ============================================ */
-
-/* 預設卡片 */
 .idea-card {
   background: #fff;
   border-radius: 12px;
@@ -725,18 +698,15 @@ input, select, button {
   cursor: pointer;
 }
 
-/* 滑鼠移上去微微放大（未 active 時）*/
 .idea-card:hover:not(.active) {
   transform: scale(1.03);
   box-shadow: 0 8px 20px rgba(0,0,0,0.12);
 }
 
-/* 點選後的狀態 */
 .idea-card.active {
-  transform: translateY(-3px); /* 上移一點 */
+  transform: translateY(-3px);
 }
 
-/* 被選到時的高光框 */
 .idea-card.active::after {
   content: "";
   position: absolute;
@@ -747,7 +717,6 @@ input, select, button {
   pointer-events: none;
 }
 
-/* 移除收藏按鈕對卡片的干擾 */
 .idea-card button.btn-fav {
   cursor: pointer;
   position: relative;
@@ -767,13 +736,8 @@ input, select, button {
   transition: 0.2s;
 }
 
-
-/*Login頁*/
-/* --- Login 專用修正樣式 --- */
-
-/* 讓卡片絕對置中 */
 .auth-wrap {
-  min-height: 80vh; /* 扣掉 header 高度 */
+  min-height: 80vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -783,13 +747,12 @@ input, select, button {
   width: 100%;
   max-width: 400px;
   background: #fff;
-  border: 2px solid var(--line); /* 加框框 */
+  border: 2px solid var(--line);
   border-radius: 16px;
   padding: 30px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
-/* 驗證碼同一行設定 */
 .captcha-inline-row {
   display: flex;
   align-items: center;
@@ -798,23 +761,22 @@ input, select, button {
 }
 
 .captcha-inline-row input {
-  flex: 1; /* 輸入框佔滿剩餘空間 */
+  flex: 1;
   min-width: 0;
 }
 
 .captcha-inline-row img {
-  height: 42px; /* 固定高度配合 input */
+  height: 42px;
   width: auto;
   border-radius: 6px;
   cursor: pointer;
 }
 
-/* 按鈕字體修正與樣式 */
 .btn-login, .btn-outline-login,btn primary full-width  {
   width: 100%;
   padding: 12px;
   margin-top: 10px;
-  font-family: "Noto Serif TC", serif; /* 確保字體一致 */
+  font-family: "Noto Serif TC", serif;
   font-size: 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -837,8 +799,6 @@ input, select, button {
   white-space: nowrap;
 }
 
-/* --- Message Board Split Layout --- */
-/* === 留言板版面：左右分欄 === */
 
 .message-layout-split {
   display: flex;
@@ -847,23 +807,19 @@ input, select, button {
   margin-top: 2rem;
 }
 
-/* 左側輸入區：約 35% */
 .msg-sidebar {
   flex: 0 0 35%;
 }
 
-/* 右側留言區：約 50%，剩下留白 */
 .msg-content {
   flex: 0 0 50%;
 }
 
-/* 讓發文卡片稍微吸附在視窗上方（桌機感） */
 .sticky-card {
   position: sticky;
-  top: 5rem; /* 視你 header 高度調整 */
+  top: 5rem;
 }
 
-/* 留言列表外觀 */
 .message-list {
   list-style: none;
   padding: 0;
@@ -873,7 +829,6 @@ input, select, button {
   gap: 1rem;
 }
 
-/* 每則留言卡片 */
 .message-card {
   background: #fff;
   border-radius: 12px;
@@ -881,7 +836,6 @@ input, select, button {
   box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 
-/* 留言 header：暱稱 + 時間 */
 .message-header {
   display: flex;
   justify-content: space-between;
@@ -899,14 +853,12 @@ input, select, button {
   color: #888;
 }
 
-/* 文字內容 */
 .message-content {
   margin: 0.3rem 0 0.5rem;
   line-height: 1.5;
   font-size: 0.95rem;
 }
 
-/* 圖片區：像 FB 那樣貼在文字下方 */
 .message-media {
   margin-top: 0.4rem;
 }
@@ -917,7 +869,6 @@ input, select, button {
   display: block;
 }
 
-/* 按鈕區（愛心、回覆） */
 .message-actions {
   display: flex;
   gap: 0.75rem;
@@ -940,7 +891,6 @@ input, select, button {
   font-weight: 600;
 }
 
-/* 回覆區 */
 .reply-area {
   margin-top: 0.6rem;
   border-top: 1px solid #eee;
@@ -991,12 +941,10 @@ input, select, button {
   width: 100%;
 }
 
-/* 隱藏用 */
 .hidden {
   display: none;
 }
 
-/* RWD：螢幕窄的時候上下排 */
 @media (max-width: 900px) {
   .message-layout-split {
     flex-direction: column;
@@ -1010,36 +958,27 @@ input, select, button {
   }
 }
 
-/* === 新增留言表單：固定輸入框大小 === */
-
-/* 整個表單寬度吃滿左側欄 */
 #new-message-form {
   width: 100%;
 }
 
-/* 暱稱欄位：100% 寬 */
 #new-message-form #nickname {
   width: 100%;
   box-sizing: border-box;
 }
 
-/* 留言內容欄位：固定高度，不讓使用者拉伸 */
 #new-message-form #content {
   width: 100%;
-  height: 150px;      /* 可以依喜好調高低，例如 140 ~ 180 */
-  resize: none;       /* 不允許拖拉改大小 */
+  height: 150px;   
+  resize: none;  
   box-sizing: border-box;
 }
 
-/* 上傳圖片欄位也對齊寬度 */
 #new-message-form .input-file {
   width: 100%;
   box-sizing: border-box;
 }
 
-
-/* === 新增留言表單：固定輸入框大小 === */
-
 #new-message-form {
   width: 100%;
 }
@@ -1049,7 +988,6 @@ input, select, button {
   box-sizing: border-box;
 }
 
-/* 主留言的內容輸入框：固定高度，不可拉伸 */
 #new-message-form #content {
   width: 100%;
   height: 150px;
@@ -1057,13 +995,11 @@ input, select, button {
   box-sizing: border-box;
 }
 
-/* 上傳圖片欄位對齊寬度 */
 #new-message-form .input-file {
   width: 100%;
   box-sizing: border-box;
 }
 
-/* === 回覆區表單 === */
 
 .reply-form {
   display: flex;
@@ -1071,7 +1007,6 @@ input, select, button {
   gap: 0.4rem;
 }
 
-/* 回覆的暱稱欄位：縮小一點 */
 .reply-form input[name="replyNickname"] {
   width: 45%;
   max-width: 180px;
@@ -1080,7 +1015,6 @@ input, select, button {
   padding: 0.25rem 0.4rem;
 }
 
-/* 回覆內容：固定高度，不可拉伸 */
 .reply-form textarea[name="replyContent"] {
   width: 100%;
   height: 90px;
@@ -1089,15 +1023,13 @@ input, select, button {
   font-size: 0.85rem;
 }
 
-/* === 按鈕字型統一 === */
 
 button,
 .btn,
 .btn-text {
-  font-family: inherit; /* 跟整個網站同一套字型 */
+  font-family: inherit;
 }
 
-/* 文字型按鈕（愛心 / 回覆） */
 .btn-text {
   border: none;
   background: none;
@@ -1109,22 +1041,21 @@ button,
   gap: 0.25rem;
 }
 
-/* 垃圾桶小圖示按鈕 */
 .btn-icon {
   border: none;
   background: none;
   padding: 0;
   cursor: pointer;
-  font-size: 0.9rem;   /* 可以再調小一點 0.85rem */
+  font-size: 0.9rem; 
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 .btn-icon-hover {
-  position: relative;   /* 或 absolute / fixed / sticky */
-  z-index: -3;          /* 層級，數字可以是負值 */
+  position: relative;
+  z-index: -3;      
 }
-/* 留言卡片的按鈕排版（原本你就有，可補強） */
+
 .message-actions {
   display: flex;
   gap: 0.6rem;
@@ -1132,7 +1063,6 @@ button,
   margin-top: 0.4rem;
 }
 
-/* 回覆 header：暱稱 + 時間 + 小垃圾桶 */
 .reply-header {
   display: flex;
   justify-content: space-between;
@@ -1147,17 +1077,15 @@ button,
 
 .message-layout-split {
   display: grid;
-  grid-template-columns: 300px 1fr; /* 左側固定 300px，右側自適應 */
+  grid-template-columns: 300px 1fr; 
   gap: 24px;
   margin-top: 2rem;
   margin-bottom: 3rem;
   align-items: start;
 }
-/* !!!!!!!!!!!!!!!!!!!!!!!!!! */
-/* --- Message Board Split Layout --- */
+
 .message-layout-split {
   display: grid;
-  /* 左側改為 25%，右側自動填滿剩餘空間 (1fr) */
   grid-template-columns: 27% 1fr; 
   gap: 24px;
   margin-top: 2rem;
@@ -1165,12 +1093,10 @@ button,
   align-items: start;
 }
 
-/* 為了讓左側在 40% 寬度下好看一點，建議加這行確保卡片不會太寬 */
 .msg-sidebar {
-  min-width: 0; /* 防止內容撐開 grid item */
+  min-width: 0;
 }
 
-/* 手機版維持單欄 */
 @media (max-width: 768px) {
   .message-layout-split {
     grid-template-columns: 1fr; 
@@ -1179,7 +1105,7 @@ button,
 
 .sticky-card {
   position: sticky;
-  top: 90px; /* 隨捲動固定 */
+  top: 90px;
 }
 
 .full-width {
@@ -1192,7 +1118,6 @@ button,
   margin-top: 5px;
 }
 
-/* 留言中的圖片 */
 .message-img {
   max-width: 200px;
   max-height: 200px;
@@ -1202,9 +1127,8 @@ button,
   object-fit: cover;
 }
 
-/* 刪除按鈕 */
 .btn-delete {
-  color: #ef4444; /* 紅色 */
+  color: #ef4444;
   font-size: 13px;
   margin-left: 10px;
   cursor: pointer;
@@ -1217,21 +1141,19 @@ button,
 
 @media (max-width: 768px) {
   .message-layout-split {
-    grid-template-columns: 1fr; /* 手機變單欄 */
+    grid-template-columns: 1fr;
   }
   .sticky-card {
     position: static;
   }
 }
 
-/* 愛心 / 回覆文字按鈕 / 垃圾桶 icon：加上 hover 動畫 */
 .btn-text,
 .btn-icon {
   font-family: inherit;
   transition: transform 0.15s ease, filter 0.15s ease;
 }
 
-/* hover 或鍵盤聚焦時：上浮 + 放大 30% */
 .btn-text:hover,
 .btn-text:focus-visible,
 .btn-icon:hover,
@@ -1241,33 +1163,29 @@ button,
 }
 
 
-/* 回覆區的送出按鈕：小一點、靠左 */
 .reply-form .btn.small {
   font-size: 0.8rem;
   padding: 0.25rem 0.6rem;
   line-height: 1.2;
-  align-self: flex-start;  /* 不要撐滿整行 */
+  align-self: flex-start; 
   margin-top: 0.1rem;
 }
 
-/* 主留言暱稱：更粗、更明顯 */
 .message-nickname {
-  font-weight: 700;   /* 比原本再粗一級 */
+  font-weight: 700;
   font-size: 1rem;
 }
 
-/* 回覆暱稱：略粗 */
 .reply-nickname {
   font-weight: 600;
 }
-/* 回覆卡片陰影稍微加重 */
+
 .reply-item {
   background: #fafafa;
   border-radius: 8px;
   padding: 0.4rem 0.6rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);  /* 比一般 list 稍重一點 */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16); 
 }
-/* 移除垃圾桶 / 愛心 hover 時的紅線（outline / 邊框 / 底線） */
 .btn-icon,
 .btn-icon:hover,
 .btn-icon:focus,
@@ -1282,7 +1200,6 @@ button,
 }
 
 
-/* --- 字數計數器樣式 --- */
 .input-wrapper {
   position: relative;
   width: 100%;
@@ -1290,7 +1207,7 @@ button,
 
 .input-wrapper textarea {
   width: 100%;
-  resize: vertical; /* 允許垂直拉伸 */
+  resize: vertical;
   display: block;
 }
 
@@ -1299,14 +1216,13 @@ button,
   bottom: 8px;
   right: 12px;
   font-size: 12px;
-  color: #9ca3af; /* 淺灰色 */
-  pointer-events: none; /* 讓滑鼠點擊穿透，不會擋住輸入 */
-  background-color: rgba(255, 255, 255, 0.8); /* 稍微加個背景防字重疊 */
+  color: #9ca3af;
+  pointer-events: none;
+  background-color: rgba(255, 255, 255, 0.8);
   padding: 2px 4px;
   border-radius: 4px;
 }
 
-/* 回覆的愛心按鈕 */
 .btn-reply-like {
   background: none;
   border: none;
@@ -1322,14 +1238,9 @@ button,
   color: #ef4444;
 }
 .btn-reply-like.liked {
-  color: #ef4444; /* 按讚後變紅 */
+  color: #ef4444;
 }
 
-/* ============================================
-   GALLERY 結果展示頁升級版面
-   ============================================ */
-
-/* 主要 layout：左右 50 / 50 */
 .gallery-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1338,10 +1249,9 @@ button,
   margin-bottom: 3rem;
 }
 
-/* 左側大圖展示區 */
 .look-image {
   width: 100%;
-  padding-top: 80%; /* 比例可調（原本 120% → 改為 80%） */
+  padding-top: 80%; 
   background-size: cover;
   background-position: center;
   border-radius: 18px;
@@ -1350,7 +1260,6 @@ button,
   transition: 0.25s ease;
 }
 
-/* 右側資訊區 */
 .gallery-right h1 {
   margin-bottom: 0.4rem;
 }
@@ -1370,7 +1279,6 @@ button,
   background: #8e877f;
 }
 
-/* 重新搭配按鈕 hover */
 #redo-btn:hover {
   background: rgba(199,166,147,0.2);
 }
@@ -1378,18 +1286,17 @@ button,
 
 #thumbnails-grid {
   display: grid;
-  grid-template-columns: 0.7fr 160px;   /* 左寬 + 右窄 */
+  grid-template-columns: 0.7fr 160px; 
   grid-template-rows: repeat(3, 160px);
   gap: 15px;
   max-width: 520px;
   width: 100%;
 }
 
-/* 🔥 每個縮圖格子更大、更漂亮 */
 .thumb-item {
   width: 100%;
-  height: 180px;          /* ★ ★ ★ 加大格子高度 */
-  padding: 12px;          /* ★ 保留內邊距讓圖片不會貼邊 */
+  height: 180px;      
+  padding: 12px;         
   border-radius: 12px;
   border: 2px solid #e5e7eb;
   background-color: #ffffff;
@@ -1400,27 +1307,23 @@ button,
   transition: 0.2s;
 }
 
-/* 圖片等比例縮放＋不貼邊 */
 .thumb-item img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-/* 點擊時的 active 效果 */
 .thumb-item.active-thumb {
   border-color: #b4c4ff;
   box-shadow: 0 0 10px rgba(180, 196, 255, 0.6);
 }
 
-/* hover 效果（可選） */
 .thumb-item:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.12);
 }
 
 
-/* 標籤區調整 */
 .look-tags {
   display: flex;
   flex-wrap: wrap;
@@ -1429,17 +1332,13 @@ button,
 }
 
 
-/* ============================================
-   RWD for Gallery
-   ============================================ */
-
 @media (max-width: 768px) {
   .gallery-layout {
     grid-template-columns: 1fr;
   }
 
   .look-image {
-    padding-top: 100%; /* 手機版可以讓圖方形一點 */
+    padding-top: 100%; 
   }
 
   .thumbnails-grid {
@@ -1456,45 +1355,38 @@ button,
   color: #0a0;
   font-weight: bold;
 }
-/* ============================================================
-   找靈感頁面 - 「已選擇的靈感」整段完整樣式修正版
-   將整坨文字置中、放大，並讓第三行文字不再是小字
-   ============================================================ */
+
 
 .insp-detail-row {
   display: flex;
-  align-items: center;          /* ⭐ 整段垂直置中 */
+  align-items: center;       
   justify-content: space-between;
   gap: 2rem;
   margin-top: 2rem;
   margin-bottom: 2rem;
 }
 
-/* 左側整坨文字 36% */
 .insp-detail-text {
   width: 36%;
   display: flex;
   flex-direction: column;
-  justify-content: center;      /* ⭐ 內文也置中 */
+  justify-content: center;    
   line-height: 1.8;
 }
 
-/* 標題放大 */
 .insp-detail-text .insp-title {
   font-size: 2.3rem; 
   margin-bottom: 0.3rem;           
   font-weight: 700;
 }
 
-/* ⭐⭐ 文本全部放大（覆蓋 .small, .muted）⭐⭐ */
 .insp-detail-text p,
 .insp-detail-text span,
 .insp-detail-text strong {
-  font-size: 1.2rem !important; /* ⭐ 讓第二行、第三行、第四行全部一樣大 */
+  font-size: 1.2rem !important; 
   color: var(--text-light) !important;
 }
 
-/* 右側縮圖卡片區 64% */
 .insp-mini-cards {
   width: 64%;
   display: grid;
@@ -1502,7 +1394,6 @@ button,
   gap: 1rem;
 }
 
-/* 卡片樣式固定 */
 .insp-mini-cards .idea-card {
   background: #fff;
   border-radius: 12px;
@@ -1520,7 +1411,6 @@ button,
   box-shadow: 0 8px 20px rgba(0,0,0,0.12);
 }
 
-/* active 效果 */
 .insp-mini-cards .idea-card.active {
   transform: translateY(-3px);
 }
@@ -1535,7 +1425,6 @@ button,
   pointer-events: none;
 }
 
-/* 正方形縮圖 */
 .insp-mini-cards .idea-thumb {
   width: 100%;
   padding-top: 100%;
@@ -1544,7 +1433,6 @@ button,
   background-position: center;
 }
 
-/* ====== RWD ====== */
 @media (max-width: 768px) {
   .insp-detail-row {
     flex-direction: column;
@@ -1561,41 +1449,33 @@ button,
 }
 
 
-/* 範例樣式 */
 .btn-fav.saved {
-  background-color: #8e877f; /* 變成深灰色或你喜歡的顏色 */
+  background-color: #8e877f; 
   color: #fff;
-  /* border-color: #555; */
 }
 
 
-/* --- 按鈕 Hover 互動效果 --- */
-
-/* 1. 基礎設定：加入過渡動畫，讓變化平滑 */
 .btn {
   transition: all 0.2s ease-in-out;
-  cursor: pointer; /* 確保游標變成手指 */
+  cursor: pointer;
 }
 
-/* 2. 「產生靈感」按鈕 (Primary) */
 .btn.primary:hover {
   background: #e8dcd5;
   transform: translateY(-2px);
   transition: 0.2s;
 }
 
-/* 3. 「清除篩選」按鈕 (Secondary) */
 .btn.secondary:hover {
   background: #e8dcd5;
   transform: translateY(-2px);
   transition: 0.2s;
 }
 
-/* 4. 點擊時的效果 (Active) - 讓按鈕有被壓下去的感覺 */
 .btn:active {
-  transform: translateY(0);      /* 回復原位 */
-  box-shadow: none;              /* 陰影消失 */
-  filter: brightness(0.95);      /* 稍微變暗 */
+  transform: translateY(0);     
+  box-shadow: none;            
+  filter: brightness(0.95);  
 }
 
 .idea-card button.btn-fav {
@@ -1618,9 +1498,6 @@ button,
 }
 
 
-/* === 特例修正：取消收藏按鈕的 Hover 變色效果 === */
-/* 
-1. 未收藏時：Hover 維持白色背景，不要變淺棕色 */
 .btn.secondary.btn-fav:hover {
   background: #fff; 
   /* 如果也不想要上浮效果，可以把下面這行註解拿掉 */

@@ -1,4 +1,3 @@
-<!-- 留言板 Really-->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -26,14 +25,11 @@
   <main class="container">
     <div class="message-layout-split">
       
-      <!-- 左側：發文區（約 35%） -->
       <section class="msg-sidebar">
         <div class="card sticky-card">
           <h2>留言分享</h2>
           <form id="new-message-form">
-            <!-- 移除暱稱輸入框，改為顯示目前身分 (由 JS 動態顯示) -->
             <div id="posting-as" style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">
-               <!-- JS 會在這裡插入 "正在以 [你的暱稱] 發文..." -->
             </div>
 
             <label class="label" for="content">內容</label>
@@ -61,7 +57,6 @@
         </div>
       </section>
 
-      <!-- 右側：留言列表（約 50%） -->
       <section class="msg-content">
         <ul id="message-list" class="message-list"></ul>
       </section>
