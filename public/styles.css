@@ -1498,6 +1498,9 @@ button,
 }
 
 
+/* === 特例修正：取消收藏按鈕的 Hover 變色效果 === */
+/* 
+1. 未收藏時：Hover 維持白色背景，不要變淺棕色 */
 .btn.secondary.btn-fav:hover {
   background: #fff; 
   /* 如果也不想要上浮效果，可以把下面這行註解拿掉 */
@@ -4946,4 +4949,48 @@ input, select, button {
   max-width: 500px;
   height: auto;
   object-fit: contain;
+}
+
+.thumb-square {
+  /* 加上過渡動畫，讓變大變小的過程滑順，才不會閃爍 */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer; /* 滑鼠移上去變成手指 */
+}
+
+.thumb-square:hover {
+  /* 1. 微微放大 1.05 倍 */
+  transform: scale(1.05) translateY(-5px); 
+  
+  /* 2. 加深陰影，營造懸浮感 */
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  
+  /* 3. 確保放大的時候蓋在其他東西上面 */
+  z-index: 10;
+  position: relative; 
+}
+
+
+
+.thumb-rect {
+  /* 加上過渡動畫，讓變大變小的過程滑順，才不會閃爍 */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer; /* 滑鼠移上去變成手指 */
+}
+
+.thumb-rect:hover {
+  /* 1. 微微放大 1.05 倍 */
+  transform: scale(1.05) translateY(-5px); 
+  
+  /* 2. 加深陰影，營造懸浮感 */
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  
+  /* 3. 確保放大的時候蓋在其他東西上面 */
+  z-index: 10;
+  position: relative; 
+}
+
+.look-tags {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.8rem 0;
 }
