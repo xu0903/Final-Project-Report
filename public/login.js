@@ -1,18 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ===== 設定區 =====
-  const API_BASE_URL = 'http://localhost:3000';
-
   // Storage Keys
   const REMEMBER_KEY = "fitmatch_remember";
   const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions";
   const USERS_DB_KEY = "fitmatch_users"; // 本地備份資料庫
 
   // Views & Elements
-  const loginView = document.getElementById("login-view");
-  const loggedinView = document.getElementById("loggedin-view");
-  const currentUserEmailEl = document.getElementById("current-user-email");
-  const btnLogout = document.getElementById("btn-logout");
-
   const authWrap = document.querySelector(".centered-card");
   const loginForm = document.getElementById("login-form");
   const emailInput = document.getElementById("email");
@@ -44,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       // ★ 關鍵：透過 API 檢查 JWT Cookie 來判斷登入狀態
-      const response = await fetch(`${API_BASE_URL}/getUserData`, {
+      const response = await fetch(`/getUserData`, {
         method: 'GET',
         credentials: 'include' // 發送 JWT Cookie
       });
@@ -114,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("btn-logout-current").onclick = async () => {
       if (confirm("確定要登出嗎？")) {
-        try { await fetch(`${API_BASE_URL}/logout`, { method: 'POST' }); } catch (e) { }
+        try { await fetch(`/logout`, { method: 'POST' }); } catch (e) { }
         checkLoginState();
       }
     };
@@ -314,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // API 登入
   async function performApiLogin(email, password, isNewLogin) {
     try {
-      const response = await fetch(`${API_BASE_URL}/authenticate`, {
+      const response = await fetch(`/authenticate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, password: password })

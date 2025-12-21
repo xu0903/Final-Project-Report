@@ -1,6 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const API_BASE_URL = 'http://localhost:3000';
-
   // ==========================================
   // 1. 設定與變數
   // ==========================================
@@ -421,7 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return false;
       }
 
-      const response = await fetch(`${API_BASE_URL}/update-user`, {
+      const response = await fetch(`/update-user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
