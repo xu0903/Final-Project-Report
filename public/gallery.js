@@ -74,9 +74,9 @@ function renderThumbnails() {
       </div>
     </div>
 
-    <div class="thumb-square"><img src="${current.hat}"></div>
-    <div class="thumb-square"><img src="${current.top}"></div>
-    <div class="thumb-square"><img src="${current.bottom}"></div>
+    ${current.hat ? `<div class="thumb-square"><img src="${current.hat}"></div>` : ""}
+    ${current.top ? `<div class="thumb-square"><img src="${current.top}"></div>` : ""}
+    ${current.bottom ? `<div class="thumb-square"><img src="${current.bottom}"></div>` : ""}
   `;
 
   // 綁定切換主圖
@@ -154,10 +154,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // refreshFavBtn();
 
   // ===========================================
-  // ❤️ 重新搭配按鈕（單純跳轉）
+  // 返回按鈕(跳轉回來源頁面)
   // ===========================================
-  const regenBtn = document.getElementById("regen-btn");
-  regenBtn.addEventListener("click", () => {
+  const returnBtn = document.getElementById("return-btn");
+  returnBtn.addEventListener("click", () => {
     window.location.href = fromPage;
   });
 

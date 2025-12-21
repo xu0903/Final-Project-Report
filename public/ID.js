@@ -4,11 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   // 1. 設定與變數
   // ==========================================
-  const USER_KEY = "fitmatch_user";
-  const ACCOUNT_KEY = "fitmatch_account";
-  const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions";
-  const USERS_DB_KEY = "fitmatch_users";
-  const RESULT_KEY = "fitmatch_result"; // 跳轉用的 key
 
   // DOM Elements (資料顯示)
   const displayNickname = document.getElementById("display-nickname");
@@ -43,7 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (freshData) {
       userJson = freshData;
-      localStorage.setItem(USER_KEY, freshData);
 
       // 同步更新給留言板用的資料 (LocalStorage)
       try {
@@ -56,11 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
           id: userObj.UserID
         }));
       } catch (e) { console.error("同步留言板資料錯誤", e); }
-    } else {
-      // 如果伺服器沒回應或沒登入，嘗試讀取本地快取
-      userJson = localStorage.getItem(USER_KEY);
-    }
-
+    } 
     // 根據資料更新 UI
     updateUI(userJson ? JSON.parse(userJson) : null);
     loadUserProfile();
@@ -302,16 +292,9 @@ document.addEventListener("DOMContentLoaded", () => {
         // 存到 result
         if (outfitImages) {
           newResult.outfitImages = outfitImages;
-        } else {
-          // 如果真的沒有 outfitImages，嘗試檢查這張卡片是否就是「上次產生結果」的那張
-          const oldResult = JSON.parse(localStorage.getItem(RESULT_KEY) || "{}");
-          if (oldResult.id === id && oldResult.outfitImages) {
-            newResult.outfitImages = oldResult.outfitImages;
-          }
         }
 
-        // 儲存並跳轉
-        localStorage.setItem(RESULT_KEY, JSON.stringify(newResult));
+        // 跳轉
         setTimeout(() => {
           window.location.href = `gallery.html?outfitID=${id}&from=${'ID.html'}`;
         }, 150);
@@ -451,7 +434,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("更新成功", result.user);
 
         // 更新 localStorage
-        localStorage.setItem(USER_KEY, JSON.stringify(result.user));
         userJson = JSON.stringify(result.user);
         return true;
       } else {
@@ -469,8 +451,6 @@ document.addEventListener("DOMContentLoaded", () => {
     btnLogout.addEventListener("click", async () => {
       if (confirm("確定要登出嗎？")) {
         try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) { }
-        localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(ACCOUNT_KEY);
         window.location.href = "login.html";
       }
     });

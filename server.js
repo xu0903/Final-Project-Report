@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');// 引入 jsonwebtoken 套件以處理 JWT
 const multer = require('multer'); // 引入 multer 處理檔案上傳
 const fs = require('fs'); // 引入 fs 處理檔案系統操作
 const app = express();
-const port = 3000;
+const serverPort = process.env.SERVER_PORT || 3000;
 
 
 // 解析 JSON
@@ -44,7 +44,11 @@ const connection = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,//root
   password: process.env.DB_PASSWORD,//你的密碼
-  database: process.env.DB_NAME//new_schema
+  database: process.env.DB_NAME,//new_schema
+  port: Number(process.env.DB_PORT), // 強制轉成數字，Aiven 必須指定這個
+  ssl: {
+    rejectUnauthorized: false // Aiven 強制要求加密，這行通常能解決連線超時
+  }
 });
 
 // 連線測試
@@ -145,7 +149,7 @@ app.get('/getUserData', authMiddleware, (req, res) => {
   // 新增 AvatarBase64 欄位並使用 AS avatar 別名
   const query = `
     SELECT 
-      UserID, Username, Email, Height, Weight, BMI, CreatedAt, 
+      UserID, Username, Email, CreatedAt, 
       AvatarBase64 AS avatar
     FROM users 
     WHERE UserID = ?
@@ -240,7 +244,7 @@ app.post('/logout', (req, res) => {
 //查詢收藏數量
 app.get("/api/users/:id/favorite-count", (req, res) => {
   const UserID = parseInt(req.params.id, 10);
-  console.log(typeof (UserID));
+  // console.log(typeof (UserID));
 
   const sql = "SELECT COUNT(*) AS favoriteCount FROM user_favorites WHERE UserID = ?";
   connection.query(sql, [UserID], (err, results) => {
@@ -427,6 +431,20 @@ app.get('/get-outfit/:id', (req, res) => {
     }
 
     res.json({ success: true, outfit: results[0] });
+  });
+});
+
+//取得所有 Ideas table的資料
+app.get('/get-all-idea', (req, res) => {
+  const query = 'SELECT * FROM ideas';
+
+  connection.query(query, [ideaID], (err, results) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({ success: false, message: '查詢 idea 失敗' });
+    }
+
+    res.json({ success: true, idea: results[0] });
   });
 });
 
@@ -699,6 +717,6 @@ app.post("/api/messages/:postId/comment/:commentId/toggle-like", authMiddleware,
 
 
 // 啟動伺服器
-app.listen(port, () => {
-  console.log(`伺服器已啟動:http://localhost:${port}`);
+app.listen(serverPort, () => {
+  console.log(`伺服器已啟動:http://localhost:${serverPort}`);
 });

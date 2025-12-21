@@ -6,7 +6,7 @@ const RESULT_KEY = "fitmatch_result";
 /* --------------------- 顏色對照表 (新增) --------------------- */
 // 將中文標籤轉換為 HEX 色碼
 const tagColors = {
-  "大地色": "#d4b89f",
+  "earth": "#d4b89f",
   "黑白灰": "#9ca3af",
   "韓系": "#ffc8dd",   // 粉嫩色
   "日系": "#e6ccb2",   // 米色/卡其
@@ -21,7 +21,7 @@ const inspirations = [
   {
     label: "campus",
     title: "校園日常",
-    tags: ["大地色", "休閒", "寬褲"],
+    tags: ["earth", "休閒", "寬褲"],
     note: "適合上課、社團、圖書館，一整天活動量偏高的日子。",
   },
   {

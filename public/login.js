@@ -4,8 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Storage Keys
   const REMEMBER_KEY = "fitmatch_remember";
-  const ACCOUNT_KEY = "fitmatch_account";
-  const USER_KEY_LEGACY = "fitmatch_user";
   const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions";
   const USERS_DB_KEY = "fitmatch_users"; // 本地備份資料庫
 
@@ -37,9 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===== 0. 狀態檢查 =====
-  // 舊版 (已移除)：
-  // const rawAccount = localStorage.getItem(ACCOUNT_KEY);
-
   async function checkLoginState() {
     let savedSessions = [];
     try {
@@ -120,7 +115,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-logout-current").onclick = async () => {
       if (confirm("確定要登出嗎？")) {
         try { await fetch(`${API_BASE_URL}/logout`, { method: 'POST' }); } catch (e) { }
-        localStorage.removeItem(ACCOUNT_KEY);
         checkLoginState();
       }
     };
@@ -397,8 +391,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const activeUser = { ...user, account: email, password: password };
-    localStorage.setItem(ACCOUNT_KEY, JSON.stringify(activeUser));
-    localStorage.setItem(USER_KEY_LEGACY, JSON.stringify(activeUser));
 
     // 無論是否為新登入 (isNewLogin)，都更新切換帳號列表
     // 這樣才能確保從 ID.js 修改後的暱稱/頭像，在下次登入時是新的

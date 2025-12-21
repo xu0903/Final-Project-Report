@@ -1,12 +1,14 @@
 function checkLoginStatus() {
   fetch('/getUserData', {
     method: 'GET',
-    credentials: 'include'  // 傳送 Cookie
+    credentials: 'include'  // 傳送 Cookie
   })
-    .then(res => {
+    .then(async res => {
       if (res.status === 401) {
         // 捕獲 401 (未登入) 狀態，但不拋出錯誤，讓後續 .catch 執行導向
+        //直接登出以清除無效的 Cookie
         console.log("未登入：JWT Cookie 無效或過期。");
+        try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) { }
         return null; // 傳回 null 表示未登入
       }
       if (!res.ok) {
