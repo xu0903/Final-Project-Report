@@ -39,7 +39,7 @@ app.get('/', (req, res) => {
 const bcrypt = require('bcrypt');// 引入 bcrypt 套件以進行密碼雜湊
 
 // 載入環境變數
-require('dotenv').config({ path: path.join(__dirname, '/etc/secrets/mySQLDB.env') });// 連線 MySQL
+require('dotenv').config();
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,//root
