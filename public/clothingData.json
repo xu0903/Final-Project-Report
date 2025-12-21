@@ -1,5 +1,4 @@
 {
-  "clothes_set": {},
   "formal": {
     "bottom": {
       "blackgraywhite": [
@@ -243,6 +242,128 @@
         "clothing/sweety/top/brown/IMG_5249.PNG",
         "clothing/sweety/top/brown/IMG_5250.PNG",
         "clothing/sweety/top/brown/IMG_5254.PNG"
+      ]
+    }
+  },
+  "clothes_set": {
+    "campus": {
+      "a": [
+        "clothing/clothes_set/campus/a/bottom.png",
+        "clothing/clothes_set/campus/a/hat.PNG",
+        "clothing/clothes_set/campus/a/top.PNG"
+      ],
+      "b": [
+        "clothing/clothes_set/campus/b/bottom.png",
+        "clothing/clothes_set/campus/b/hat.png",
+        "clothing/clothes_set/campus/b/top.png"
+      ],
+      "c": [
+        "clothing/clothes_set/campus/c/bottom.png",
+        "clothing/clothes_set/campus/c/hat.png",
+        "clothing/clothes_set/campus/c/top.png"
+      ],
+      "d": [
+        "clothing/clothes_set/campus/d/bottom.png",
+        "clothing/clothes_set/campus/d/hat.png",
+        "clothing/clothes_set/campus/d/top.png"
+      ]
+    },
+    "date": {
+      "a": [
+        "clothing/clothes_set/date/a/bottom.png",
+        "clothing/clothes_set/date/a/top.png"
+      ],
+      "b": [
+        "clothing/clothes_set/date/b/bottom.png",
+        "clothing/clothes_set/date/b/hat.png",
+        "clothing/clothes_set/date/b/top.png"
+      ],
+      "c": [
+        "clothing/clothes_set/date/c/bottom.png",
+        "clothing/clothes_set/date/c/top.png"
+      ],
+      "d": [
+        "clothing/clothes_set/date/d/bottom.png",
+        "clothing/clothes_set/date/d/hat.png",
+        "clothing/clothes_set/date/d/top.png"
+      ]
+    },
+    "formal": {
+      "a": [
+        "clothing/clothes_set/formal/a/bottom.png",
+        "clothing/clothes_set/formal/a/top.png"
+      ],
+      "b": [
+        "clothing/clothes_set/formal/b/bottom.png",
+        "clothing/clothes_set/formal/b/top.png"
+      ],
+      "c": [
+        "clothing/clothes_set/formal/c/bottom.png",
+        "clothing/clothes_set/formal/c/top.png"
+      ],
+      "d": [
+        "clothing/clothes_set/formal/d/bottom.png",
+        "clothing/clothes_set/formal/d/top.png"
+      ]
+    },
+    "office": {
+      "a": [
+        "clothing/clothes_set/office/a/bottom.png",
+        "clothing/clothes_set/office/a/top.png"
+      ],
+      "b": [
+        "clothing/clothes_set/office/b/bottom.png",
+        "clothing/clothes_set/office/b/top.png"
+      ],
+      "c": [
+        "clothing/clothes_set/office/c/bottom.png",
+        "clothing/clothes_set/office/c/hat.png"
+      ],
+      "d": [
+        "clothing/clothes_set/office/d/bottom.png",
+        "clothing/clothes_set/office/d/top.png"
+      ]
+    },
+    "sport": {
+      "a": [
+        "clothing/clothes_set/sport/a/bottom.png",
+        "clothing/clothes_set/sport/a/hat.png",
+        "clothing/clothes_set/sport/a/top.png"
+      ],
+      "b": [
+        "clothing/clothes_set/sport/b/bottom.png",
+        "clothing/clothes_set/sport/b/top.png"
+      ],
+      "c": [
+        "clothing/clothes_set/sport/c/bottom.png",
+        "clothing/clothes_set/sport/c/hat.png",
+        "clothing/clothes_set/sport/c/top.png"
+      ],
+      "d": [
+        "clothing/clothes_set/sport/d/bottom.png",
+        "clothing/clothes_set/sport/d/hat.png",
+        "clothing/clothes_set/sport/d/top.png"
+      ]
+    },
+    "weekend": {
+      "a": [
+        "clothing/clothes_set/weekend/a/bottom.png",
+        "clothing/clothes_set/weekend/a/top.png"
+      ],
+      "b": [
+        "clothing/clothes_set/weekend/b/bottom.png",
+        "clothing/clothes_set/weekend/b/hat.png",
+        "clothing/clothes_set/weekend/b/top.png"
+      ],
+      "c": [
+        "clothing/clothes_set/weekend/c/bottom.png",
+        "clothing/clothes_set/weekend/c/hat.png",
+        "clothing/clothes_set/weekend/c/top.png"
+      ],
+      "d": [
+        "clothing/clothes_set/weekend/d/bottom.png",
+        "clothing/clothes_set/weekend/d/hat.PNG",
+        "clothing/clothes_set/weekend/d/top.PNG"
       ]
     }
   }

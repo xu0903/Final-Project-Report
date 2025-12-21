@@ -22,17 +22,22 @@ function safeReadDir(dir) {
 function generate() {
   const data = {};
 
-  // 讀取風格資料夾，例如 sweety / simple / formal / street
+  /* =====================================================
+     原本 sweety / simple / formal / street（完全不改）
+  ===================================================== */
   const styles = safeReadDir(ROOT);
 
   styles.forEach(styleDir => {
     if (!styleDir.isDirectory()) return;
     const style = styleDir.name;
+
+    // ⚠️ clothes_set 不走這一段
+    if (style === "clothes_set") return;
+
     data[style] = {};
 
     const stylePath = path.join(ROOT, style);
 
-    // 只允許 top / bottom / hat 三種類別（已移除 outwear）
     const categories = safeReadDir(stylePath).filter(d =>
       d.isDirectory() && ["top", "bottom", "hat"].includes(d.name)
     );
@@ -53,7 +58,6 @@ function generate() {
         const images = safeReadDir(colorPath);
 
         images.forEach(img => {
-          // 排除 .DS_Store 和所有隱藏檔
           if (img.isFile() && !img.name.startsWith(".")) {
             const relativePath = `clothing/${style}/${category}/${color}/${img.name}`;
             data[style][category][color].push(relativePath);
@@ -63,9 +67,46 @@ function generate() {
     });
   });
 
+  /* =====================================================
+     新增：clothing/clothes_set 掃描（獨立處理）
+  ===================================================== */
+  const CLOTHES_SET_ROOT = path.join(ROOT, "clothes_set");
+  data.clothes_set = {};
+
+  const setStyles = safeReadDir(CLOTHES_SET_ROOT);
+
+  setStyles.forEach(sceneDir => {
+    if (!sceneDir.isDirectory()) return;
+    const scene = sceneDir.name; // campus / state / formal ...
+
+    data.clothes_set[scene] = {};
+
+    const scenePath = path.join(CLOTHES_SET_ROOT, scene);
+    const sets = safeReadDir(scenePath); // a / b / c / d
+
+    sets.forEach(setDir => {
+      if (!setDir.isDirectory()) return;
+      const setName = setDir.name;
+
+      data.clothes_set[scene][setName] = [];
+
+      const setPath = path.join(scenePath, setName);
+      const images = safeReadDir(setPath);
+
+      images.forEach(img => {
+        if (!img.isFile() || img.name.startsWith(".")) return;
+
+        const relativePath =
+          `clothing/clothes_set/${scene}/${setName}/${img.name}`;
+
+        data.clothes_set[scene][setName].push(relativePath);
+      });
+    });
+  });
+
   // 寫入 clothingData.json
   fs.writeFileSync(OUTPUT, JSON.stringify(data, null, 2), "utf8");
-  console.log("已成功生成！");
+  console.log("已成功生成！（包含 clothes_set）");
 }
 
 // 執行主程式
