@@ -5211,3 +5211,36 @@ input, select, button {
       transform: translateY(0);
       box-shadow: none;
     }
+
+.btn-delete-fav {
+  position: absolute;
+  top: 6px;          /* 👈 比原本 8px 再往上 */
+  right: 8px;
+
+  width: 28px;
+  height: 28px;
+
+  border-radius: 50%;
+  border: 1px solid #d7d7d7;
+
+  background: rgba(255, 255, 255, 0.9);
+  color: #555;
+
+  font-size: 16px;
+  line-height: 1;    /* 👈 關鍵：避免字元偏下 */
+  
+  display: flex;     /* 👇 讓 ✕ 正中 */
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  z-index: 5;
+  transition: background .2s ease, color .2s ease;
+}
+
+
+.btn-delete-fav:hover {
+  background: #e26d5a;
+  color: #fff;
+  border: none;
+}

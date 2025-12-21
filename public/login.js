@@ -1,10 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Storage Keys
   const REMEMBER_KEY = "fitmatch_remember";
   const SAVED_SESSIONS_KEY = "fitmatch_saved_sessions";
-  const USERS_DB_KEY = "fitmatch_users"; // 本地備份資料庫
-
-  // Views & Elements
+  const USERS_DB_KEY = "fitmatch_users";
   const authWrap = document.querySelector(".centered-card");
   const loginForm = document.getElementById("login-form");
   const emailInput = document.getElementById("email");
@@ -26,22 +23,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (authWrap) authWrap.insertBefore(switchAccountView, authWrap.firstChild);
   }
 
-  // ===== 0. 狀態檢查 =====
   async function checkLoginState() {
     let savedSessions = [];
     try {
-      // 只有切換帳號列表 (SAVED_SESSIONS_KEY) 仍然使用 LocalStorage
       savedSessions = JSON.parse(localStorage.getItem(SAVED_SESSIONS_KEY) || "[]");
     } catch (e) { }
 
     try {
-      // ★ 關鍵：透過 API 檢查 JWT Cookie 來判斷登入狀態
+      // 透過 API 檢查 JWT Cookie 來判斷登入狀態
       const response = await fetch(`/getUserData`, {
         method: 'GET',
         credentials: 'include' // 發送 JWT Cookie
       });
 
-      // A. 已經登入 (API 回傳 200 OK)
+      // 已經登入 (API 回傳 200 OK)
       if (response.ok) {
         const data = await response.json();
         const accountData = {
@@ -50,17 +45,16 @@ document.addEventListener("DOMContentLoaded", () => {
           avatar: data.user.avatar,
           userId: data.user.UserID,
         };
-        // 登入成功後，更新 LocalStorage 裡的 savedSessions 資料
         renderLoggedInView(accountData, savedSessions);
       }
-      // B. 沒登入 (API 回傳 401 Unauthorized 或其他錯誤)
+      // 沒登入 (API 回傳 401 Unauthorized 或其他錯誤)
       else {
         if (savedSessions.length > 0) {
-          renderSwitchAccountList(savedSessions); // 顯示切換帳號列表
+          renderSwitchAccountList(savedSessions);
         }
-        // C. 完全沒紀錄
+        // 完全沒紀錄
         else {
-          showLoginForm(); // 顯示登入表單
+          showLoginForm();
         }
       }
     } catch (e) {
@@ -74,7 +68,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 渲染：已登入畫面
   function renderLoggedInView(user, savedSessions) {
     if (!authWrap) return;
     if (loginForm) loginForm.style.display = "none";
@@ -112,7 +105,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // 渲染：切換帳號列表
   function renderSwitchAccountList(sessions) {
     if (!authWrap) return;
     if (loginForm) loginForm.style.display = "none";
@@ -142,7 +134,6 @@ document.addEventListener("DOMContentLoaded", () => {
     switchAccountView.innerHTML = html;
     switchAccountView.classList.remove("hidden");
 
-    // 點擊直接登入
     document.querySelectorAll(".account-item").forEach(item => {
       item.addEventListener("click", async (e) => {
         if (e.target.classList.contains("remove-acc")) return;
@@ -207,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 執行檢查
   checkLoginState();
 
-  // ===== 1. 驗證碼邏輯 =====
+  // 驗證碼
   const CAPTCHA_IMAGES = [
     { file: "0110.png", code: "0110" }, { file: "0484.png", code: "0484" },
     { file: "0815.png", code: "0815" }, { file: "0848.png", code: "0848" },
@@ -250,7 +241,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   pickRandomCaptcha();
 
-  // ===== 2. 輔助函式 =====
   function setFieldError(input, msg) {
     if (!input) return;
     const id = input.id;
@@ -280,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ===== 3. 表單送出 =====
+  // 表單送出
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -336,7 +326,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       console.error("Login Error:", err);
 
-      // Fallback: 嘗試本地備份
       if (err.message === "API_Unavailable" || err.message.includes("Failed to fetch")) {
         const localSuccess = tryLocalLogin(email, password, isNewLogin);
         if (localSuccess) return;
@@ -354,7 +343,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function tryLocalLogin(email, password, isNewLogin) {
     try {
-      // 從本地備份資料庫讀取
       const rawUsers = localStorage.getItem(USERS_DB_KEY);
       if (rawUsers) {
         const users = JSON.parse(rawUsers);
@@ -374,7 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return false;
   }
 
-  // 登入成功處理
+  // 登入成功
   function doLoginSuccess(user, email, password, isNewLogin = true) {
     if (rememberChk && rememberChk.checked) {
       localStorage.setItem(REMEMBER_KEY, JSON.stringify({ email: email, remember: true }));
@@ -391,9 +379,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const idx = sessions.findIndex(s => s.account === email);
     if (idx >= 0) {
-      sessions[idx] = { ...sessions[idx], ...activeUser }; // 更新資料
+      sessions[idx] = { ...sessions[idx], ...activeUser };
     } else {
-      sessions.push(activeUser); // 新增資料
+      sessions.push(activeUser);
     }
     localStorage.setItem(SAVED_SESSIONS_KEY, JSON.stringify(sessions));
 
@@ -409,10 +397,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ... 前面省略 ...
-const USERS_DB_KEY = "fitmatch_users"; // 本地備份資料庫
+const USERS_DB_KEY = "fitmatch_users";
 
-// === 救援工具 ===
 window.resetAllUsers = () => {
   localStorage.removeItem(USERS_DB_KEY);
   localStorage.removeItem(SAVED_SESSIONS_KEY);

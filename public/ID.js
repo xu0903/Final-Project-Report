@@ -1,7 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ==========================================
-  // 1. 設定與變數
-  // ==========================================
 
   // DOM Elements (資料顯示)
   const displayNickname = document.getElementById("display-nickname");
@@ -24,20 +21,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRemoveAvatar = document.getElementById("btn-remove-avatar");
   const avatarText = document.getElementById("avatar-text");
 
-  // 全域變數
   let userJson = null;
 
-  // ==========================================
-  // 2. 初始化流程 (IIFE)
-  // ==========================================
   (async () => {
-    // 嘗試從伺服器取得最新資料
     const freshData = await loadUserData();
 
     if (freshData) {
       userJson = freshData;
 
-      // 同步更新給留言板用的資料 (LocalStorage)
       try {
         const userObj = JSON.parse(freshData);
         localStorage.setItem("fitmatch_user", JSON.stringify({
@@ -49,13 +40,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }));
       } catch (e) { console.error("同步留言板資料錯誤", e); }
     } 
-    // 根據資料更新 UI
     updateUI(userJson ? JSON.parse(userJson) : null);
     loadUserProfile();
-    loadUserFavorites(); // 載入收藏列表
+    loadUserFavorites();
   })();
 
-  // 從後端載入使用者資料
   async function loadUserData() {
     try {
       const res = await fetch('/getUserData', {
@@ -71,7 +60,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 更新 Header/登入按鈕狀態
   function updateUI(user) {
     if (user) {
       // 已登入
@@ -88,9 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ==========================================
-  // 3. 會員資料渲染 (頭像與暱稱)
-  // ==========================================
   function loadUserProfile() {
     if (userJson) {
       try {
@@ -120,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 輔助函式：顯示文字頭像
+  // 顯示文字頭像
   function renderAvatarText(name) {
     if (!avatarDisplayArea) return;
     const firstChar = name ? name.charAt(0).toUpperCase() : "M";
@@ -129,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (avatarText) avatarText.style.display = "block";
   }
 
-  // 輔助函式：顯示圖片頭像
+  // 顯示圖片頭像
   function renderAvatarImage(base64Str) {
     if (!avatarDisplayArea) return;
     avatarDisplayArea.innerHTML = "";
@@ -139,11 +124,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (avatarText) avatarText.style.display = "none";
   }
 
-  // ==========================================
-  // 4. 收藏功能 (Load & Jump & Delete)
-  // ==========================================
-
-  // 取得顏色背景
   function getColorBG(colorKey) {
     const colorBG = {
       earth: "#d4b89f", blackgraywhite: "#a2a1a1ff", pastel: "#f9dfe5", pink: "#ffb3c6",
@@ -154,13 +134,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return colorBG[colorKey] || "#e5e7eb";
   }
 
-  // 產生收藏卡片 HTML
+  // 收藏卡片
   function createFavoriteCardHTML(fav) {
     const bgColor = getColorBG(fav.ColorKey);
     const outfitId = fav.OutfitID;
-
-    // 若後端未來支援儲存 outfitImages 結構，可放在 data-images
-    // 目前先放 null 或嘗試讀取相關欄位
     const imagesData = fav.OutfitImages ? JSON.stringify(fav.OutfitImages) : "null";
 
     return `
@@ -220,10 +197,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 渲染卡片
       grid.innerHTML = data.favorites.map(fav => createFavoriteCardHTML(fav)).join("");
 
-      // 綁定事件 (包含跳轉與刪除)
       setupCardEvents(grid);
 
     } catch (err) {
@@ -241,28 +216,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  // 設定卡片事件 (跳轉與刪除)
+  // 卡片跳轉與刪除
   async function setupCardEvents(grid) {
     grid.addEventListener('click', async (e) => {
-      // A. 刪除按鈕
       const delBtn = e.target.closest('.btn-delete-fav');
       if (delBtn) {
-        e.stopPropagation(); // 阻止冒泡
+        e.stopPropagation();
         const favId = delBtn.dataset.id;
         await deleteFavorite(favId);
         await refreshFavoriteCount();
         return;
       }
 
-
-      // B. 卡片點擊 -> 跳轉 (包含保留組合邏輯)
       const card = e.target.closest('.idea-card');
       if (card) {
-        // 視覺效果
         document.querySelectorAll(".idea-card.active").forEach(c => c.classList.remove("active"));
         card.classList.add("active");
 
-        // 準備基礎資料
         const id = card.dataset.id;
         const newResult = {
           id: id,
@@ -275,8 +245,6 @@ document.addEventListener("DOMContentLoaded", () => {
           note: `${card.dataset.color} × ${card.dataset.style} 收藏回顧`
         };
 
-        // ⭐ 嘗試讀取固定組合 (outfitImages)
-        // 優先順序: 1. 本地暫存的 look 資料  2. 卡片上的 dataset  3. 若無則 null
         let outfitImages = null;
         try {
           const localLook = localStorage.getItem(`fitmatch_look_${id}`);
@@ -287,12 +255,10 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         } catch (e) { console.error("解析 outfitImages 錯誤", e); }
 
-        // 存到 result
         if (outfitImages) {
           newResult.outfitImages = outfitImages;
         }
 
-        // 跳轉
         setTimeout(() => {
           window.location.href = `gallery.html?outfitID=${id}&from=${'ID.html'}`;
         }, 150);
@@ -335,10 +301,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ==========================================
-  // 5. 其他功能 (頭像上傳、編輯暱稱、登出)
-  // ==========================================
-
   // 頭像上傳
   if (avatarContainer && avatarUpload) {
     avatarContainer.addEventListener("click", () => {
@@ -357,7 +319,6 @@ document.addEventListener("DOMContentLoaded", () => {
         renderAvatarImage(base64String);
         if (btnRemoveAvatar) btnRemoveAvatar.classList.remove("hidden");
 
-        // 更新
         await updateServerProfile({ avatar: base64String });
       };
       reader.readAsDataURL(file);
@@ -398,7 +359,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const newName = inputNickname.value.trim();
       if (!newName) return alert("暱稱不能為空");
 
-      // 更新 UI
       displayNickname.textContent = newName;
       if (avatarText && avatarText.style.display !== "none") {
         avatarText.textContent = newName.charAt(0).toUpperCase();
@@ -411,7 +371,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 5. 呼叫後端 (更新使用者資料)
+  // 呼叫後端
   async function updateServerProfile(data) {
     try {
       if (!userJson) {
@@ -431,7 +391,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (result.success) {
         console.log("更新成功", result.user);
 
-        // 更新 localStorage
         userJson = JSON.stringify(result.user);
         return true;
       } else {

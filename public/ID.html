@@ -6,7 +6,6 @@
   <title>會員中心 - FitMatch</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
-    /* 針對 ID 頁面的微調樣式 */
     .body-stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -35,6 +34,28 @@
       font-size: 1.1rem;
       margin-left: 5px;
     }
+
+    .btn-logout {
+      background: #ee614b;
+      color: #fff;
+      border: none;
+      width: 100%;
+      display: none;
+      transition: 
+        background .2s ease,
+        transform .15s ease,
+        box-shadow .15s ease;
+    }
+
+    .btn-logout:hover {
+      background: #d34d39;
+    }
+
+    .btn-logout:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
   </style>
 </head>
 
@@ -54,12 +75,10 @@
   </header>
 
   <main class="container member-layout">
-    <!-- 左側：會員卡片資料 -->
     <section class="member-column">
       <div class="card">
         <h2 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:20px;">會員資料</h2>
         
-        <!-- 頭像編輯區 -->
         <div style="text-align: center; margin-bottom: 1.5rem;">
           <div id="avatar-container" style="position: relative; width: 100px; height: 100px; margin: 0 auto; cursor: pointer;" title="點擊更換頭像">
             <div id="avatar-display-area" style="width: 100%; height: 100%; border-radius: 50%; background: #f5f1eb; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid #ddd;">
@@ -75,7 +94,6 @@
           <input type="file" id="avatar-upload" accept="image/*" style="display: none;" />
         </div>
 
-        <!-- 基本資料 (帳號/暱稱) -->
         <div style="margin-bottom: 1.5rem;">
           <p class="muted small" style="margin-bottom: 4px;">帳號</p>
           <div id="display-account" style="font-weight: 500; margin-bottom: 15px;">loading...</div>
@@ -98,43 +116,19 @@
           </div>
         </div>
 
-        <!-- ★ 新增：身體數值與 BMI 區塊 -->
-        <!-- <div style="border-top: 1px solid #eee; padding-top: 15px; margin-bottom: 1.5rem;">
-          <h3 style="font-size: 1rem; margin-bottom: 10px; color: #333;">身體數值</h3>
-          
-          <div class="body-stats-grid">
-            <div class="stat-box">
-              <label class="muted small" style="display:block; margin-bottom:4px;">身高 (cm)</label>
-              <input type="number" id="input-height" placeholder="0" min="0" step="0.1">
-            </div>
-            <div class="stat-box">
-              <label class="muted small" style="display:block; margin-bottom:4px;">體重 (kg)</label>
-              <input type="number" id="input-weight" placeholder="0" min="0" step="0.1">
-            </div>
-          </div>
-
-          <div class="bmi-display">
-            BMI 指數：<span id="bmi-value" class="bmi-value">--</span>
-            <span id="bmi-status" style="margin-left: 10px; font-size: 0.85rem;"></span>
-          </div>
-
-          <button id="btn-save-body" class="btn small outline" style="width: 100%;">更新身體數值</button>
-        </div> -->
-
-        <button id="btn-logout" class="btn small" style="background: #ef4444; color: white; border: none; width: 100%; display: none;">
+        <button id="btn-logout" class="btn btn-logout small">
           登出
         </button>
+
         <a href="login.html" id="link-login" class="btn primary small full-width" style="display: none; text-align: center;">前往登入/註冊</a>
       </div>
     </section>
 
-    <!-- 右側：收藏 -->
     <section class="member-column">
       <div class="card">
         <h2 id="favorite-title">我的收藏</h2>
         <p class="muted small">這裡會顯示你在風格篩選頁收藏的靈感卡片。</p>
         <div class="favorites-grid" id="fav-grid">
-           <!-- JS 動態填入收藏 -->
         </div>
       </div>
     </section>
