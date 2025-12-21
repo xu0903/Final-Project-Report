@@ -53,6 +53,9 @@
             />
 
             <button type="submit" class="btn primary full-width">發佈留言</button>
+            <button type="button" id="share-favorites-btn" class="btn secondary full-width" style="margin-top:10px;">
+              分享我的收藏穿搭
+            </button>
           </form>
         </div>
       </section>
@@ -68,9 +71,35 @@
   <script src="messageboard.js" defer></script>
 
   <footer class="site-footer">
-    <div class="container">
-      <p>© 2025 FitMatch Outfit Recommendation</p>
-    </div>
   </footer>
+
+<div id="share-modal" class="modal hidden">
+  <div class="modal-content">
+
+    <!-- ① Header（固定） -->
+    <div class="modal-header">
+      <h2>選擇要分享的收藏穿搭</h2>
+      <p class="subtitle">最多可選 3 套</p>
+    </div>
+
+    <!-- ② Body（可滾動） -->
+    <div class="modal-body">
+      <div id="modal-favorite-grid" class="favorite-grid"></div>
+    </div>
+
+    <!-- ③ Footer（固定） -->
+    <div class="modal-footer">
+      <div id="modal-selected-count">已選擇 0 / 3</div>
+      <div class="actions">
+        <button id="modal-cancel" class="btn btn-cancel">取消</button>
+        <button id="modal-confirm" class="btn btn-confirm">確認分享</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
 </body>
 </html>
+

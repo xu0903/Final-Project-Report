@@ -4994,3 +4994,220 @@ input, select, button {
   gap: 0.5rem;
   margin: 0.8rem 0;
 }
+
+.shared-outfit-card {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.shared-outfit-card img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.shared-outfit-title {
+  font-size: 0.9rem;
+  margin-top: 6px;
+  text-align: center;
+}
+
+.shared-outfit-card {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.shared-outfit-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+}
+
+.modal-panel {
+  position: relative;
+  background: #fff;
+  width: min(900px, 90vw);
+  max-height: 85vh;
+  margin: 5vh auto;
+  padding: 24px;
+  border-radius: 16px;
+  overflow-y: auto;
+}
+
+.modal-content {
+  width: 90%;
+  max-width: 1100px;
+  height: 80vh;               /* 🔥 高度固定 */
+  background: #f5f1eb;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;     /* 🔥 關鍵 */
+  overflow: hidden;           /* 🔥 防止整個 modal 滾 */
+}
+
+.modal-header {
+  padding: 20px 24px 12px;
+  flex-shrink: 0;             /* 🔥 不被壓縮 */
+  background: #f6f1ea;
+}
+
+.modal-body {
+  flex: 1;                    /* 🔥 吃掉剩餘高度 */
+  overflow-y: auto;           /* 🔥 只這裡滾 */
+  padding: 0 24px 16px;
+}
+
+.modal-footer {
+  background: #fff;
+  border-top: 1px solid #e5e5e5;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#modal-selected-count {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0;            /* 🔥 關鍵：清掉上下 margin */
+}
+
+/* =========================
+   Modal 收藏卡片樣式（共用 choose）
+========================= */
+
+/* Grid 本體 */
+#modal-favorite-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* 卡片 */
+#modal-favorite-grid .fav-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid #fff;
+  transition: transform .15s ease, box-shadow .15s ease, border .15s ease;
+  position: relative;
+}
+
+#modal-favorite-grid .fav-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0,0,0,.12);
+}
+
+/* 被選取 */
+#modal-favorite-grid .fav-card.selected {
+  border-color: #c0bcb9;
+}
+
+/* 縮圖 */
+#modal-favorite-grid .fav-thumb {
+  width: 100%;
+  height: 220px;
+  background: #f5f1eb;
+  overflow: hidden;
+}
+
+#modal-favorite-grid .fav-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 文字區 */
+#modal-favorite-grid .fav-body {
+  padding: 12px;
+}
+
+#modal-favorite-grid .fav-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+#modal-favorite-grid .fav-tags {
+  font-size: 0.8rem;
+  color: #777;
+}
+
+/* 勾選角標 */
+#modal-favorite-grid .check-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.9);
+  color: rgba(255,255,255,.9);
+  border: 2px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+#modal-favorite-grid .fav-card.selected .check-badge {
+  background: #c0bcb9;
+  border-color: #c0bcb9;
+  color: #fff;
+}
+
+.btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .btn-cancel {
+      background: #ffffff;
+      border: 1px solid #c0bcb9;
+      transition: background .2s ease;
+    }
+
+    .btn-cancel:hover {
+      background: #ddd;
+    }
+
+    .btn-confirm {
+      background: #c7a693;
+      color: #fff;
+      transition: background .2s ease, transform .15s ease, box-shadow .15s ease;
+    }
+    .btn-confirm:hover {
+      background: #ae9179;
+    }
+
+    .btn-confirm:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }

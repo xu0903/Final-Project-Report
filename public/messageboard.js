@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  
   // ===== 設定區 =====
   const API_BASE = "http://localhost:3000/api"; // 後端 API base URL
   const USER_KEY = "fitmatch_user"; // 讀取當前登入者資料
@@ -6,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== 變數 =====
   let messages = [];
   let likedMessageIds = new Set();
+  let openedCommentIds = new Set();
 
   // ===== DOM 元素 =====
   const messageList = document.getElementById("message-list");
@@ -14,11 +16,150 @@ document.addEventListener("DOMContentLoaded", () => {
   const msgImageInput = document.getElementById("msg-image");
   const charCountDisplay = document.getElementById("main-char-count");
   const postingIdentity = document.getElementById("posting-as");
+  const shareFavoritesBtn = document.getElementById("share-favorites-btn");
+
+  // ===== Modal DOM =====
+  const shareModal = document.getElementById("share-modal");
+  const modalGrid = document.getElementById("modal-favorite-grid");
+  const modalCancel = document.getElementById("modal-cancel");
+  const modalConfirm = document.getElementById("modal-confirm");
+
+  let selectedCount = document.getElementById("modal-selected-count");
+
+  if (!selectedCount) {
+    selectedCount = document.createElement("div");
+    selectedCount.id = "modal-selected-count";
+    selectedCount.style.marginTop = "12px";
+    selectedCount.style.color = "#666";
+    modalGrid.after(selectedCount);
+  }
+  selectedCount.textContent = "已選擇 0 / 3";
+
+  const MAX_SELECT = 3;
+  let selectedOutfits = [];
+
+  async function loadFavoritesIntoModal() {
+    selectedOutfits = [];
+    updateSelectedCount();
+    
+    const res = await fetch("/get-user-favorites", { credentials: "include" });
+    const data = await res.json();
+
+    if (!data.success || !data.favorites || data.favorites.length === 0) {
+      modalGrid.innerHTML = `<p class="muted">目前沒有收藏的穿搭</p>`;
+      return;
+    }
+
+    modalGrid.innerHTML = data.favorites
+      .map(fav => createModalFavoriteCardHTML(fav))
+      .join("");
+
+    updateSelectedCount();
+  }
+
+  modalGrid.addEventListener("click", e => {
+    const card = e.target.closest(".fav-card");
+    if (!card) return;
+
+    const id = card.dataset.id;
+
+    if (card.classList.contains("selected")) {
+      card.classList.remove("selected");
+      selectedOutfits = selectedOutfits.filter(x => x !== id);
+    } else {
+      if (selectedOutfits.length >= MAX_SELECT) {
+        alert("最多選 3 套");
+        return;
+      }
+      card.classList.add("selected");
+      selectedOutfits.push(id);
+    }
+
+    updateSelectedCount();
+  });
+
+  function updateSelectedCount() {
+    const el = document.getElementById("modal-selected-count");
+    if (el) el.textContent = `已選擇 ${selectedOutfits.length} / ${MAX_SELECT}`;
+  }
+
+
+
+  modalCancel.addEventListener("click", () => {
+    shareModal.classList.add("hidden");
+    selectedOutfits = [];
+    updateSelectedCount();
+  });
+
+
+  modalConfirm.addEventListener("click", async () => {
+    if (selectedOutfits.length === 0) {
+      alert("請先選擇穿搭");
+      return;
+    }
+
+    await fetch(`${API_BASE}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        content: "分享我的收藏穿搭 👗✨",
+        selectedOutfits
+      })
+    });
+
+    shareModal.classList.add("hidden");
+    selectedOutfits = [];
+    fetchMessages();
+  });
+
+
+  function createModalFavoriteCardHTML(fav) {
+    const bgColor = getColorBG(fav.ColorKey);
+
+    return `
+      <div class="fav-card" data-id="${fav.OutfitID}">
+        <div class="check-badge">✓</div>
+
+        <div class="fav-thumb" style="background:${bgColor}">
+          ${
+            fav.ImageURL
+              ? `<img src="${fav.ImageURL}" style="width:100%;height:100%;object-fit:cover;">`
+              : ""
+          }
+        </div>
+
+        <div class="fav-body">
+          <div class="fav-title">${escapeHTML(fav.Title)}</div>
+          <div class="fav-tags">
+            #${fav.ColorLabel} #${fav.StyleLabel}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+
 
   // ===== 1. 初始化 =====
   fetchMessages();
   updatePostingIdentity();
 
+  // ===== 分享收藏 → 開啟 Modal =====
+  if (shareFavoritesBtn) {
+    shareFavoritesBtn.addEventListener("click", async () => {
+      const user = getCurrentUser();
+      if (!user) {
+        alert("請先登入才能分享收藏");
+        return;
+      }
+
+      selectedOutfits = [];
+      shareModal.classList.remove("hidden");
+      await loadFavoritesIntoModal();
+    });
+  }
+  
   // 字數統計
   if (msgContent && charCountDisplay) {
     msgContent.addEventListener("input", () => {
@@ -72,6 +213,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (messageList) {
     messageList.addEventListener("click", async (e) => {
       const target = e.target;
+
+      const outfitCard = target.closest(".shared-outfit-card");
+      if (outfitCard) {
+        const outfitId = outfitCard.dataset.outfitId;
+        window.location.href = `gallery.html?id=${outfitId}`;
+        return;
+      }
+
       const card = target.closest(".message-card");
       if (!card) return;
       const id = card.dataset.id;
@@ -100,14 +249,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // C. 顯示/隱藏 comment 區
       if (target.closest(".btn-comment-toggle")) {
-        const commentArea = card.querySelector(".comment-area");
-        if (commentArea) commentArea.classList.toggle("hidden");
-        return;
+      const commentArea = card.querySelector(".comment-area");
+      if (!commentArea) return;
+
+      const isHidden = commentArea.classList.toggle("hidden");
+      if (isHidden) {
+        openedCommentIds.delete(id);
+      } else {
+        openedCommentIds.add(id);
       }
+      return;
+    } 
 
       // D. comment 區按讚
       const commentLikeBtn = target.closest(".btn-comment-like");
       if (commentLikeBtn) {
+        e.stopPropagation(); // ⭐ 關鍵
         const commentItem = target.closest(".comment-item");
         const commentId = commentItem.dataset.commentId;
         await toggleLike("comment", id, commentId);
@@ -173,12 +330,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     messageList.innerHTML = messages.map(msg => {
+      const isOpen = openedCommentIds.has(msg.id);
       const avatarHTML = createAvatarHTML(msg.nickname, msg.userAvatar);
       const imgHTML = msg.image ? `<div class="message-media"><img src="${msg.image}" class="message-img"></div>` : "";
       const isLiked = msg.likedByCurrentUser;
 
+      const sharedCardsHTML =
+        (msg.sharedCards && msg.sharedCards.length > 0)
+          ? `
+            <div class="shared-cards-grid">
+              ${msg.sharedCards.map(fav =>
+                createSharedFavoriteCardHTML(fav)
+              ).join("")}
+            </div>
+          `
+          : "";
+
+
+
       const commentsHTML = (msg.comments || []).map(com => {
-        const comAvatar = createAvatarHTML(com.nickname, com.userAvatar);
+        const comAvatar = createAvatarHTML(com.nickname, com.userAvatar);      
+      
         return `
           <li class="comment-item" data-comment-id="${com.id}">
             <div class="comment-header">
@@ -212,6 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="message-content">
             ${escapeHTML(msg.content).replace(/\n/g, "<br>")}
           </div>
+          ${sharedCardsHTML}
           ${imgHTML}
 
           <div class="message-actions">
@@ -222,7 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <button class="btn-icon btn-delete">🗑️</button>
           </div>
 
-          <div class="comment-area hidden">
+          <div class="comment-area ${isOpen ? '' : 'hidden'}">
              <form class="comment-form">
                <div class="input-wrapper">
                  <textarea name="commentContent" rows="5" placeholder="寫下你的評論..." maxlength="500" required></textarea>
@@ -260,6 +433,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateCharCount(input, display) {
     display.textContent = `${input.value.length}/${input.getAttribute("maxlength")}`;
+  }
+
+  function createSharedFavoriteCardHTML(fav) {
+    const bgColor = getColorBG(fav.ColorKey);
+    const outfitId = fav.OutfitID;
+
+    return `
+      <div class="idea-card shared-outfit-card"
+          data-outfit-id="${outfitId}"
+          style="cursor:pointer;">
+
+        <div class="idea-thumb" style="background-color:${bgColor}; overflow:hidden;">
+          ${fav.ImageURL
+            ? `<img src="${fav.ImageURL}" style="width:100%; height:100%; object-fit:cover;">`
+            : ''
+          }
+        </div>
+
+        <div class="idea-body">
+          <h3 class="idea-title">${escapeHTML(fav.Title)}</h3>
+          <p class="idea-tags muted small">
+            #${fav.ColorLabel} #${fav.StyleLabel}
+          </p>
+          <p class="muted small">
+            收藏時間：${new Date(fav.FavoritedAt).toLocaleDateString()}
+          </p>
+        </div>
+      </div>
+    `;
+  }
+
+  function getColorBG(colorKey) {
+    const colorBG = {
+      earth: "#d4b89f", blackgraywhite: "#a2a1a1ff", pastel: "#f9dfe5", pink: "#ffb3c6",
+      red: "#e26d5a", orange: "#ffb84c", yellow: "#ffe26a", lightgreen: "#b7e4c7",
+      darkgreen: "#588157", lightblue: "#a0c4ff", blue: "#b7d7fcff", purple: "#c77dff",
+      brown: "#c7ac91ff",
+    };
+    return colorBG[colorKey] || "#e5e7eb";
   }
 
   function escapeHTML(str) {
@@ -314,3 +526,5 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+
+
