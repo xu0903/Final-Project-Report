@@ -311,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
     avatarUpload.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      if (file.size > 2 * 1024 * 1024) return alert("圖片太大 (限2MB)");
+      if (file.size > 20 * 1024 * 1024) return alert("圖片太大 (限20MB)");
 
       const reader = new FileReader();
       reader.onload = async (event) => {

@@ -9,7 +9,9 @@ const serverPort = process.env.SERVER_PORT || 3000;
 
 
 // 解析 JSON
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+
 
 // 解析 Cookie
 const cookieParser = require('cookie-parser');
@@ -185,7 +187,7 @@ app.get('/getUserData', authMiddleware, (req, res) => {
 });
 
 // 更新使用者資料
-app.post('/update-user', authMiddleware, (req, res) => {
+app.post('/update-user', express.json({ limit: '20mb' }), authMiddleware, (req, res) => {
   const userId = req.user.userId;
   const updates = req.body;
 
