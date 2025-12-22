@@ -536,42 +536,60 @@ app.get('/get-history', authMiddleware, (req, res) => {
 // ------------------------
 
 // 取得所有貼文與回覆
+// 修改 server.js 的 GET /messages 路由
 app.get("/messages", (req, res) => {
-  // 1. 取得所有文章
+  // 1. 嘗試從 Cookie 取得當前使用者的 ID (即使沒登入也能看貼文，所以用 try-catch)
+  let currentUserId = 0;
+  const token = req.cookies.token;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || "mySecretKey");
+      currentUserId = decoded.userId;
+    } catch (e) {
+      currentUserId = 0;
+    }
+  }
+
+  // 2. 取得所有文章 (新增 IsLiked 欄位：判斷該 User 是否有點讚)
   const postsQuery = `
     SELECT p.PostID, p.UserID, u.Username AS Nickname, u.AvatarBase64 AS Avatar, p.Content, p.ImageURL, p.CreatedAt,
-           IFNULL(l.like_count,0) AS Likes
+           IFNULL(l.like_count, 0) AS Likes,
+           IF(pl.UserID IS NOT NULL, 1, 0) AS IsLiked  -- ★ 新增：判斷當前使用者是否按讚
     FROM posts p
-    JOIN users u ON p.UserID=u.UserID
-    LEFT JOIN (SELECT PostID, COUNT(*) AS like_count FROM posts_likes GROUP BY PostID) l ON p.PostID=l.PostID
+    JOIN users u ON p.UserID = u.UserID
+    LEFT JOIN (SELECT PostID, COUNT(*) AS like_count FROM posts_likes GROUP BY PostID) l ON p.PostID = l.PostID
+    LEFT JOIN posts_likes pl ON p.PostID = pl.PostID AND pl.UserID = ? -- ★ 關聯當前使用者
     ORDER BY p.CreatedAt DESC
   `;
 
-  connection.query(postsQuery, (err, posts) => {
+  connection.query(postsQuery, [currentUserId], (err, posts) => {
     if (err) return res.status(500).json({ error: err.message });
 
-    // 2. 取得所有留言
+    // 3. 取得所有留言 (同樣新增 IsLiked 欄位)
     const commentsQuery = `
       SELECT c.CommentID, c.PostID, c.UserID, u.Username AS Nickname, u.AvatarBase64 AS Avatar, c.Content, c.CreatedAt,
-             IFNULL(l.like_count,0) AS Likes
+             IFNULL(l.like_count, 0) AS Likes,
+             IF(cl.UserID IS NOT NULL, 1, 0) AS IsLiked -- ★ 新增
       FROM comments c
-      JOIN users u ON c.UserID=u.UserID
-      LEFT JOIN (SELECT CommentID, COUNT(*) AS like_count FROM comments_likes GROUP BY CommentID) l ON c.CommentID=l.CommentID
+      JOIN users u ON c.UserID = u.UserID
+      LEFT JOIN (SELECT CommentID, COUNT(*) AS like_count FROM comments_likes GROUP BY CommentID) l ON c.CommentID = l.CommentID
+      LEFT JOIN comments_likes cl ON c.CommentID = cl.CommentID AND cl.UserID = ? -- ★ 關聯當前使用者
       ORDER BY c.CreatedAt ASC
     `;
 
-    connection.query(commentsQuery, (err, comments) => {
+    connection.query(commentsQuery, [currentUserId], (err, comments) => {
       if (err) return res.status(500).json({ error: err.message });
 
-      // 3. 取得分享的穿搭資訊 (透過 FavoriteID 關聯出穿搭圖片)
-      // 這裡 JOIN user_favorites (uf) 取得 OutfitID，再 JOIN outfits
+      // 4. 取得分享的穿搭資訊 (維持之前的修正：包含 ImageTop 和 FavoritedAt)
       const favoritesQuery = `
         SELECT 
           pf.PostID, 
           pf.FavoriteID, 
           o.OutfitID, o.Title, o.Description,
           o.StyleKey, o.StyleLabel,
-          o.ColorKey, o.ColorLabel
+          o.ColorKey, o.ColorLabel,
+          o.ImageTop,       
+          uf.FavoritedAt    
         FROM post_favorites pf
         JOIN user_favorites uf ON pf.FavoriteID = uf.FavoriteID
         JOIN outfits o ON uf.OutfitID = o.OutfitID
@@ -580,7 +598,7 @@ app.get("/messages", (req, res) => {
       connection.query(favoritesQuery, (err, favorites) => {
         if (err) return res.status(500).json({ error: err.message });
 
-        // 4. 組合資料
+        // 5. 組合資料
         const messages = posts.map(p => ({
           id: p.PostID.toString(),
           nickname: p.Nickname,
@@ -589,9 +607,9 @@ app.get("/messages", (req, res) => {
           image: p.ImageURL,
           createdAt: p.CreatedAt,
           likes: p.Likes,
+          isLiked: p.IsLiked === 1, // ★ 將 1/0 轉為 true/false 傳給前端
           userId: p.UserID,
 
-          // 處理分享的穿搭：回傳包含 ID 與圖片的物件陣列
           sharedOutfits: favorites
             .filter(f => f.PostID === p.PostID)
             .map(f => ({
@@ -602,10 +620,11 @@ app.get("/messages", (req, res) => {
               styleKey: f.StyleKey,
               styleLabel: f.StyleLabel,
               colorKey: f.ColorKey,
-              colorLabel: f.ColorLabel
+              colorLabel: f.ColorLabel,
+              imageURL: f.ImageTop,
+              favoritedAt: f.FavoritedAt
             })),
 
-          // 處理留言
           comments: comments
             .filter(c => c.PostID === p.PostID)
             .map(c => ({
@@ -615,6 +634,7 @@ app.get("/messages", (req, res) => {
               content: c.Content,
               createdAt: c.CreatedAt,
               likes: c.Likes,
+              isLiked: c.IsLiked === 1, // ★ 處理留言的按讚狀態
               userId: c.UserID
             }))
         }));
