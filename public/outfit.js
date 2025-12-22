@@ -22,17 +22,6 @@ const MAP_COLOR = {
   "earth": "brown"
 };
 
-// --------------------------------------------
-// ⭐ 生成整組穿搭（帽子 / 上衣 / 褲子）
-// --------------------------------------------
-function generateOutfit(style, color) {
-  return {
-    hat: pickRandom(style, "hat", color),
-    top: pickRandom(style, "top", color),
-    bottom: pickRandom(style, "bottom", color)
-  };
-}
-
 // 渲染標籤群組
 function renderTagsByType(tags) {
   const colorContainer = document.getElementById("color-tags");
