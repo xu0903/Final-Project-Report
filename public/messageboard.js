@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-  
+
   // ===== 設定區 =====
-  const API_BASE = "http://localhost:3000/api"; // 後端 API base URL
   const USER_KEY = "fitmatch_user"; // 讀取當前登入者資料
 
   // ===== 變數 =====
@@ -23,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalGrid = document.getElementById("modal-favorite-grid");
   const modalCancel = document.getElementById("modal-cancel");
   const modalConfirm = document.getElementById("modal-confirm");
+  const tempFavorite = document.getElementById("tempFavorite");
 
   let selectedCount = document.getElementById("modal-selected-count");
 
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadFavoritesIntoModal() {
     selectedOutfits = [];
     updateSelectedCount();
-    
+
     const res = await fetch("/get-user-favorites", { credentials: "include" });
     const data = await res.json();
 
@@ -87,7 +87,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   modalCancel.addEventListener("click", () => {
     shareModal.classList.add("hidden");
+
     selectedOutfits = [];
+    tempFavorite.innerHTML = "";
     updateSelectedCount();
   });
 
@@ -98,19 +100,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    await fetch(`${API_BASE}/messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        content: "分享我的收藏穿搭 👗✨",
-        selectedOutfits
-      })
-    });
+    tempFavorite.innerHTML = `要分享的穿搭(favoriteID)：<br>
+      ${selectedOutfits.map(id => `<div>${id}</div>`).join("")} 
+    `;
 
     shareModal.classList.add("hidden");
-    selectedOutfits = [];
-    fetchMessages();
   });
 
 
@@ -118,15 +112,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const bgColor = getColorBG(fav.ColorKey);
 
     return `
-      <div class="fav-card" data-id="${fav.OutfitID}">
+      <div class="fav-card" data-id="${fav.favoriteID}">
         <div class="check-badge">✓</div>
 
         <div class="fav-thumb" style="background:${bgColor}">
-          ${
-            fav.ImageURL
-              ? `<img src="${fav.ImageURL}" style="width:100%;height:100%;object-fit:cover;">`
-              : ""
-          }
+          ${fav.ImageURL
+        ? `<img src="${fav.ImageURL}" style="width:100%;height:100%;object-fit:cover;">`
+        : ""
+      }
         </div>
 
         <div class="fav-body">
@@ -159,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
       await loadFavoritesIntoModal();
     });
   }
-  
+
   // 字數統計
   if (msgContent && charCountDisplay) {
     msgContent.addEventListener("input", () => {
@@ -178,6 +171,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      tempFavorite.innerHTML = "";// 清空暫存收藏區
+
       const content = msgContent.value.trim();
       if (!content) {
         alert("請輸入內容");
@@ -186,12 +181,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         const formData = new FormData();
+        //新增文字內容
         formData.append("content", content);
+        //新增圖片檔案(若存在)
         if (msgImageInput.files && msgImageInput.files[0]) {
           formData.append("image", msgImageInput.files[0]); // multer 接收
         }
+        //新增分享的收藏穿搭(若存在)
+        if (selectedOutfits.length > 0) {
+          formData.append("sharedOutfits", JSON.stringify(selectedOutfits));
+        }
 
-        const res = await fetch(`${API_BASE}/messages`, {
+        const res = await fetch(`/messages`, {
           method: "POST",
           body: formData,
           credentials: "include"
@@ -231,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (target.closest(".btn-delete")) {
         if (!confirm("確定要刪除這則留言嗎？")) return;
         try {
-          await fetch(`${API_BASE}/messages/${id}`, { method: "DELETE", credentials: "include" });
+          await fetch(`/messages/${id}`, { method: "DELETE", credentials: "include" });
           fetchMessages();
         } catch (err) {
           console.error(err);
@@ -249,17 +250,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // C. 顯示/隱藏 comment 區
       if (target.closest(".btn-comment-toggle")) {
-      const commentArea = card.querySelector(".comment-area");
-      if (!commentArea) return;
+        const commentArea = card.querySelector(".comment-area");
+        if (!commentArea) return;
 
-      const isHidden = commentArea.classList.toggle("hidden");
-      if (isHidden) {
-        openedCommentIds.delete(id);
-      } else {
-        openedCommentIds.add(id);
+        const isHidden = commentArea.classList.toggle("hidden");
+        if (isHidden) {
+          openedCommentIds.delete(id);
+        } else {
+          openedCommentIds.add(id);
+        }
+        return;
       }
-      return;
-    } 
 
       // D. comment 區按讚
       const commentLikeBtn = target.closest(".btn-comment-like");
@@ -278,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const commentId = commentItem.dataset.commentId;
         if (!confirm("確定刪除此評論？")) return;
         try {
-          await fetch(`${API_BASE}/messages/${id}/comment/${commentId}`, { method: "DELETE", credentials: "include" });
+          await fetch(`/messages/${id}/comment/${commentId}`, { method: "DELETE", credentials: "include" });
           fetchMessages();
         } catch (err) {
           console.error(err);
@@ -298,7 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!content) return;
 
       try {
-        await fetch(`${API_BASE}/messages/${id}/comment`, {
+        await fetch(`/messages/${id}/comment`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ content }),
@@ -330,6 +331,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     messageList.innerHTML = messages.map(msg => {
+      console.log("處理留言 ID =", msg.id);
+      console.log('sharedOutfits:', msg.sharedOutfits);
       const isOpen = openedCommentIds.has(msg.id);
       const avatarHTML = createAvatarHTML(msg.nickname, msg.userAvatar);
       const imgHTML = msg.image ? `<div class="message-media"><img src="${msg.image}" class="message-img"></div>` : "";
@@ -340,8 +343,8 @@ document.addEventListener("DOMContentLoaded", () => {
           ? `
             <div class="shared-cards-grid">
               ${msg.sharedCards.map(fav =>
-                createSharedFavoriteCardHTML(fav)
-              ).join("")}
+            createSharedFavoriteCardHTML(fav)
+          ).join("")}
             </div>
           `
           : "";
@@ -349,8 +352,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       const commentsHTML = (msg.comments || []).map(com => {
-        const comAvatar = createAvatarHTML(com.nickname, com.userAvatar);      
-      
+        const comAvatar = createAvatarHTML(com.nickname, com.userAvatar);
+
         return `
           <li class="comment-item" data-comment-id="${com.id}">
             <div class="comment-header">
@@ -360,7 +363,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
               <div class="comment-meta">
                  <button type="button" class="btn-comment-like ${com.likedByCurrentUser ? 'liked' : ''}">
-                   ${com.likedByCurrentUser ? '❤️' : '♡'} ${com.likes || 0}
+                   ${com.likedByCurrentUser ? '❤️' : '🤍'} ${com.likes || 0}
                  </button>
                  <span class="comment-time">${formatTime(com.createdAt)}</span>
                  <button type="button" class="btn-icon btn-comment-delete">🗑️</button>
@@ -386,6 +389,18 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           ${sharedCardsHTML}
           ${imgHTML}
+          <!-- 分享收藏穿搭卡片生成區塊(目前先用文字代替) -->
+          <div class="shared-outfits-container">
+            ${msg.sharedOutfits && msg.sharedOutfits.length > 0
+                    ? msg.sharedOutfits.slice(0, 3).map(outfit => `
+                  <div class="shared-outfit-placeholder" style="border: 1px solid #ddd; padding: 8px; margin-bottom: 5px; border-radius: 5px;">
+                    <strong>${outfit.title || '未命名穿搭'}</strong><br>
+                    <small>${outfit.styleLabel} / ${outfit.colorLabel}</small>
+                  </div>
+                `).join('')
+                    : ''
+              }
+          </div>
 
           <div class="message-actions">
             <button class="btn-text btn-like ${isLiked ? 'liked' : ''}">
@@ -446,9 +461,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div class="idea-thumb" style="background-color:${bgColor}; overflow:hidden;">
           ${fav.ImageURL
-            ? `<img src="${fav.ImageURL}" style="width:100%; height:100%; object-fit:cover;">`
-            : ''
-          }
+        ? `<img src="${fav.ImageURL}" style="width:100%; height:100%; object-fit:cover;">`
+        : ''
+      }
         </div>
 
         <div class="idea-body">
@@ -487,9 +502,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function fetchMessages() {
     try {
-      const res = await fetch(`${API_BASE}/messages`, { credentials: "include" });
+      const res = await fetch(`/messages`, { credentials: "include" });
       if (!res.ok) throw new Error("讀取留言失敗");
       messages = await res.json(); // 後端返回已排序好、每則留言包含 comments、likes
+      console.log("取得留言：", messages);
       renderMessages();
     } catch (err) {
       console.error(err);
@@ -507,12 +523,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       let url = "";
-      let method = "POST"; 
+      let method = "POST";
 
       if (type === "post") {
-        url = `${API_BASE}/messages/${postId}/toggle-like`; 
+        url = `/messages/${postId}/toggle-like`;
       } else if (type === "comment") {
-        url = `${API_BASE}/messages/${postId}/comment/${commentId}/toggle-like`;
+        url = `/messages/${postId}/comment/${commentId}/toggle-like`;
       }
 
       const res = await fetch(url, { method, credentials: "include" });

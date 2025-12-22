@@ -39,7 +39,19 @@ app.get('/', (req, res) => {
 const bcrypt = require('bcrypt');// 引入 bcrypt 套件以進行密碼雜湊
 
 // 載入環境變數
-require('dotenv').config();
+//如果{ path: path.join(__dirname, '../mine.env') }存在，則指定路徑，否則使用空路徑
+require('dotenv'); // 只 require，不馬上 config
+
+const envPath = path.join(__dirname, '../mySQLDB.env');
+
+if (fs.existsSync(envPath)) {
+  console.log('使用 mine.env');
+  require('dotenv').config({ path: envPath });
+} else {
+  console.log('使用預設 .env');
+  require('dotenv').config();
+}
+
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,//root
@@ -265,7 +277,7 @@ app.get('/get-user-favorites', authMiddleware, (req, res) => {
     SELECT o.OutfitID, o.Title, o.Description, o.ImageHat,o.ImageTop,o.ImageBottom,
            o.StyleKey, o.StyleLabel,
            o.ColorKey, o.ColorLabel,
-           uf.FavoritedAt
+           uf.favoriteID,uf.FavoritedAt
     FROM user_favorites uf
     JOIN outfits o ON uf.OutfitID = o.OutfitID
     WHERE uf.UserID = ?
@@ -524,7 +536,8 @@ app.get('/get-history', authMiddleware, (req, res) => {
 // ------------------------
 
 // 取得所有貼文與回覆
-app.get("/api/messages", (req, res) => {
+app.get("/messages", (req, res) => {
+  // 1. 取得所有文章
   const postsQuery = `
     SELECT p.PostID, p.UserID, u.Username AS Nickname, u.AvatarBase64 AS Avatar, p.Content, p.ImageURL, p.CreatedAt,
            IFNULL(l.like_count,0) AS Likes
@@ -533,8 +546,11 @@ app.get("/api/messages", (req, res) => {
     LEFT JOIN (SELECT PostID, COUNT(*) AS like_count FROM posts_likes GROUP BY PostID) l ON p.PostID=l.PostID
     ORDER BY p.CreatedAt DESC
   `;
+
   connection.query(postsQuery, (err, posts) => {
     if (err) return res.status(500).json({ error: err.message });
+
+    // 2. 取得所有留言
     const commentsQuery = `
       SELECT c.CommentID, c.PostID, c.UserID, u.Username AS Nickname, u.AvatarBase64 AS Avatar, c.Content, c.CreatedAt,
              IFNULL(l.like_count,0) AS Likes
@@ -546,71 +562,145 @@ app.get("/api/messages", (req, res) => {
 
     connection.query(commentsQuery, (err, comments) => {
       if (err) return res.status(500).json({ error: err.message });
-      const messages = posts.map(p => ({
-        id: p.PostID.toString(),
-        nickname: p.Nickname,
-        userAvatar: p.Avatar,
-        content: p.Content,
-        image: p.ImageURL,
-        createdAt: p.CreatedAt,
-        likes: p.Likes,
-        userId: p.UserID,
-        comments: comments.filter(c => c.PostID === p.PostID).map(c => ({
-          id: c.CommentID.toString(),
-          nickname: c.Nickname,
-          userAvatar: c.Avatar,
-          content: c.Content,
-          createdAt: c.CreatedAt,
-          likes: c.Likes,
-          userId: c.UserID
-        }))
-      }));
-      res.json(messages);
+
+      // 3. 取得分享的穿搭資訊 (透過 FavoriteID 關聯出穿搭圖片)
+      // 這裡 JOIN user_favorites (uf) 取得 OutfitID，再 JOIN outfits
+      const favoritesQuery = `
+        SELECT 
+          pf.PostID, 
+          pf.FavoriteID, 
+          o.OutfitID, o.Title, o.Description,
+          o.StyleKey, o.StyleLabel,
+          o.ColorKey, o.ColorLabel
+        FROM post_favorites pf
+        JOIN user_favorites uf ON pf.FavoriteID = uf.FavoriteID
+        JOIN outfits o ON uf.OutfitID = o.OutfitID
+      `;
+
+      connection.query(favoritesQuery, (err, favorites) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        // 4. 組合資料
+        const messages = posts.map(p => ({
+          id: p.PostID.toString(),
+          nickname: p.Nickname,
+          userAvatar: p.Avatar,
+          content: p.Content,
+          image: p.ImageURL,
+          createdAt: p.CreatedAt,
+          likes: p.Likes,
+          userId: p.UserID,
+
+          // 處理分享的穿搭：回傳包含 ID 與圖片的物件陣列
+          sharedOutfits: favorites
+            .filter(f => f.PostID === p.PostID)
+            .map(f => ({
+              favoriteId: f.FavoriteID,
+              outfitId: f.OutfitID,
+              title: f.Title,
+              description: f.Description,
+              styleKey: f.StyleKey,
+              styleLabel: f.StyleLabel,
+              colorKey: f.ColorKey,
+              colorLabel: f.ColorLabel
+            })),
+
+          // 處理留言
+          comments: comments
+            .filter(c => c.PostID === p.PostID)
+            .map(c => ({
+              id: c.CommentID.toString(),
+              nickname: c.Nickname,
+              userAvatar: c.Avatar,
+              content: c.Content,
+              createdAt: c.CreatedAt,
+              likes: c.Likes,
+              userId: c.UserID
+            }))
+        }));
+
+        res.json(messages);
+      });
     });
   });
 });
 
 // 新增貼文
-app.post("/api/messages", authMiddleware, upload.single("image"), (req, res) => {
-  const { content } = req.body;
+app.post("/messages", authMiddleware, upload.single("image"), (req, res) => {
+  const { content, sharedOutfits } = req.body;
   const userId = req.user.userId;
-  if (!content) return res.status(400).json({ error: "Missing content" });
 
   let imageUrl = null;
-  if (req.file) imageUrl = `uploads/${req.file.filename}`;
+  if (req.file) {
+    imageUrl = `/uploads/${req.file.filename}`;
+  }
 
-  connection.query(
-    "INSERT INTO posts (UserID, Content, ImageURL) VALUES (?,?,?)",
-    [userId, content, imageUrl],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      const postId = result.insertId;
-      connection.query(
-        "SELECT p.PostID, u.Username AS Nickname, u.AvatarBase64 AS Avatar, p.Content, p.ImageURL, p.CreatedAt FROM posts p JOIN users u ON p.UserID=u.UserID WHERE p.PostID=?",
-        [postId],
-        (err, rows) => {
-          if (err) return res.status(500).json({ error: err.message });
-          const post = rows[0];
-          res.json({
-            id: post.PostID.toString(),
-            nickname: post.Nickname,
-            userAvatar: post.Avatar,
-            content: post.Content,
-            image: post.ImageURL,
-            createdAt: post.CreatedAt,
-            likes: 0,
-            comments: [],
-            userId
+  // 1. 寫入主表：posts
+  const sqlInsertPost = "INSERT INTO posts (UserID, Content, ImageURL) VALUES (?,?,?)";
+  connection.query(sqlInsertPost, [userId, content, imageUrl], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    // 取得剛剛自動生成的 PostID
+    const newPostId = result.insertId;
+
+    // 2. 檢查是否有分享收藏
+    if (sharedOutfits) {
+      try {
+        const outfitIds = JSON.parse(sharedOutfits);
+
+        if (Array.isArray(outfitIds) && outfitIds.length > 0) {
+          // ⚠️ 重點：這裡的 PostID 必須是剛剛生成的 newPostId
+          // 假設你的欄位是 (PostID, FavoriteID)，而 FavoriteID 放的是 OutfitID
+          const favoriteValues = outfitIds.map(outfitId => [newPostId, outfitId]);
+
+          const sqlInsertFav = "INSERT INTO post_favorites (PostID, FavoriteID) VALUES ?";
+          connection.query(sqlInsertFav, [favoriteValues], (favErr) => {
+            if (favErr) {
+              console.error("寫入收藏失敗:", favErr);
+              // 如果收藏寫入失敗，你得決定是要回傳錯誤，還是繼續完成發文
+              return res.status(500).json({ error: "收藏關聯失敗" });
+            }
+            // 成功後才執行回傳邏輯
+            sendFinalResponse(newPostId, userId, res);
           });
+        } else {
+          sendFinalResponse(newPostId, userId, res);
         }
-      );
+      } catch (e) {
+        sendFinalResponse(newPostId, userId, res);
+      }
+    } else {
+      sendFinalResponse(newPostId, userId, res);
+    }
+  });
+});
+
+// 封裝最後的查詢回傳邏輯
+function sendFinalResponse(postId, userId, res) {
+  connection.query(
+    "SELECT p.PostID, u.Username AS Nickname, u.AvatarBase64 AS Avatar, p.Content, p.ImageURL, p.CreatedAt FROM posts p JOIN users u ON p.UserID=u.UserID WHERE p.PostID=?",
+    [postId],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      const post = rows[0];
+      res.json({
+        id: post.PostID.toString(),
+        nickname: post.Nickname,
+        userAvatar: post.Avatar,
+        content: post.Content,
+        image: post.ImageURL,
+        createdAt: post.CreatedAt,
+        likes: 0,
+        comments: [],
+        userId
+      });
     }
   );
-});
+}
 
 
 // 刪除貼文，連同uploads圖片一起刪除
-app.delete("/api/messages/:id", authMiddleware, (req, res) => {
+app.delete("/messages/:id", authMiddleware, (req, res) => {
   const postId = req.params.id;
   // 先取得該貼文資料，找到圖片路徑
   connection.query("SELECT ImageURL FROM posts WHERE PostID=?", [postId], (err, result) => {
@@ -645,7 +735,7 @@ function deleteFile(filePath) {
 
 
 // 對貼文按讚 / 取消按讚
-app.post("/api/messages/:id/toggle-like", authMiddleware, (req, res) => {
+app.post("/messages/:id/toggle-like", authMiddleware, (req, res) => {
   const postId = req.params.id;
   const userId = req.user.userId;
   connection.query("SELECT * FROM posts_likes WHERE PostID=? AND UserID=?", [postId, userId], (err, exists) => {
@@ -667,7 +757,7 @@ app.post("/api/messages/:id/toggle-like", authMiddleware, (req, res) => {
 });
 
 // 新增回覆
-app.post("/api/messages/:id/comment", authMiddleware, (req, res) => {
+app.post("/messages/:id/comment", authMiddleware, (req, res) => {
   const postId = req.params.id;
   const userId = req.user.userId;
   const { content } = req.body;
@@ -684,7 +774,7 @@ app.post("/api/messages/:id/comment", authMiddleware, (req, res) => {
 });
 
 // 刪除回覆
-app.delete("/api/messages/:postId/comment/:commentId", authMiddleware, (req, res) => {
+app.delete("/messages/:postId/comment/:commentId", authMiddleware, (req, res) => {
   const commentId = req.params.commentId;
   connection.query("DELETE FROM comments WHERE CommentID=?", [commentId], (err) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -693,7 +783,7 @@ app.delete("/api/messages/:postId/comment/:commentId", authMiddleware, (req, res
 });
 
 // 回覆按讚 / 取消按讚
-app.post("/api/messages/:postId/comment/:commentId/toggle-like", authMiddleware, (req, res) => {
+app.post("/messages/:postId/comment/:commentId/toggle-like", authMiddleware, (req, res) => {
   const commentId = req.params.commentId;
   const userId = req.user.userId;
   connection.query("SELECT * FROM comments_likes WHERE CommentID=? AND UserID=?", [commentId, userId], (err, exists) => {
