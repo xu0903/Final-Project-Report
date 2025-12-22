@@ -25,13 +25,6 @@ const MAP_COLOR = {
 // --------------------------------------------
 // ⭐ 生成整組穿搭（帽子 / 上衣 / 褲子）
 // --------------------------------------------
-function generateOutfit(style, color) {
-  return {
-    hat: pickRandom(style, "hat", color),
-    top: pickRandom(style, "top", color),
-    bottom: pickRandom(style, "bottom", color)
-  };
-}
 
 // 渲染標籤群組
 function renderTagsByType(tags) {
@@ -389,11 +382,15 @@ function pickRandom(style, category, color) {
 
 // 生成整套穿搭
 function generateOutfit(style, color) {
-  console.log("生成穿搭：", style, color);
+  console.log('generateOutfit函式');
+  const hat = pickRandom(style, "hat", color);
+  const top = pickRandom(style, "top", color);
+  const bottom = pickRandom(style, "bottom", color);
+  console.log("生成穿搭連結：", hat, top, bottom);
   return {
-    hat: pickRandom(style, "hat", color),
-    top: pickRandom(style, "top", color),
-    bottom: pickRandom(style, "bottom", color)
+    hat: hat,
+    top: top,
+    bottom: bottom
   };
 }
 

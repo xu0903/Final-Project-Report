@@ -1,5 +1,7 @@
+<!-- 登入 Really-->
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -16,72 +18,70 @@
         <a href="index.html">主頁</a>
         <a href="login.html" class="active">登入/註冊</a>
         <a href="outfit.html">風格篩選</a>
-        <a href="idea.html">找靈感</a>
+        <!-- <a href="idea.html">找靈感</a> -->
         <a href="ID.html">會員</a>
         <a href="messageboard.html">留言板</a>
       </nav>
     </div>
   </header>
 
-<main class="container auth-wrap">
-  <section class="auth-card centered-card">
-    <h2 >歡迎回來</h2>
-    <p class="muted">請使用帳號與密碼登入。</p>
+  <main class="container auth-wrap">
+    <section class="auth-card centered-card">
+      <h2>歡迎回來</h2>
+      <p class="muted">請使用帳號與密碼登入。</p>
 
-    <form id="login-form" novalidate>
-      <label class="field">
-        <span>帳號(Email)</span><br>
-        <input id="email" type="email" autocomplete="username" style="width: 100%;" required placeholder="you@example.com" />
-        <small class="err" data-for="email"></small>
-      </label>
+      <form id="login-form" novalidate>
+        <label class="field">
+          <span>帳號(Email)</span><br>
+          <input id="email" type="email" autocomplete="username" style="width: 100%;" required
+            placeholder="you@example.com" />
+          <small class="err" data-for="email"></small>
+        </label>
 
-      <label class="field">
-        <div class="pass-row">
-          <span>密碼</span>
-          <a class="small" href="#" id="forgot" style="float: right;">忘記密碼？</a>
-        </div>
-        <div style="position: relative;">
-            <input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="至少 6 碼" style="width: 100%;" />
-            <button class="ghost small-text" id="toggle-pass" type="button" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer;">顯示</button>
-        </div>
-        <small class="err" data-for="password"></small>
-      </label>
-      <label class="check" >
-        <input id="remember" type="checkbox" /> <a style="font-size: 14px; margin-left: 5px;">記住我</a>
-      </label>
+        <label class="field">
+          <div class="pass-row">
+            <span>密碼</span>
+            <a class="small" href="#" id="forgot" style="float: right;">忘記密碼？</a>
+          </div>
+          <div style="position: relative;">
+            <input id="password" type="password" autocomplete="current-password" minlength="6" required
+              placeholder="至少 6 碼" style="width: 100%;" />
+            <button class="ghost small-text" id="toggle-pass" type="button"
+              style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer;">顯示</button>
+          </div>
+          <small class="err" data-for="password"></small>
+        </label>
+        <label class="check">
+          <input id="remember" type="checkbox" /> <a style="font-size: 14px; margin-left: 5px;">記住我</a>
+        </label>
 
-      <label class="field"><br>
-        <span>驗證碼</span>
-        <div class="captcha-inline-row">
-          <input
-            id="captcha"
-            type="text"
-            maxlength="4"
-            placeholder="輸入驗證碼"
-            autocomplete="off"
-            required
-          />
-          <img id="captcha-img" src="" alt="驗證碼" style="cursor: pointer;" title="點擊換一張" />
-          <button type="button" class="ghost small-text" id="refresh-captcha">換一張</button>
-        </div>
-        <small class="err" data-for="captcha"></small>
-      </label>
+        <label class="field"><br>
+          <span>驗證碼</span>
+          <div class="captcha-inline-row">
+            <input id="captcha" type="text" maxlength="4" placeholder="輸入驗證碼" autocomplete="off" required />
+            <img id="captcha-img" src="" alt="驗證碼" style="cursor: pointer;" title="點擊換一張" />
+            <button type="button" class="ghost small-text" id="refresh-captcha">換一張</button>
+          </div>
+          <small class="err" data-for="captcha"></small>
+        </label>
 
-      <button id="submit" type="submit" class="btn-login" disabled>登入</button>
-      <button id="register-btn" type="button" class="btn-outline-login" onclick="location.href='register.html'">註冊帳號</button>
-      
-      <p id="msg" class="msg" role="status" style="text-align: center; margin-top: 10px; min-height: 1.5em;"></p>
-    </form>
-    
-    <div class="tips">
-      <p class="small muted">
-        Demo : <code>demo@fitmatch.dev</code> / <code>fitmatch</code>
-      </p>
-    </div>
-  </section>
-</main>
+        <button id="submit" type="submit" class="btn-login" disabled>登入</button>
+        <button id="register-btn" type="button" class="btn-outline-login"
+          onclick="location.href='register.html'">註冊帳號</button>
 
-<script src="auth.js"></script>
-<script type="module" src="login.js"></script>
+        <p id="msg" class="msg" role="status" style="text-align: center; margin-top: 10px; min-height: 1.5em;"></p>
+      </form>
+
+      <div class="tips">
+        <p class="small muted">
+          Demo : <code>demo@fitmatch.dev</code> / <code>fitmatch</code>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script src="auth.js"></script>
+  <script type="module" src="login.js"></script>
 </body>
+
 </html>

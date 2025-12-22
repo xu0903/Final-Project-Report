@@ -5244,3 +5244,132 @@ input, select, button {
   color: #fff;
   border: none;
 }
+
+/* =========================================
+   Message Board - 分享小卡樣式 (修正版)
+   ========================================= */
+
+/* 分享卡片容器：橫向排列，最多 3 張 */
+.shared-cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 52px; /* 與留言內容對齊 (縮排) */
+}
+
+/* 迷你穿搭卡片 (限制大小) */
+.mini-outfit-card {
+  width: 110px; /* 固定寬度 */
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.mini-outfit-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  border-color: var(--accent);
+}
+
+/* 圖片區塊 */
+.mini-outfit-thumb {
+  width: 100%;
+  height: 110px; /* 固定高度，正方形感 */
+  background-color: #f3f4f6;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-outfit-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 填滿 */
+}
+
+/* 文字區塊 */
+.mini-outfit-body {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mini-outfit-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-outfit-tags {
+  font-size: 0.7rem;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Modal 裡的選取狀態 */
+.fav-card.selected {
+  border: 2px solid var(--accent);
+  background-color: #fffbf7;
+}
+.fav-card .check-badge {
+  display: none;
+}
+.fav-card.selected .check-badge {
+  display: flex;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 20px;
+  height: 20px;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* 在你的 CSS 檔案中 */
+.btn-like.liked, 
+.btn-comment-like.liked {
+    color: #e63946; /* 紅色 */
+}
+
+.btn-like, 
+.btn-comment-like {
+    color: #6b7280; /* 未按讚時的灰色 */
+    transition: transform 0.2s;
+}
+
+.btn-like:active,
+.btn-comment-like:active {
+    transform: scale(1.2); /* 點擊時的縮放效果 */
+}
+
+/* Hashtag 與 Mention 的樣式 */
+.highlight-text {
+  color: #4a90e2; /* 藍色 (你可以改成你喜歡的藍) */
+  text-decoration: none; /* 不要底線 */
+  font-weight: bold; /* 選填：加粗會更明顯 */
+  cursor: pointer; /* 選填：滑鼠移過去變手指 */
+}
+
+/* 滑鼠移過去的效果 (選填) */
+.highlight-text:hover {
+  text-decoration: underline; /* 滑鼠移上去才顯示底線 */
+}

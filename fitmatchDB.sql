@@ -1,111 +1,119 @@
 -- 建立資料表
-CREATE TABLE users (
-    UserID INT AUTO_INCREMENT PRIMARY KEY,
-    Username VARCHAR(50) NOT NULL,
-    PasswordHash VARCHAR(255) NOT NULL,
-    Email VARCHAR(100) NOT NULL UNIQUE,
-    Height INT,
-    Weight INT,
-    BMI DECIMAL(5,2),
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "users" (
+  "UserID" int NOT NULL AUTO_INCREMENT,
+  "Username" varchar(50) NOT NULL,
+  "PasswordHash" varchar(255) NOT NULL,
+  "Email" varchar(100) NOT NULL,
+  "CreatedAt" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  "AvatarBase64" longtext,
+  PRIMARY KEY ("UserID"),
+  UNIQUE KEY "Email" ("Email")
 );
-
-CREATE TABLE tags (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    type ENUM('gender','color','style','other') NOT NULL,
-    `key` VARCHAR(64) NOT NULL,       -- 程式用 key，例如 'male','pink','jp'
-    label VARCHAR(64) NOT NULL,       -- 顯示用，例如 '男性','粉紅色','日系'
-    UNIQUE KEY ux_tags_type_key (type, `key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE outfits (
-    OutfitID INT AUTO_INCREMENT PRIMARY KEY,
-    GenderKey ENUM('male','female','unisex') NOT NULL,
-    GenderLabel VARCHAR(50) NOT NULL,
-    StyleKey VARCHAR(50) NOT NULL,
-    StyleLabel VARCHAR(50) NOT NULL,
-    ColorKey VARCHAR(50) NOT NULL,
-    ColorLabel VARCHAR(50) NOT NULL,
-    Title VARCHAR(100) NOT NULL,
-    Description VARCHAR(255),
-    ImageURL VARCHAR(255)
+CREATE TABLE "outfits" (
+  "OutfitID" int NOT NULL AUTO_INCREMENT,
+  "StyleKey" varchar(50) NOT NULL,
+  "StyleLabel" varchar(50) NOT NULL,
+  "ColorKey" varchar(50) NOT NULL,
+  "ColorLabel" varchar(50) NOT NULL,
+  "Title" varchar(100) NOT NULL,
+  "Description" varchar(255) DEFAULT NULL,
+  "ImageTop" varchar(255) DEFAULT NULL,
+  "ImageHat" varchar(255) DEFAULT NULL,
+  "ImageBottom" varchar(255) DEFAULT NULL,
+  PRIMARY KEY ("OutfitID")
 );
-
-CREATE TABLE user_favorites (
-    UserID INT NOT NULL,
-    OutfitID INT NOT NULL,
-    FavoritedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (UserID, OutfitID),
-    FOREIGN KEY (UserID) REFERENCES users(UserID),
-    FOREIGN KEY (OutfitID) REFERENCES outfits(OutfitID)
+CREATE TABLE "user_favorites" (
+  "favoriteID" int NOT NULL AUTO_INCREMENT,
+  "UserID" int NOT NULL,
+  "OutfitID" int NOT NULL,
+  "FavoritedAt" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("favoriteID"),
+  KEY "OutfitID" ("OutfitID"),
+  KEY "user_favorites_ibfk_1" ("UserID"),
+  CONSTRAINT "user_favorites_ibfk_1" FOREIGN KEY ("UserID") REFERENCES "users" ("UserID"),
+  CONSTRAINT "user_favorites_ibfk_2" FOREIGN KEY ("OutfitID") REFERENCES "outfits" ("OutfitID")
 );
-
-CREATE TABLE outfitHistory (
-    HistoryID INT AUTO_INCREMENT PRIMARY KEY,
-    UserID INT NOT NULL,
-    OutfitID INT NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (UserID) REFERENCES users(UserID),
-    FOREIGN KEY (OutfitID) REFERENCES outfits(OutfitID)
+CREATE TABLE "tags" (
+  "id" int NOT NULL AUTO_INCREMENT,
+  "type" enum('gender','color','style','other') NOT NULL,
+  "key" varchar(64) NOT NULL,
+  "label" varchar(64) NOT NULL,
+  PRIMARY KEY ("id"),
+  UNIQUE KEY "ux_tags_type_key" ("type","key")
+);
+CREATE TABLE "posts" (
+  "PostID" int NOT NULL AUTO_INCREMENT,
+  "UserID" int NOT NULL,
+  "Title" varchar(100) DEFAULT NULL,
+  "Content" text NOT NULL,
+  "ImageURL" varchar(500) DEFAULT NULL,
+  "CreatedAt" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("PostID"),
+  KEY "UserID" ("UserID"),
+  CONSTRAINT "posts_ibfk_1" FOREIGN KEY ("UserID") REFERENCES "users" ("UserID") ON DELETE CASCADE
+);
+CREATE TABLE "posts_likes" (
+  "PostID" int NOT NULL,
+  "UserID" int NOT NULL,
+  "LikedAt" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("PostID","UserID"),
+  KEY "UserID" ("UserID"),
+  CONSTRAINT "posts_likes_ibfk_1" FOREIGN KEY ("PostID") REFERENCES "posts" ("PostID") ON DELETE CASCADE,
+  CONSTRAINT "posts_likes_ibfk_2" FOREIGN KEY ("UserID") REFERENCES "users" ("UserID") ON DELETE CASCADE
+);
+CREATE TABLE "post_favorites" (
+  "PostID" int NOT NULL,
+  "FavoriteID" int NOT NULL,
+  PRIMARY KEY ("PostID","FavoriteID"),
+  KEY "FavoriteID" ("FavoriteID"),
+  CONSTRAINT "post_favorites_ibfk_1" FOREIGN KEY ("PostID") REFERENCES "posts" ("PostID") ON DELETE CASCADE,
+  CONSTRAINT "post_favorites_ibfk_2" FOREIGN KEY ("FavoriteID") REFERENCES "user_favorites" ("favoriteID") ON DELETE CASCADE
+);
+CREATE TABLE "comments" (
+  "CommentID" int NOT NULL AUTO_INCREMENT,
+  "PostID" int NOT NULL,
+  "UserID" int NOT NULL,
+  "Content" text NOT NULL,
+  "CreatedAt" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("CommentID"),
+  KEY "PostID" ("PostID"),
+  KEY "UserID" ("UserID"),
+  CONSTRAINT "comments_ibfk_1" FOREIGN KEY ("PostID") REFERENCES "posts" ("PostID") ON DELETE CASCADE,
+  CONSTRAINT "comments_ibfk_2" FOREIGN KEY ("UserID") REFERENCES "users" ("UserID") ON DELETE CASCADE
+);
+CREATE TABLE "comments_likes" (
+  "CommentID" int NOT NULL,
+  "UserID" int NOT NULL,
+  "LikedAt" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("CommentID","UserID"),
+  KEY "UserID" ("UserID"),
+  CONSTRAINT "comments_likes_ibfk_1" FOREIGN KEY ("CommentID") REFERENCES "comments" ("CommentID") ON DELETE CASCADE,
+  CONSTRAINT "comments_likes_ibfk_2" FOREIGN KEY ("UserID") REFERENCES "users" ("UserID") ON DELETE CASCADE
+);
+CREATE TABLE "outfitHistory" (
+  "HistoryID" int NOT NULL AUTO_INCREMENT,
+  "UserID" int NOT NULL,
+  "OutfitID" int NOT NULL,
+  "CreatedAt" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("HistoryID"),
+  KEY "UserID" ("UserID"),
+  KEY "OutfitID" ("OutfitID"),
+  CONSTRAINT "outfitHistory_ibfk_1" FOREIGN KEY ("UserID") REFERENCES "users" ("UserID"),
+  CONSTRAINT "outfitHistory_ibfk_2" FOREIGN KEY ("OutfitID") REFERENCES "outfits" ("OutfitID")
 );
 
 
 
 -- 插入初始使用者資料
 INSERT INTO users (UserID, Username, PasswordHash, Email, CreatedAt)
-VALUES (34, 'Demo', '$2b$10$MjSt9Jt5kbXFkTUOsd/Za.PzFkIw1kM.QnSgYGDJoP6NJMQHl/CDK', 'demo@fitmatch.dev', '2025-11-27 22:46:47');
+VALUES (1, 'Demo', '$2b$10$MjSt9Jt5kbXFkTUOsd/Za.PzFkIw1kM.QnSgYGDJoP6NJMQHl/CDK', 'demo@fitmatch.dev', '2025-11-27 22:46:47');
 -- 插入初始標籤資料
 -- tags
 INSERT INTO tags (type, `key`, label) VALUES
-('gender','male','男性'),
-('gender','female','女性'),
-('gender','unisex','中性'),
 ('color','blue','藍色系'),
 ('color','brown','棕色系'),
-('color','mono','黑白灰'),
+('color','blackgraywhite','黑白灰'),
 ('style','Sweet','甜美'),
 ('style','Minimalist','簡約'),
 ('style','Formal','正式'),
 ('style','Street','街頭');
-
-
-
-
-CREATE TABLE posts (
-PostID INT AUTO_INCREMENT PRIMARY KEY,
-UserID INT NOT NULL,
-Title VARCHAR(100),
-Content TEXT NOT NULL,
-ImageURL VARCHAR(255),
-CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
-);
-
-CREATE TABLE posts_likes (
-PostID INT NOT NULL,
-UserID INT NOT NULL,
-LikedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-PRIMARY KEY (PostID, UserID),
-FOREIGN KEY (PostID) REFERENCES posts(PostID) ON DELETE CASCADE,
-FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
-);
-
-CREATE TABLE comments (
-CommentID INT AUTO_INCREMENT PRIMARY KEY,
-PostID INT NOT NULL,
-UserID INT NOT NULL,
-Content TEXT NOT NULL,
-CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-FOREIGN KEY (PostID) REFERENCES posts(PostID) ON DELETE CASCADE,
-FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
-);
-
-CREATE TABLE comments_likes (
-CommentID INT NOT NULL,
-UserID INT NOT NULL,
-LikedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-PRIMARY KEY (CommentID, UserID),
-FOREIGN KEY (CommentID) REFERENCES comments(CommentID) ON
-DELETE CASCADE,
-FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
-);

@@ -45,7 +45,7 @@ require('dotenv'); // 只 require，不馬上 config
 const envPath = path.join(__dirname, '../mySQLDB.env');
 
 if (fs.existsSync(envPath)) {
-  console.log('使用 mine.env');
+  console.log('使用 mySQLDB.env');
   require('dotenv').config({ path: envPath });
 } else {
   console.log('使用預設 .env');
