@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // ★★★ 修正這裡：發文時，我們要傳給後端的是 "FavoriteID" ★★★
       // 原本是 card.dataset.outfitId，現在改為 dataset.favoriteId
-      const id = card.dataset.favoriteId; 
+      const id = card.dataset.favoriteId;
 
       if (card.classList.contains("selected")) {
         card.classList.remove("selected");
@@ -120,10 +120,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function createSharedFavoriteCardHTML(fav) {
     // 1. 抓取 OutfitID (給點擊跳轉 gallery 用)
     const outfitId = fav.outfitId || fav.OutfitID;
-    
+
     // 2. ★ 新增：抓取 FavoriteID (給發文傳後端用)
     // Modal 來源是 FavoriteID (大寫)，留言板來源是 favoriteId (小寫)
-    const favId = fav.favoriteId || fav.FavoriteID || fav.favoriteID; 
+    const favId = fav.favoriteId || fav.FavoriteID || fav.favoriteID;
 
     const title = fav.title || fav.Title;
     const cKey = fav.colorKey || fav.ColorKey;
@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let dateString = "推薦穿搭";
     if (favTime) {
-         dateString = `收藏時間：${new Date(favTime).toLocaleDateString()}`;
+      dateString = `收藏時間：${new Date(favTime).toLocaleDateString()}`;
     }
 
     // ★ 注意：在 div 上新增了 data-favorite-id
@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!res.ok) throw new Error("發文失敗");
         msgContent.value = "";
         msgImageInput.value = "";
-        selectedOutfits = []; 
+        selectedOutfits = [];
         if (charCountDisplay) charCountDisplay.textContent = "0/500";
         fetchMessages();
       } catch (err) {
@@ -242,10 +242,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // 排除在 modal 裡面的點擊，只針對留言區的卡片
       if (outfitCard && !target.closest("#modal-favorite-grid")) {
         const outfitId = outfitCard.dataset.outfitId;
-        
+
         // 模仿 ID.js 加入一點延遲，並使用正確的參數名稱 outfitID
         setTimeout(() => {
-            window.location.href = `gallery.html?outfitID=${outfitId}&from=messageboard.html`;
+          window.location.href = `gallery.html?outfitID=${outfitId}&from=messageboard.html`;
         }, 150);
         return;
       }
@@ -352,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== 4. 渲染留言 =====
   // ===== 4. 渲染留言 (修正後：讀取後端 isLiked 狀態) =====
-// ===== 4. 渲染留言 (已加入 # @ 變色功能) =====
+  // ===== 4. 渲染留言 (已加入 # @ 變色功能) =====
   function renderMessages() {
     if (!messageList) return;
     if (messages.length === 0) {
@@ -364,16 +364,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const isOpen = openedCommentIds.has(msg.id);
       const avatarHTML = createAvatarHTML(msg.nickname, msg.userAvatar);
       const imgHTML = msg.image ? `<div class="message-media"><img src="${msg.image}" class="message-img"></div>` : "";
-      
-      const isLiked = msg.isLiked; 
+
+      const isLiked = msg.isLiked;
 
       const sharedCardsHTML =
         (msg.sharedOutfits && msg.sharedOutfits.length > 0)
           ? `
             <div class="shared-cards-grid">
               ${msg.sharedOutfits.map(fav =>
-                createSharedFavoriteCardHTML(fav)
-              ).join("")}
+            createSharedFavoriteCardHTML(fav)
+          ).join("")}
             </div>
           `
           : "";
@@ -504,88 +504,106 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
+  // 在 toggleLike 函式外部定義一個鎖
+  const activeLocks = new Set();
+
   async function toggleLike(type, postId, commentId = null) {
+    // 建立唯一的鎖 Key (例如: "post-123" 或 "comment-456")
+    const lockKey = commentId ? `comment-${commentId}` : `post-${postId}`;
+
+    // 如果這個按鈕正在處理中，直接攔截，不執行任何動作
+    if (activeLocks.has(lockKey)) {
+      console.log("請求處理中，攔截連點");
+      return;
+    }
+
     const user = getCurrentUser();
     if (!user) {
       alert("請先登入才能操作！");
       return;
     }
 
+    // --- 啟動鎖定 ---
+    activeLocks.add(lockKey);
+
     try {
-      let url = "";
-      let btnSelector = null;
-      let countSelector = null;
+      let url = (type === "post")
+        ? `/messages/${postId}/toggle-like`
+        : `/messages/${postId}/comment/${commentId}/toggle-like`;
 
-      // 1. 設定 URL 與 DOM 選擇器 (先找到要操作的元素)
-      if (type === "post") {
-        url = `/messages/${postId}/toggle-like`;
-        const card = document.querySelector(`.message-card[data-id="${postId}"]`);
-        if (card) {
-          btnSelector = card.querySelector(".btn-like");
-          countSelector = card.querySelector(".like-count");
-        }
-      } else if (type === "comment") {
-        url = `/messages/${postId}/comment/${commentId}/toggle-like`;
-        const item = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
-        if (item) {
-          btnSelector = item.querySelector(".btn-comment-like");
-          countSelector = item.querySelector(".like-count");
-        }
-      }
-
-      // 2. 發送請求給後端 (這是關鍵：先請求，此時畫面尚未變色)
       const res = await fetch(url, { method: "POST", credentials: "include" });
       if (!res.ok) throw new Error("操作失敗");
 
-      // 3. 等待後端回傳結果 (Server 決定是 liked: true 還是 false)
-      const data = await res.json(); 
+      const data = await res.json();
 
-      // 4. 只有在後端成功回傳後，才修改畫面 (數字與顏色)
-      if (btnSelector && countSelector) {
-        let currentCount = parseInt(countSelector.textContent) || 0;
-
-        if (data.liked) {
-
-          if (!btnSelector.classList.contains("liked")) {
-             currentCount++; 
-          }
-          btnSelector.classList.add("liked");
-          btnSelector.innerHTML = `❤️ <span class="like-count">${currentCount}</span>`;
+      // 更新資料與 UI (維持你原本正確的邏輯)
+      const msg = messages.find(m => m.id == postId);
+      if (msg) {
+        if (type === "post") {
+          msg.isLiked = data.liked;
+          msg.likes = data.newCount;
         } else {
-          if (btnSelector.classList.contains("liked")) {
-             currentCount = Math.max(0, currentCount - 1); 
+          const com = msg.comments?.find(c => c.id == commentId);
+          if (com) {
+            com.isLiked = data.liked;
+            com.likes = data.newCount;
           }
-          btnSelector.classList.remove("liked");
-          btnSelector.innerHTML = `🤍 <span class="like-count">${currentCount}</span>`;
         }
       }
 
+      // 精準更新 DOM
+      let btnElement;
+      if (type === "post") {
+        const card = document.querySelector(`.message-card[data-id="${postId}"]`);
+        btnElement = card?.querySelector(".btn-like");
+      } else {
+        const item = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
+        btnElement = item?.querySelector(".btn-comment-like");
+      }
+
+      if (btnElement) {
+        btnElement.classList.toggle("liked", data.liked);
+        const icon = data.liked ? '❤️' : '🤍';
+        btnElement.innerHTML = `${icon} <span class="like-count">${data.newCount}</span>`;
+      }
+
+      // ★ 為了防止極速連點，成功後強制多鎖 200ms
+      await new Promise(resolve => setTimeout(resolve, 200));
+
     } catch (err) {
-      console.error(err);
+      console.error("按讚失敗:", err);
       alert("操作失敗，請稍後再試");
+    } finally {
+      // --- 解除鎖定 ---
+      activeLocks.delete(lockKey);
     }
   }
 
   // ===== 專門處理留言內容的函式 (防XSS + 標籤變色 + 換行) =====
+  // 修正後的內容處理函式
   function formatMessageContent(str) {
-    if (!str) return "";
+    if (str === null || str === undefined) return ""; // 關鍵防錯：避免 null 導致報錯
 
-    // 1. 先做 HTML 跳脫 (防止 XSS 攻擊)
-    let safeStr = str.replace(/&/g, "&amp;")
-                     .replace(/</g, "&lt;")
-                     .replace(/>/g, "&gt;")
-                     .replace(/"/g, "&quot;");
+    // 1. 先做 HTML 跳脫 (防止 XSS)
+    let safeStr = str.toString()
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
 
-    // 2. 針對 # 和 @ 進行變色處理
-    // 正規表達式說明：
-    // (#|@)           -> 抓取 # 或 @
-    // ([\w\u4e00-\u9fa5]+) -> 抓取後面的 英文、數字、底線 或 中文字
+    // 2. 針對 # 和 @ 進行變色 (使用 highlight-text class)
     safeStr = safeStr.replace(/(#|@)([\w\u4e00-\u9fa5]+)/g, (match) => {
-      return `<span class="highlight-text">${match}</span>`;
+      return `<span class="highlight-text" style="color: #4a90e2; font-weight: 500;">${match}</span>`;
     });
 
-    // 3. 處理換行 (\n 轉 <br>)
+    // 3. 處理換行
     return safeStr.replace(/\n/g, "<br>");
+  }
+
+  // 修正後的 HTML 跳脫 (用於標題等單行文字)
+  function escapeHTML(str) {
+    if (!str) return "";
+    return str.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
 });

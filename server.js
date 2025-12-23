@@ -539,41 +539,46 @@ app.get('/get-history', authMiddleware, (req, res) => {
 
 // 取得所有貼文與回覆
 app.get("/messages", (req, res) => {
-  // 1. 取得所有文章
+  // 嘗試從 cookie 取得當前登入者 ID
+  let currentUserId = 0;
+  const token = req.cookies.token;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || "mySecretKey");
+      currentUserId = decoded.userId;
+    } catch (e) { }
+  }
+
   const postsQuery = `
     SELECT p.PostID, p.UserID, u.Username AS Nickname, u.AvatarBase64 AS Avatar, p.Content, p.ImageURL, p.CreatedAt,
-           IFNULL(l.like_count,0) AS Likes
+           IFNULL(l.like_count,0) AS Likes,
+           IF(ul.UserID IS NULL, 0, 1) AS IsLiked
     FROM posts p
     JOIN users u ON p.UserID=u.UserID
     LEFT JOIN (SELECT PostID, COUNT(*) AS like_count FROM posts_likes GROUP BY PostID) l ON p.PostID=l.PostID
+    LEFT JOIN posts_likes ul ON p.PostID = ul.PostID AND ul.UserID = ?
     ORDER BY p.CreatedAt DESC
   `;
 
-  connection.query(postsQuery, (err, posts) => {
+  connection.query(postsQuery, [currentUserId], (err, posts) => {
     if (err) return res.status(500).json({ error: err.message });
 
-    // 2. 取得所有留言
     const commentsQuery = `
       SELECT c.CommentID, c.PostID, c.UserID, u.Username AS Nickname, u.AvatarBase64 AS Avatar, c.Content, c.CreatedAt,
-             IFNULL(l.like_count,0) AS Likes
+             IFNULL(l.like_count,0) AS Likes,
+             IF(cl.UserID IS NULL, 0, 1) AS IsLiked
       FROM comments c
       JOIN users u ON c.UserID=u.UserID
       LEFT JOIN (SELECT CommentID, COUNT(*) AS like_count FROM comments_likes GROUP BY CommentID) l ON c.CommentID=l.CommentID
+      LEFT JOIN comments_likes cl ON c.CommentID = cl.CommentID AND cl.UserID = ?
       ORDER BY c.CreatedAt ASC
     `;
 
-    connection.query(commentsQuery, (err, comments) => {
+    connection.query(commentsQuery, [currentUserId], (err, comments) => {
       if (err) return res.status(500).json({ error: err.message });
 
-      // 3. 取得分享的穿搭資訊 (透過 FavoriteID 關聯出穿搭圖片)
-      // 這裡 JOIN user_favorites (uf) 取得 OutfitID，再 JOIN outfits
       const favoritesQuery = `
-        SELECT 
-          pf.PostID, 
-          pf.FavoriteID, 
-          o.OutfitID, o.Title, o.Description,
-          o.StyleKey, o.StyleLabel,
-          o.ColorKey, o.ColorLabel
+        SELECT pf.PostID, pf.FavoriteID, o.OutfitID, o.Title, o.StyleLabel, o.ColorKey, o.ColorLabel
         FROM post_favorites pf
         JOIN user_favorites uf ON pf.FavoriteID = uf.FavoriteID
         JOIN outfits o ON uf.OutfitID = o.OutfitID
@@ -582,7 +587,6 @@ app.get("/messages", (req, res) => {
       connection.query(favoritesQuery, (err, favorites) => {
         if (err) return res.status(500).json({ error: err.message });
 
-        // 4. 組合資料
         const messages = posts.map(p => ({
           id: p.PostID.toString(),
           nickname: p.Nickname,
@@ -591,23 +595,18 @@ app.get("/messages", (req, res) => {
           image: p.ImageURL,
           createdAt: p.CreatedAt,
           likes: p.Likes,
+          isLiked: p.IsLiked === 1, // 將 1/0 轉為 boolean
           userId: p.UserID,
-
-          // 處理分享的穿搭：回傳包含 ID 與圖片的物件陣列
           sharedOutfits: favorites
             .filter(f => f.PostID === p.PostID)
             .map(f => ({
               favoriteId: f.FavoriteID,
               outfitId: f.OutfitID,
               title: f.Title,
-              description: f.Description,
-              styleKey: f.StyleKey,
-              styleLabel: f.StyleLabel,
               colorKey: f.ColorKey,
-              colorLabel: f.ColorLabel
+              colorLabel: f.ColorLabel,
+              styleLabel: f.StyleLabel
             })),
-
-          // 處理留言
           comments: comments
             .filter(c => c.PostID === p.PostID)
             .map(c => ({
@@ -617,10 +616,10 @@ app.get("/messages", (req, res) => {
               content: c.Content,
               createdAt: c.CreatedAt,
               likes: c.Likes,
+              isLiked: c.IsLiked === 1, // 這裡也要轉 boolean
               userId: c.UserID
             }))
         }));
-
         res.json(messages);
       });
     });
@@ -740,21 +739,29 @@ function deleteFile(filePath) {
 app.post("/messages/:id/toggle-like", authMiddleware, (req, res) => {
   const postId = req.params.id;
   const userId = req.user.userId;
+
+  // 1. 檢查是否已按讚
   connection.query("SELECT * FROM posts_likes WHERE PostID=? AND UserID=?", [postId, userId], (err, exists) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (exists.length > 0) {
-      //已經按讚了，刪除一筆
-      connection.query("DELETE FROM posts_likes WHERE PostID=? AND UserID=?", [postId, userId], (err) => {
+
+    let sqlAction = exists.length > 0
+      ? "DELETE FROM posts_likes WHERE PostID=? AND UserID=?"
+      : "INSERT INTO posts_likes (PostID, UserID) VALUES (?,?)";
+
+    connection.query(sqlAction, [postId, userId], (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      // 關鍵：操作完後，立刻查詢最新的總讚數
+      connection.query("SELECT COUNT(*) AS totalLikes FROM posts_likes WHERE PostID=?", [postId], (err, countResult) => {
         if (err) return res.status(500).json({ error: err.message });
-        return res.json({ success: true, liked: false });
+
+        res.json({
+          success: true,
+          liked: exists.length === 0, // 原本沒讚的話現在就是 liked: true
+          newCount: countResult[0].totalLikes
+        });
       });
-    }
-    else {
-      connection.query("INSERT INTO posts_likes (PostID, UserID) VALUES (?,?)", [postId, userId], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true, liked: true });
-      });
-    }
+    });
   });
 });
 
@@ -786,22 +793,42 @@ app.delete("/messages/:postId/comment/:commentId", authMiddleware, (req, res) =>
 
 // 回覆按讚 / 取消按讚
 app.post("/messages/:postId/comment/:commentId/toggle-like", authMiddleware, (req, res) => {
-  const commentId = req.params.commentId;
   const userId = req.user.userId;
-  connection.query("SELECT * FROM comments_likes WHERE CommentID=? AND UserID=?", [commentId, userId], (err, exists) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (exists.length > 0) {//已經按讚了，刪除一筆
-      connection.query("DELETE FROM comments_likes WHERE CommentID=? AND UserID=?", [commentId, userId], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        return res.json({ success: true, liked: false });
+  const commentId = req.params.commentId;
+
+  // 1. 檢查是否已經按過讚
+  const checkSql = "SELECT * FROM comments_likes WHERE UserID = ? AND CommentID = ?";
+  connection.query(checkSql, [userId, commentId], (err, results) => {
+    if (err) return res.status(500).json({ success: false, error: err.message });
+
+    if (results.length > 0) {
+      // 2. 已有紀錄 -> 刪除 (取消讚)
+      const deleteSql = "DELETE FROM comments_likes WHERE UserID = ? AND CommentID = ?";
+      connection.query(deleteSql, [userId, commentId], (err) => {
+        if (err) return res.status(500).json({ success: false });
+        return returnNewCount(false);
       });
-      return;
+    } else {
+      // 3. 沒有紀錄 -> 新增 (按讚)
+      const insertSql = "INSERT INTO comments_likes (UserID, CommentID) VALUES (?, ?)";
+      connection.query(insertSql, [userId, commentId], (err) => {
+        if (err) return res.status(500).json({ success: false });
+        return returnNewCount(true);
+      });
     }
-    //還沒按讚，新增一筆
-    else {
-      connection.query("INSERT INTO comments_likes (CommentID, UserID) VALUES (?,?)", [commentId, userId], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true, liked: true });
+
+    // 輔助函式：計算最新的按讚數並回傳
+    function returnNewCount(isLiked) {
+      // ★ 關鍵：這裡必須統計 comments_likes 表中對應該留言的數量
+      const countSql = "SELECT COUNT(*) AS total FROM comments_likes WHERE CommentID = ?";
+      connection.query(countSql, [commentId], (err, countRes) => {
+        if (err) return res.status(500).json({ success: false });
+
+        res.json({
+          success: true,
+          liked: isLiked,
+          newCount: countRes[0].total // 確保這裡抓到的是最新數字
+        });
       });
     }
   });
