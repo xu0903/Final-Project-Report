@@ -515,7 +515,7 @@ app.get('/get-history', authMiddleware, (req, res) => {
 
   const query = `
     SELECT h.HistoryID, h.OutfitID, h.CreatedAt, 
-           o.Title, o.ColorKey, o.StyleKey
+           o.Title, o.ColorKey, o.StyleKey, o.ColorLabel, o.StyleLabel
     FROM outfitHistory h
     JOIN outfits o ON h.OutfitID = o.OutfitID
     WHERE h.UserID = ?
@@ -703,6 +703,19 @@ function sendFinalResponse(postId, userId, res) {
 // 刪除貼文，連同uploads圖片一起刪除
 app.delete("/messages/:id", authMiddleware, (req, res) => {
   const postId = req.params.id;
+  const userId = req.user.userId;
+
+  if (!userId) return res.status(401).json({ success: false, message: '請先登入' });
+
+  // 權限檢查：確認該貼文是屬於目前登入的使用者
+  connection.query("SELECT UserID FROM posts WHERE PostID=?", [postId], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (results.length === 0) return res.status(404).json({ error: "貼文不存在" });
+    if (results[0].UserID !== userId) {
+      return res.status(403).json({ error: "你沒有權限刪除此貼文" });
+    }
+  });
+
   // 先取得該貼文資料，找到圖片路徑
   connection.query("SELECT ImageURL FROM posts WHERE PostID=?", [postId], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });

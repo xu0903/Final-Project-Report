@@ -21,14 +21,40 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRemoveAvatar = document.getElementById("btn-remove-avatar");
   const avatarText = document.getElementById("avatar-text");
 
+  let currentView = 'favorites';
   let userJson = null;
+
+  // 新增：偵測網址參數
+  const urlParams = new URLSearchParams(window.location.search);
+  const activeTab = urlParams.get('tab');
+
+  // 綁定按鈕事件
+  const btnShowFavorites = document.getElementById("btn-show-favorites");
+  const btnShowHistory = document.getElementById("btn-show-history");
+
+  if (btnShowFavorites && btnShowHistory) {
+    btnShowFavorites.addEventListener("click", () => {
+      if (currentMode === 'favorites') return;
+      currentMode = 'favorites';
+      btnShowFavorites.classList.add("active");
+      btnShowHistory.classList.remove("active");
+      loadUserFavorites(); // 呼叫你原本的函式
+    });
+
+    btnShowHistory.addEventListener("click", () => {
+      if (currentMode === 'history') return;
+      currentMode = 'history';
+      btnShowHistory.classList.add("active");
+      btnShowFavorites.classList.remove("active");
+      loadUserHistory(); // 呼叫新函式
+    });
+  }
 
   (async () => {
     const freshData = await loadUserData();
 
     if (freshData) {
       userJson = freshData;
-
       try {
         const userObj = JSON.parse(freshData);
         localStorage.setItem("fitmatch_user", JSON.stringify({
@@ -39,10 +65,39 @@ document.addEventListener("DOMContentLoaded", () => {
           id: userObj.UserID
         }));
       } catch (e) { console.error("同步留言板資料錯誤", e); }
-    } 
+    }
+
     updateUI(userJson ? JSON.parse(userJson) : null);
     loadUserProfile();
-    loadUserFavorites();
+
+    // --- 修改點：判斷目前該載入哪一個分頁 ---
+    if (activeTab === 'history') {
+      currentView = 'history';
+      // 更新按鈕樣式
+      if (tabHist) {
+        tabHist.classList.add("primary");
+        tabHist.style.background = "var(--accent)";
+      }
+      if (tabFav) {
+        tabFav.classList.remove("primary");
+        tabFav.style.background = "#eee";
+      }
+      // 只執行載入歷史
+      loadUserHistory();
+    } else {
+      currentView = 'favorites';
+      // 確保按鈕樣式正確 (預設就是收藏)
+      if (tabFav) {
+        tabFav.classList.add("primary");
+        tabFav.style.background = "";
+      }
+      if (tabHist) {
+        tabHist.classList.remove("primary");
+        tabHist.style.background = "#eee";
+      }
+      // 只執行載入收藏
+      loadUserFavorites();
+    }
   })();
 
   async function loadUserData() {
@@ -168,6 +223,82 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
+  const tabFav = document.getElementById("tab-fav");
+  const tabHist = document.getElementById("tab-hist");
+
+  if (tabFav && tabHist) {
+    tabFav.addEventListener("click", () => {
+      if (currentView === 'favorites') return; // 檢查點
+      currentView = 'favorites';
+      tabFav.classList.add("primary");
+      tabFav.style.background = "";
+      tabHist.classList.remove("primary");
+      tabHist.style.background = "#eee";
+      loadUserFavorites();
+    });
+
+    tabHist.addEventListener("click", () => {
+      if (currentView === 'history') return; // 檢查點
+      currentView = 'history';
+      tabHist.classList.add("primary");
+      tabHist.style.background = "var(--accent)";
+      tabFav.classList.remove("primary");
+      tabFav.style.background = "#eee";
+      loadUserHistory();
+    });
+  }
+
+  // 載入歷史紀錄
+  async function loadUserHistory() {
+    const grid = document.getElementById("fav-grid");
+    const title = document.getElementById("favorite-title");
+    const desc = document.getElementById("favorite-desc");
+
+    title.textContent = "生成紀錄";
+    desc.textContent = "這裡紀錄了你最近產生的所有穿搭組合。";
+    grid.innerHTML = "<p class='muted'>載入中...</p>";
+
+    try {
+      const res = await fetch('/get-history', { credentials: 'include' });
+      const data = await res.json();
+
+      if (!data.success || data.history.length === 0) {
+        grid.innerHTML = `<p class="muted">尚無生成紀錄</p>`;
+        return;
+      }
+
+      // 渲染歷史紀錄卡片
+      grid.innerHTML = data.history.map(item => {
+        const bgColor = getColorBG(item.ColorKey);
+        return `
+        <div class="idea-card" data-id="${item.OutfitID}" style="cursor: pointer;">
+          <div class="idea-thumb" style="background-color:${bgColor}; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">
+            
+          </div>
+          <div class="idea-body">
+            <h3 class="idea-title">${item.Title || '未命名穿搭'}</h3>
+            <p class="idea-tags muted small">#${item.StyleLabel} #${item.ColorLabel}</p>
+            <p class="muted small">${new Date(item.CreatedAt).toLocaleDateString()}</p>
+          </div>
+        </div>
+      `;
+      }).join("");
+
+      // 綁定歷史紀錄卡片的點擊事件（跳轉到展示頁）
+      grid.querySelectorAll('.idea-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const id = card.dataset.id;
+          // 重點：帶上 tab=history 參數
+          window.location.href = `gallery.html?outfitID=${id}&from=ID.html?tab=history`;
+        });
+      });
+
+    } catch (err) {
+      console.error("載入歷史失敗:", err);
+      grid.innerHTML = `<p class="muted">載入紀錄時發生錯誤</p>`;
+    }
+  }
+
   // 載入收藏列表
   async function loadUserFavorites() {
 
@@ -260,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         setTimeout(() => {
-          window.location.href = `gallery.html?outfitID=${id}&from=${'ID.html'}`;
+          window.location.href = `gallery.html?outfitID=${id}&from=ID.html?tab=favorites`;
         }, 150);
       }
     });

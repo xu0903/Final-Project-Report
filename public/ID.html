@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -12,6 +13,7 @@
       gap: 10px;
       margin-bottom: 10px;
     }
+
     .stat-box input {
       width: 100%;
       padding: 8px;
@@ -19,6 +21,7 @@
       border-radius: 6px;
       text-align: center;
     }
+
     .bmi-display {
       background: #f9f9f9;
       padding: 10px;
@@ -28,6 +31,7 @@
       font-size: 0.9rem;
       color: #666;
     }
+
     .bmi-value {
       font-weight: bold;
       color: var(--accent);
@@ -41,7 +45,7 @@
       border: none;
       width: 100%;
       display: none;
-      transition: 
+      transition:
         background .2s ease,
         transform .15s ease,
         box-shadow .15s ease;
@@ -55,7 +59,6 @@
       transform: translateY(0);
       box-shadow: none;
     }
-
   </style>
 </head>
 
@@ -78,18 +81,23 @@
     <section class="member-column">
       <div class="card">
         <h2 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:20px;">會員資料</h2>
-        
+
         <div style="text-align: center; margin-bottom: 1.5rem;">
-          <div id="avatar-container" style="position: relative; width: 100px; height: 100px; margin: 0 auto; cursor: pointer;" title="點擊更換頭像">
-            <div id="avatar-display-area" style="width: 100%; height: 100%; border-radius: 50%; background: #f5f1eb; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid #ddd;">
+          <div id="avatar-container"
+            style="position: relative; width: 100px; height: 100px; margin: 0 auto; cursor: pointer;" title="點擊更換頭像">
+            <div id="avatar-display-area"
+              style="width: 100%; height: 100%; border-radius: 50%; background: #f5f1eb; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid #ddd;">
               <span id="avatar-text" style="font-size: 2.5rem; font-weight: bold; color: #c7a693;">M</span>
             </div>
-            <div style="position: absolute; bottom: 0; right: 0; background: #fff; border: 1px solid #ddd; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #666;">
+            <div
+              style="position: absolute; bottom: 0; right: 0; background: #fff; border: 1px solid #ddd; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #666;">
               📷
             </div>
           </div>
           <div class="avatar-controls">
-             <button id="btn-remove-avatar" class="hidden" style="border:none; background:none; color:#ef4444; cursor:pointer; font-size:0.85rem; margin-top:5px;">✕ 移除頭貼</button>
+            <button id="btn-remove-avatar" class="hidden"
+              style="border:none; background:none; color:#ef4444; cursor:pointer; font-size:0.85rem; margin-top:5px;">✕
+              移除頭貼</button>
           </div>
           <input type="file" id="avatar-upload" accept="image/*" style="display: none;" />
         </div>
@@ -100,7 +108,8 @@
 
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
             <p class="muted small" style="margin:0;">暱稱</p>
-            <button id="btn-edit-nickname" class="btn-text" style="font-size: 0.85rem; color: var(--accent);">✎ 編輯</button>
+            <button id="btn-edit-nickname" class="btn-text" style="font-size: 0.85rem; color: var(--accent);">✎
+              編輯</button>
           </div>
 
           <div id="nickname-view-mode">
@@ -108,7 +117,8 @@
           </div>
 
           <div id="nickname-edit-mode" class="hidden" style="margin-top: 5px;">
-            <input type="text" id="input-nickname" placeholder="輸入新暱稱" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 8px;" />
+            <input type="text" id="input-nickname" placeholder="輸入新暱稱"
+              style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 8px;" />
             <div style="display: flex; gap: 10px;">
               <button id="btn-save-nickname" class="btn small primary" style="flex: 1;">儲存</button>
               <button id="btn-cancel-nickname" class="btn small" style="flex: 1; background: #eee;">取消</button>
@@ -120,14 +130,24 @@
           登出
         </button>
 
-        <a href="login.html" id="link-login" class="btn primary small full-width" style="display: none; text-align: center;">前往登入/註冊</a>
+        <a href="login.html" id="link-login" class="btn primary small full-width"
+          style="display: none; text-align: center;">前往登入/註冊</a>
       </div>
     </section>
 
     <section class="member-column">
       <div class="card">
-        <h2 id="favorite-title">我的收藏</h2>
-        <p class="muted small">這裡會顯示你在風格篩選頁收藏的靈感卡片。</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h2 id="favorite-title" style="margin: 0;">我的收藏</h2>
+          <div style="display: flex; gap: 5px;">
+            <button id="tab-fav" class="btn small primary" style="padding: 4px 12px;">收藏</button>
+            <button id="tab-hist" class="btn small"
+              style="padding: 4px 12px; background: #eee; color: #666;">歷史</button>
+          </div>
+        </div>
+
+        <p id="favorite-desc" class="muted small">這裡會顯示你在風格篩選頁收藏的靈感卡片。</p>
+
         <div class="favorites-grid" id="fav-grid">
         </div>
       </div>
@@ -136,4 +156,5 @@
 
   <script src="ID.js"></script>
 </body>
+
 </html>

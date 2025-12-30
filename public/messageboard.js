@@ -360,89 +360,97 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // 1. 取得當前用戶 ID 以進行比對
+    const currentUser = getCurrentUser();
+    const currentUserId = currentUser ? currentUser.id : null;
+
     messageList.innerHTML = messages.map(msg => {
       const isOpen = openedCommentIds.has(msg.id);
       const avatarHTML = createAvatarHTML(msg.nickname, msg.userAvatar);
       const imgHTML = msg.image ? `<div class="message-media"><img src="${msg.image}" class="message-img"></div>` : "";
-
       const isLiked = msg.isLiked;
+
+      // 2. 判斷是否為本人留言 (支援大小寫屬性名)
+      const isMyMessage = currentUserId && (msg.UserID === currentUserId || msg.userId === currentUserId);
 
       const sharedCardsHTML =
         (msg.sharedOutfits && msg.sharedOutfits.length > 0)
           ? `
-            <div class="shared-cards-grid">
-              ${msg.sharedOutfits.map(fav =>
-            createSharedFavoriteCardHTML(fav)
-          ).join("")}
-            </div>
-          `
+          <div class="shared-cards-grid">
+            ${msg.sharedOutfits.map(fav => createSharedFavoriteCardHTML(fav)).join("")}
+          </div>
+        `
           : "";
 
+      // 3. 處理評論列表
       const commentsHTML = (msg.comments || []).map(com => {
         const comAvatar = createAvatarHTML(com.nickname, com.userAvatar);
         const isCommentLiked = com.isLiked;
 
+        // 判斷是否為本人評論
+        const isMyComment = currentUserId && (com.UserID === currentUserId || com.userId === currentUserId);
+
         return `
-          <li class="comment-item" data-comment-id="${com.id}" style="margin-top: 12px; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
-            <div class="comment-header" style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
-               ${comAvatar}
-               <div class="comment-info" style="display:flex; flex-direction:column; line-height:1.3;">
-                  <span class="comment-nickname" style="font-weight:700; font-size:0.9rem; color:#333;">${escapeHTML(com.nickname)}</span>
-                  <span class="comment-time" style="font-size:0.75rem; color:#999;">${formatTime(com.createdAt)}</span>
-               </div>
-            </div>
-            <div class="comment-content" style="margin-left:52px; margin-bottom:8px; font-size:0.9rem; color:#333;">
-               ${formatMessageContent(com.content)}
-            </div>
-            <div class="comment-actions" style="margin-left:52px; display:flex; gap:16px; align-items:center;">
-               <button type="button" class="btn-text btn-comment-like ${isCommentLiked ? 'liked' : ''}" style="display:inline-flex; align-items:center; gap:4px; border:none; background:none; cursor:pointer; color:#6b7280; transition: transform 0.15s;">
-                 ${isCommentLiked ? '❤️' : '🤍'} <span class="like-count" style="font-size:0.85rem;">${com.likes || 0}</span>
-               </button>
-               <button type="button" class="btn-icon btn-comment-delete" style="border:none; background:none; cursor:pointer; font-size:0.9rem; color:#6b7280;">🗑️</button>
-            </div>
-          </li>
-        `;
+        <li class="comment-item" data-comment-id="${com.id}" style="margin-top: 12px; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+          <div class="comment-header" style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+             ${comAvatar}
+             <div class="comment-info" style="display:flex; flex-direction:column; line-height:1.3;">
+                <span class="comment-nickname" style="font-weight:700; font-size:0.9rem; color:#333;">${escapeHTML(com.nickname)}</span>
+                <span class="comment-time" style="font-size:0.75rem; color:#999;">${formatTime(com.createdAt)}</span>
+             </div>
+          </div>
+          <div class="comment-content" style="margin-left:52px; margin-bottom:8px; font-size:0.9rem; color:#333;">
+             ${formatMessageContent(com.content)}
+          </div>
+          <div class="comment-actions" style="margin-left:52px; display:flex; gap:16px; align-items:center;">
+             <button type="button" class="btn-text btn-comment-like ${isCommentLiked ? 'liked' : ''}" style="display:inline-flex; align-items:center; gap:4px; border:none; background:none; cursor:pointer; color:#6b7280; transition: transform 0.15s;">
+               ${isCommentLiked ? '❤️' : '🤍'} <span class="like-count" style="font-size:0.85rem;">${com.likes || 0}</span>
+             </button>
+             ${isMyComment ? `<button type="button" class="btn-icon btn-comment-delete" style="border:none; background:none; cursor:pointer; font-size:0.9rem; color:#6b7280;" title="刪除評論">🗑️</button>` : ""}
+          </div>
+        </li>
+      `;
       }).join("");
 
       return `
-        <article class="message-card" data-id="${msg.id}">
-          <div class="message-header">
-            ${avatarHTML}
-            <div class="msg-info">
-              <span class="message-nickname">${escapeHTML(msg.nickname)}</span>
-              <span class="message-time">${formatTime(msg.createdAt)}</span>
-            </div>
+      <article class="message-card" data-id="${msg.id}">
+        <div class="message-header">
+          ${avatarHTML}
+          <div class="msg-info">
+            <span class="message-nickname">${escapeHTML(msg.nickname)}</span>
+            <span class="message-time">${formatTime(msg.createdAt)}</span>
           </div>
-          
-          <div class="message-content">
-            ${formatMessageContent(msg.content)}
-          </div>
+        </div>
+        
+        <div class="message-content">
+          ${formatMessageContent(msg.content)}
+        </div>
 
-          ${sharedCardsHTML}
-          ${imgHTML}
+        ${sharedCardsHTML}
+        ${imgHTML}
 
-          <div class="message-actions">
-            <button class="btn-text btn-like ${isLiked ? 'liked' : ''}">
-              ${isLiked ? '❤️' : '🤍'} <span class="like-count">${msg.likes || 0}</span>
-            </button>
-            <button class="btn-text btn-comment-toggle">💬 評論 (${(msg.comments || []).length})</button>
-            <button class="btn-icon btn-delete">🗑️</button>
-          </div>
+        <div class="message-actions">
+          <button class="btn-text btn-like ${isLiked ? 'liked' : ''}">
+            ${isLiked ? '❤️' : '🤍'} <span class="like-count">${msg.likes || 0}</span>
+          </button>
+          <button class="btn-text btn-comment-toggle">💬 評論 (${(msg.comments || []).length})</button>
+          ${isMyMessage ? `<button class="btn-icon btn-delete" title="刪除留言">🗑️</button>` : ""}
+        </div>
 
-          <div class="comment-area ${isOpen ? '' : 'hidden'}">
-             <form class="comment-form">
-               <div class="input-wrapper">
-                 <textarea name="commentContent" rows="3" placeholder="寫下你的評論..." maxlength="500" required></textarea>
-                 <span class="char-count comment-char-count">0/500</span>
-               </div>
-               <button type="submit" class="btn small" style="margin-top:5px;">送出</button>
-             </form>
-             <ul class="comment-list" style="list-style:none; padding:0; margin-top:10px;">
-               ${commentsHTML}
-             </ul>
-          </div>
-        </article>
-      `;
+        <div class="comment-area ${isOpen ? '' : 'hidden'}">
+           <form class="comment-form">
+             <div class="input-wrapper">
+               <textarea name="commentContent" rows="3" placeholder="寫下你的評論..." maxlength="500" required></textarea>
+               <span class="char-count comment-char-count">0/500</span>
+             </div>
+             <button type="submit" class="btn small" style="margin-top:5px;">送出</button>
+           </form>
+           <ul class="comment-list" style="list-style:none; padding:0; margin-top:10px;">
+             ${commentsHTML}
+           </ul>
+        </div>
+      </article>
+    `;
     }).join("");
   }
 

@@ -4,7 +4,7 @@
 
 const RESULT_KEY = "fitmatch_outfit_result";
 
-// 取得 URL 內的outfitID
+// 取得網址內的outfitID
 const params = new URLSearchParams(window.location.search);
 const outfitID = parseInt(params.get("outfitID"), 10);
 const fromPage = params.get("from") || 'outfit.html';
@@ -13,7 +13,6 @@ if (!outfitID || Number.isNaN(outfitID)) {
   console.error("outfitID 缺失！");
   window.location.href = "outfit.html";
 }
-
 
 // 對照：UI → JSON
 const MAP_STYLE = {
