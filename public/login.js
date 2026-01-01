@@ -15,6 +15,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const msgBox = document.getElementById("msg");
   const forgotLink = document.getElementById("forgot");
 
+  forgotLink.addEventListener("click",ForgotPassWord);
+
+function ForgotPassWord(){
+  alert("更改密碼需綁定 E-mail 以及發信驗證 此功能尚未實現,敬請見諒。請聯繫rich040903@gmail.com 線上真人客服為您更改密碼。");
+};
+
   let switchAccountView = document.getElementById("switch-account-view");
   if (!switchAccountView) {
     switchAccountView = document.createElement("div");
@@ -399,11 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const USERS_DB_KEY = "fitmatch_users";
 
-forgotLink.addEventListener("click",ForgotPassWord);
 
-function ForgotPassWord(){
-  alert("更改密碼需綁定 e-mail 以及發信驗證 此功能尚未實現 請見諒 請聯繫rich040903@gmail.com 線上真人客服為您更改密碼");
-};
 
 window.resetAllUsers = () => {
   localStorage.removeItem(USERS_DB_KEY);
