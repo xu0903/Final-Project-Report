@@ -1,0 +1,32 @@
+name: Keep Aiven MySQL Alive
+
+on:
+  schedule:
+    # 設定排程：每 6 小時執行一次 (UTC 時間)
+    - cron: '0 */6 * * *'
+  
+  # 允許你手動按按鈕測試 (Workflow Dispatch)
+  workflow_dispatch:
+
+jobs:
+  ping-database:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install MySQL Client
+        run: sudo apt-get update && sudo apt-get install -y mysql-client
+
+      - name: Ping Database
+        env:
+          # 這裡會讀取你在 Step 2 設定的密鑰
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: |
+          # 使用 mysql 指令連線並執行 "SELECT 1;"
+          # 只要這個指令成功，就算是一次活躍操作
+          mysql --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USER" --password="$DB_PASSWORD" --database="$DB_NAME" --ssl-mode=REQUIRED --execute="SELECT 1;"
+          
+          echo "✅ Database pinged successfully!"
